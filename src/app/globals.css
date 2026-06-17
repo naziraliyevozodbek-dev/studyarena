@@ -1,26 +1,389 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* StudyArena Unique Brand Colors */
+  --color-primary: #6C4CF1;
+  --color-primary-dark: #5534d1;
+  --color-primary-light: #ece9fe;
+  
+  --color-success: #10B981;
+  --color-success-dark: #059669;
+  
+  --color-warning: #F59E0B;
+  --color-warning-dark: #D97706;
+
+  --color-xp: #FBBF24;
+  --color-xp-dark: #F59E0B;
+
+  --color-bg-light: #F8FAFC;
+  --color-bg-card: #FFFFFF;
+
+  --color-text-main: #0F172A;
+  --color-text-sub: #64748B;
+  
+  --color-border: #E2E8F0;
+
+  /* Spacing & Borders */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 2px 8px rgba(108, 76, 241, 0.05);
+  --shadow-md: 0 8px 24px rgba(108, 76, 241, 0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Telegram dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg-light: #0F172A;
+    --color-bg-card: #1E293B;
+    --color-text-main: #F8FAFC;
+    --color-text-sub: #94A3B8;
+    --color-border: #334155;
+    --color-primary-light: #2d2459;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--color-bg-light);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+/* Mobile Container */
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--color-bg-light);
+}
+
+.content-area {
+  flex: 1;
+  padding: 20px 16px;
+  padding-bottom: 90px;
+  overflow-y: auto;
+}
+
+/* Typography Utilities */
+.text-h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: var(--color-text-main); letter-spacing: -0.5px; }
+.text-h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--color-text-main); }
+.text-h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--color-text-main); }
+.text-body { font-size: 15px; font-weight: 500; color: var(--color-text-sub); line-height: 1.5; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  text-decoration: none;
+  width: 100%;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(108, 76, 241, 0.4);
+}
+
+.btn-primary:active {
+  background-color: var(--color-primary-dark);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary-light);
+}
+
+/* Cards */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:active {
+  transform: scale(0.99);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 8px;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  z-index: 50;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-sub);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.nav-item.active {
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+/* Progress Bar */
+.progress-bg {
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background-color: var(--color-primary);
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Flashcard */
+.flashcard-container {
+  perspective: 1200px;
+  width: 100%;
+  height: 320px;
+  margin-bottom: 24px;
+}
+
+.flashcard {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  padding: 32px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+/* Typography Utilities */
+.text-h1 { font-size: 24px; font-weight: 800; margin-bottom: 16px; color: var(--color-gray-900); }
+.text-h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--color-gray-900); }
+.text-h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--color-gray-800); }
+.text-body { font-size: 15px; font-weight: 500; color: var(--color-gray-800); line-height: 1.5; }
+.text-sub { font-size: 13px; font-weight: 600; color: var(--color-gray-400); }
+
+/* Animation Utils */
+@keyframes bounce-sm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-bounce-sm {
+  animation: bounce-sm 2s infinite ease-in-out;
+}
+
+/* ==================================================
+   MENTOR SaaS UI STYLES
+   ================================================== */
+
+.saas-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #f8fafc; /* Slate 50 */
+  color: #0f172a; /* Slate 900 */
+}
+
+.saas-content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 90px;
+  overflow-y: auto;
+}
+
+.saas-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 8px;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  z-index: 50;
+  max-width: 480px;
+  margin: 0 auto;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.saas-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b; /* Slate 500 */
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  padding: 8px;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.saas-nav-item.active {
+  color: #0f172a; /* Slate 900 */
+}
+
+.saas-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.saas-header {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.saas-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.saas-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+
+.saas-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.saas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.saas-btn-primary {
+  background-color: var(--color-primary); /* Slate 900 -> Purple */
+  color: #fff;
+}
+
+.saas-btn-primary:active {
+  background-color: var(--color-primary-dark);
+}
+
+.saas-btn-secondary {
+  background-color: #f1f5f9; /* Slate 100 */
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.saas-btn-secondary:active {
+  background-color: #e2e8f0;
 }
