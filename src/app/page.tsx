@@ -3,13 +3,23 @@
 import { useAuth } from '@/context/AuthContext';
 import { Flame, Gem, BookOpen, ChevronRight, CheckCircle2, Target } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Home() {
   const { user, isLoading, error } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user?.role === 'mentor') {
+      router.push('/mentor');
+    }
+  }, [user, router]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[50vh]">
+
         <div className="animate-bounce-sm text-slate-400 flex flex-col items-center">
           <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
             <BookOpen size={32} />
