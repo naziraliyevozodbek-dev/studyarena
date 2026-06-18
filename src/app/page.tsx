@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
   
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
@@ -53,26 +53,19 @@ export default function Home() {
   }, [user]);
 
   const fetchEnrolledCourses = async () => {
-    if (!user) return;
+    if (!user || !token) return;
     try {
-      const { data, error } = await supabase
-        .from('course_members')
-        .select(`
-          course_id,
-          courses (
-            id,
-            title,
-            course_code
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      const courses = data?.map(d => Array.isArray(d.courses) ? d.courses[0] : d.courses).filter(Boolean) || [];
+      const res = await fetch('/api/student/courses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      
+      const courses = data.courses || [];
       setEnrolledCourses(courses);
       
       if (courses.length > 0) {
-        fetchRecentVocab((courses[0] as any).id);
+        fetchRecentVocab(courses[0].id);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -81,15 +74,13 @@ export default function Home() {
 
   const fetchRecentVocab = async (courseId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('vocabularies')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-        
-      if (error) throw error;
-      setRecentVocab(data || []);
+      if (!token) return;
+      const res = await fetch(`/api/student/vocabularies?courseId=${courseId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      setRecentVocab(data.vocabularies || []);
     } catch (error) {
       console.error('Error fetching vocab:', error);
     }
@@ -97,41 +88,38 @@ export default function Home() {
 
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !courseCode.trim()) return;
+    if (!user || !courseCode.trim() || !token) return;
 
     setEnrolling(true);
     try {
-      const { data: course, error: courseError } = await supabase
-        .from('courses')
-        .select('id')
-        .eq('course_code', courseCode.trim().toUpperCase())
-        .single();
+      const res = await fetch('/api/student/join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ course_code: courseCode })
+      });
+      
+      const data = await res.json();
 
-      if (courseError || !course) {
-        alert('Course not found. Please check the code.');
-        throw new Error('Course not found');
-      }
-
-      const { error: enrollError } = await supabase
-        .from('course_members')
-        .insert([{
-          course_id: course.id,
-          user_id: user.id
-        }]);
-
-      if (enrollError) {
-        if (enrollError.code === '23505') {
-          alert('You are already enrolled in this course.');
+      if (!res.ok) {
+        if (data.error === 'Course not found') {
+          alert('Bunday kodli kurs topilmadi. Kodni tekshiring.');
+        } else if (data.error === 'Already enrolled') {
+          alert('Siz bu kursga avval qo\'shilgansiz.');
         } else {
-          throw enrollError;
+          alert('Xatolik yuz berdi: ' + data.error);
         }
-      } else {
-        alert('Successfully joined course!');
-        setCourseCode('');
-        fetchEnrolledCourses();
+        return;
       }
+
+      alert('Kursga muvaffaqiyatli qo\'shildingiz!');
+      setCourseCode('');
+      fetchEnrolledCourses();
     } catch (error: any) {
       console.error('Enrollment error:', error.message);
+      alert('Tarmoq xatosi yuz berdi');
     } finally {
       setEnrolling(false);
     }
