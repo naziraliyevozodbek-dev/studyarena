@@ -16,6 +16,7 @@ export default function MentorDashboard() {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) fetchCourses();
@@ -53,6 +54,7 @@ export default function MentorDashboard() {
     e.preventDefault();
     if (!newTitle.trim()) return;
     setErrorMsg(null);
+    setSuccessMsg(null);
     
     if (!token) {
       setErrorMsg("Xatolik: Avtorizatsiya tokeni topilmadi.");
@@ -84,6 +86,7 @@ export default function MentorDashboard() {
 
       if (res.ok && data.course) {
         setNewTitle('');
+        setSuccessMsg("Zo'r! Kurs muvaffaqiyatli yaratildi: " + data.course.title);
         fetchCourses(); // Refresh list
       } else {
         setErrorMsg(`API Xatosi: ${data.error || 'Nomaʼlum xatolik'}`);
@@ -140,6 +143,11 @@ export default function MentorDashboard() {
           {errorMsg && (
             <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
               {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="p-3 bg-green-100 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
+              {successMsg}
             </div>
           )}
           <Button type="submit" disabled={isCreating} fullWidth>
