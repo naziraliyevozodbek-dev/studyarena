@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
 export default function MentorDashboard() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [loading, setLoading] = useState(true);
@@ -51,22 +51,40 @@ export default function MentorDashboard() {
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    
+    if (!token) {
+      alert("Xatolik: Avtorizatsiya tokeni topilmadi. Iltimos, Telegram ilovani yopib boshqatdan kiring yoki keshni tozalang!");
+      return;
+    }
 
     setIsCreating(true);
     const courseCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     try {
-      const { error } = await supabase.from('courses').insert({
-        title: newTitle,
-        mentor_id: user?.id,
-        course_code: courseCode
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          course_code: courseCode
+        })
       });
 
-      if (error) throw error;
-      setNewTitle('');
-      fetchCourses();
-    } catch (error) {
-      console.error('Error creating course:', error);
+      const data = await res.json();
+
+      if (res.ok && data.course) {
+        setNewTitle('');
+        fetchCourses(); // Refresh list
+      } else {
+        console.error("API Error:", data.error);
+        alert(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}. Iltimos, Telegram keshni tozalab qayta kiring.`);
+      }
+    } catch (err: any) {
+      console.error("Network Error:", err);
+      alert('Tarmoq xatosi: ' + err.message);
     } finally {
       setIsCreating(false);
     }
