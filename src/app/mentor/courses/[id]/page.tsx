@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, BookOpen, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CourseDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
