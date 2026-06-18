@@ -63,3 +63,48 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    
+    const url = new URL(req.url);
+    const courseId = url.searchParams.get('id');
+
+    if (!courseId) {
+      return NextResponse.json({ error: 'Missing course id' }, { status: 400 });
+    }
+
+    // Verify ownership before deleting
+    const { data: course } = await supabaseAdmin
+      .from('courses')
+      .select('mentor_id')
+      .eq('id', courseId)
+      .single();
+
+    if (!course || course.mentor_id !== decoded.sub) {
+      return NextResponse.json({ error: 'Forbidden or Not Found' }, { status: 403 });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('courses')
+      .delete()
+      .eq('id', courseId);
+
+    if (error) {
+      console.error('Course delete error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('Course deletion error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

@@ -57,6 +57,12 @@ export default function MentorCourses() {
 
   const handleCreateCourse = async () => {
     if (!newTitle) return;
+    
+    if (!token) {
+      alert("Xatolik: Avtorizatsiya tokeni topilmadi. Iltimos, Telegram ilovani yopib boshqatdan kiring yoki keshni tozalang!");
+      return;
+    }
+
     setCreating(true);
     
     try {
@@ -78,12 +84,12 @@ export default function MentorCourses() {
         setCourses(prev => [...prev, data.course]);
         setShowModal(false);
       } else {
-        console.error(data.error);
-        alert(data.error || 'Failed to create course');
+        console.error("API Error:", data.error);
+        alert(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}. Iltimos, Telegram keshni tozalab qayta kiring.`);
       }
     } catch (err: any) {
-      console.error(err);
-      alert('Failed to create course');
+      console.error("Network Error:", err);
+      alert('Tarmoq xatosi: ' + err.message);
     }
     setCreating(false);
   };
@@ -92,15 +98,31 @@ export default function MentorCourses() {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!confirm('Are you sure you want to delete this course?')) return;
+    if (!token) {
+      alert("Xatolik: Token yo'q!");
+      return;
+    }
+
+    if (!confirm("Haqiqatan ham bu kursni o'chirmokchimisiz?")) return;
     
-    const { error } = await supabase.from('courses').delete().eq('id', courseId);
-    
-    if (error) {
-      console.error(error);
-      alert('Failed to delete course');
-    } else {
-      setCourses(prev => prev.filter(c => c.id !== courseId));
+    try {
+      const res = await fetch(`/api/courses?id=${courseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        setCourses(prev => prev.filter(c => c.id !== courseId));
+      } else {
+        console.error(data.error);
+        alert("O'chirishda xatolik: " + data.error);
+      }
+    } catch (err: any) {
+      alert("Tarmoq xatosi: " + err.message);
     }
   };
 
