@@ -94,7 +94,12 @@ export default function MentorDashboard() {
     <div className="animate-fade-in pb-32 px-4">
       {/* Header */}
       <div className="mb-6 pt-6">
-        <h1 className="text-2xl font-bold text-text-main mb-1">Mentor Dashboard</h1>
+        <div className="flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-bold text-text-main">Mentor Dashboard</h1>
+          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+            v2.1 (Yangi!)
+          </span>
+        </div>
         <p className="text-text-secondary text-sm">Overview of your teaching progress.</p>
       </div>
 
