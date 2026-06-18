@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 export default function CourseDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
   const supabase = useSupabase();
+  const { user, token } = useAuth();
   const [course, setCourse] = useState<any>(null);
   const [vocabularies, setVocabularies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,29 +21,23 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
 
   const fetchCourseData = useCallback(async () => {
     try {
-      const { data: courseData, error: courseError } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', params.id)
-        .single();
+      if (!token) return;
+      const res = await fetch(`/api/courses/${params.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
       
-      if (courseError) throw courseError;
-      setCourse(courseData);
-
-      const { data: vocabData, error: vocabError } = await supabase
-        .from('vocabularies')
-        .select('*')
-        .eq('course_id', params.id)
-        .order('created_at', { ascending: false });
-
-      if (vocabError) throw vocabError;
-      setVocabularies(vocabData || []);
+      setCourse(data.course);
+      setVocabularies(data.vocabularies || []);
     } catch (error) {
       console.error('Error fetching course data:', error);
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [params.id, token]);
 
   useEffect(() => {
     fetchCourseData();
@@ -54,21 +49,49 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
 
     setIsAddingVocab(true);
     try {
-      const { error } = await supabase.from('vocabularies').insert({
-        course_id: params.id,
-        german_word: germanWord,
-        translation: translation
+      const res = await fetch(`/api/vocabularies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          course_id: params.id,
+          german_word: germanWord,
+          translation: translation
+        })
       });
 
-      if (error) throw error;
+      if (!res.ok) throw new Error('Failed to add vocab');
       
       setGermanWord('');
       setTranslation('');
       fetchCourseData();
     } catch (error) {
       console.error('Error adding vocab:', error);
+      alert("Xatolik yuz berdi");
     } finally {
       setIsAddingVocab(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!confirm("Rostan ham bu kursni o'chirib tashlamoqchimisiz? Undagi barcha ma'lumotlar o'chib ketadi!")) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/courses?id=${params.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      router.push('/mentor');
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert("Xatolik: Kursni o'chirib bo'lmadi");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -83,7 +106,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   return (
     <div className="animate-fade-in pb-32">
       {/* Header */}
-      <div className="flex items-center gap-3 pt-4 px-4 mb-6">
+      <div className="flex items-center justify-between pt-4 px-4 mb-6">
         <button 
           onClick={() => router.back()} 
           className="text-primary active:opacity-70 transition-opacity"
@@ -92,6 +115,13 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
             <ArrowLeft size={22} />
             <span className="text-lg">Back</span>
           </div>
+        </button>
+        <button
+          onClick={handleDeleteCourse}
+          disabled={isDeleting}
+          className="text-red-500 active:opacity-70 transition-opacity p-2 bg-red-50 rounded-full"
+        >
+          {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
         </button>
       </div>
 
