@@ -1,23 +1,23 @@
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
-import { useSupabase } from '@/hooks/useSupabase';
-import { Flame, Gem, BookOpen, Target, Plus, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { Target, Loader2, BookOpen, CheckSquare } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { user, isLoading, error } = useAuth();
-  const supabase = useSupabase();
+  const { user } = useAuth();
   const router = useRouter();
-
-  const [courseCode, setCourseCode] = useState('');
-  const [enrolling, setEnrolling] = useState(false);
   
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [courseCode, setCourseCode] = useState('');
+  const [enrolling, setEnrolling] = useState(false);
   const [recentVocab, setRecentVocab] = useState<any[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
 
   // Redirect Mentors
   useEffect(() => {
@@ -26,37 +26,29 @@ export default function Home() {
     }
   }, [user, router]);
 
-  // Fetch student data & Setup Realtime
   useEffect(() => {
-    if (!user || user.role === 'mentor') return;
-
-    fetchStudentData();
-
-    // Setup Realtime Listener for new vocabularies
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'vocabularies',
-        },
-        (payload) => {
-          // A new vocabulary was added! Prepend it to the list instantly.
-          setRecentVocab((prev) => [payload.new, ...prev].slice(0, 5));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, supabase]);
-
-  useEffect(() => {
-    if (user?.id) {
+    if (user?.id && user.role !== 'mentor') {
       fetchEnrolledCourses();
+
+      // Setup Realtime Listener for new vocabularies
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'vocabularies',
+          },
+          (payload) => {
+            setRecentVocab((prev) => [payload.new, ...prev].slice(0, 5));
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -76,11 +68,11 @@ export default function Home() {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      const courses = data?.map(d => d.courses).filter(Boolean) || [];
+      const courses = data?.map(d => Array.isArray(d.courses) ? d.courses[0] : d.courses).filter(Boolean) || [];
       setEnrolledCourses(courses);
       
       if (courses.length > 0) {
-        fetchRecentVocab(courses[0].id);
+        fetchRecentVocab((courses[0] as any).id);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -145,7 +137,7 @@ export default function Home() {
     }
   };
 
-  if (!user) {
+  if (!user || user.role === 'mentor') {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="animate-spin text-primary" size={40} />
