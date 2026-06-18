@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, BookOpen, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 
 export default function CourseDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const supabase = useSupabase();
   const [course, setCourse] = useState<any>(null);
   const [vocabularies, setVocabularies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
