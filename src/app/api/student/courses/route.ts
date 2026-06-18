@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       .from('course_members')
       .select('course_id, courses(*)')
       .eq('student_id', decoded.sub)
-      .order('joined_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (memberError) throw memberError;
 
