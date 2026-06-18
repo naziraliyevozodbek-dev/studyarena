@@ -15,6 +15,7 @@ export default function MentorDashboard() {
   const [newTitle, setNewTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) fetchCourses();
@@ -51,9 +52,10 @@ export default function MentorDashboard() {
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    setErrorMsg(null);
     
     if (!token) {
-      alert("Xatolik: Avtorizatsiya tokeni topilmadi. Iltimos, Telegram ilovani yopib boshqatdan kiring yoki keshni tozalang!");
+      setErrorMsg("Xatolik: Avtorizatsiya tokeni topilmadi.");
       return;
     }
 
@@ -73,18 +75,21 @@ export default function MentorDashboard() {
         })
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error("Serverdan yaroqsiz javob keldi (HTML/Matn). Serverda muammo bor.");
+      }
 
       if (res.ok && data.course) {
         setNewTitle('');
         fetchCourses(); // Refresh list
       } else {
-        console.error("API Error:", data.error);
-        alert(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}. Iltimos, Telegram keshni tozalab qayta kiring.`);
+        setErrorMsg(`API Xatosi: ${data.error || 'Nomaʼlum xatolik'}`);
       }
     } catch (err: any) {
-      console.error("Network Error:", err);
-      alert('Tarmoq xatosi: ' + err.message);
+      setErrorMsg(`Tizim xatosi: ${err.message}`);
     } finally {
       setIsCreating(false);
     }
@@ -132,6 +137,11 @@ export default function MentorDashboard() {
             required
             disabled={isCreating}
           />
+          {errorMsg && (
+            <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
+              {errorMsg}
+            </div>
+          )}
           <Button type="submit" disabled={isCreating} fullWidth>
             {isCreating ? <Loader2 className="animate-spin" size={20} /> : 'Create Course'}
           </Button>
