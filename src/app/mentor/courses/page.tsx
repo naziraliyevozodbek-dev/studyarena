@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { Plus, Users, ChevronRight, Copy, Loader2 } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/context/AuthContext';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 type Course = {
   id: string;
@@ -86,71 +89,72 @@ export default function MentorCourses() {
   return (
     <div className="animate-fade-in relative h-full">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="saas-header m-0">My Courses</h1>
-        <button 
+        <h1 className="text-h1 m-0">My Courses</h1>
+        <Button 
           onClick={handleOpenModal}
-          className="saas-btn saas-btn-primary w-auto text-xs py-2 px-3 rounded-lg"
+          variant="primary"
+          className="w-auto text-xs py-2 px-3 rounded-lg"
         >
           <Plus size={16} /> New
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
         {loading ? (
-          <div className="flex justify-center p-8"><Loader2 className="animate-spin text-slate-400" /></div>
+          <div className="flex justify-center p-8"><Loader2 className="animate-spin text-text-tertiary" /></div>
         ) : courses.length === 0 ? (
-          <p className="text-slate-500 text-sm text-center py-8">No courses yet. Create one!</p>
+          <p className="text-text-secondary text-sm text-center py-8">No courses yet. Create one!</p>
         ) : courses.map(course => (
-          <div key={course.id} className="saas-card p-0 overflow-hidden m-0">
-            <Link href={`/mentor/courses/${course.id}`} className="p-5 block hover:bg-slate-50 transition">
+          <Card key={course.id} className="p-0 overflow-hidden m-0">
+            <Link href={`/mentor/courses/${course.id}`} className="p-5 block hover:bg-bg-secondary transition">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-slate-900">{course.title}</h3>
-                <ChevronRight size={18} className="text-slate-400" />
+                <h3 className="font-bold text-text-main">{course.title}</h3>
+                <ChevronRight size={18} className="text-text-tertiary" />
               </div>
-              <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+              <div className="flex items-center gap-4 text-xs font-semibold text-text-secondary">
                 <button 
                   onClick={(e) => copyCode(course.course_code, e)}
-                  className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded hover:bg-slate-200 transition"
+                  className="flex items-center gap-1.5 bg-bg-secondary px-2 py-1 rounded hover:bg-border transition"
                 >
                   <Copy size={12} /> {course.course_code}
                 </button>
               </div>
             </Link>
-          </div>
+          </Card>
         ))}
       </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl w-full max-w-sm p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Create New Course</h2>
+          <div className="bg-bg-card rounded-xl w-full max-w-sm p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-text-main mb-4">Create New Course</h2>
             
-            <label className="saas-label">Course Title</label>
-            <input 
+            <label className="block text-sm font-bold text-text-secondary mb-1">Course Title</label>
+            <Input 
               type="text" 
-              className="saas-input" 
               placeholder="e.g. German C1 Advanced"
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)} 
+              className="mb-4"
             />
 
-            <label className="saas-label">Course Code</label>
+            <label className="block text-sm font-bold text-text-secondary mb-1">Course Code</label>
             <div className="flex gap-2 mb-6">
-              <input type="text" className="saas-input mb-0 font-mono bg-slate-50" value={newCode} readOnly />
-              <button className="saas-btn saas-btn-secondary w-auto px-3" onClick={() => copyCode(newCode)}>
+              <Input type="text" className="mb-0 font-mono bg-bg-secondary" value={newCode} readOnly />
+              <Button variant="secondary" className="w-auto px-3" onClick={() => copyCode(newCode)}>
                 <Copy size={16} />
-              </button>
+              </Button>
             </div>
 
             <div className="flex gap-3">
-              <button className="saas-btn saas-btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-              <button 
-                className="saas-btn saas-btn-primary" 
+              <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button 
+                variant="primary"
                 onClick={handleCreateCourse}
                 disabled={creating}
               >
                 {creating ? <Loader2 size={16} className="animate-spin" /> : 'Create'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

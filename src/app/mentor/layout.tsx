@@ -27,23 +27,23 @@ export default function MentorLayout({
 
   if (isLoading || (user && user.role !== 'mentor')) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
+      <div className="flex items-center justify-center h-screen bg-bg-base">
+        <Loader2 className="animate-spin text-text-tertiary" size={32} />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <p className="text-gray-500">Please authenticate inside Telegram.</p>
+      <div className="flex items-center justify-center h-screen bg-bg-base">
+        <p className="text-text-secondary">Please authenticate inside Telegram.</p>
       </div>
     );
   }
 
   return (
-    <div className="saas-container">
-      <div className="saas-content">
+    <div className="app-container">
+      <div className="content-area">
         {children}
       </div>
       <MentorNav />
