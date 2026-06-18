@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { useSupabase } from '@/hooks/useSupabase';
 import { Loader2, Plus, Users, BookOpen, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 
 export default function MentorDashboard() {
   const { user, token } = useAuth();
+  const supabase = useSupabase();
   const [courses, setCourses] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [loading, setLoading] = useState(true);
