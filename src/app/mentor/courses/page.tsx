@@ -26,7 +26,7 @@ export default function MentorCourses() {
   const [creating, setCreating] = useState(false);
 
   const supabase = useSupabase();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     fetchCourses();
@@ -64,7 +64,7 @@ export default function MentorCourses() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: newTitle,
