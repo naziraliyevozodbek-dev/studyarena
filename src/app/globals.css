@@ -1,54 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  /* LIGHT MODE (Apple iOS style) */
-  --color-bg-base: #FFFFFF;
-  --color-bg-secondary: #F5F7FA;
-  --color-bg-card: #FFFFFF;
+@theme {
+  --color-bg-base: var(--bg-base);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
   
-  --color-primary: #007AFF;
-  --color-primary-active: #0056B3;
-  --color-primary-light: rgba(0, 122, 255, 0.1);
+  --color-primary: var(--primary);
+  --color-primary-active: var(--primary-active);
+  --color-primary-light: var(--primary-light);
   
-  --color-success: #34C759;
-  --color-success-light: rgba(52, 199, 89, 0.1);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
   
-  --color-text-main: #111827;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
+  --color-text-main: var(--text-main);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
   
-  --color-border: #E5E7EB;
-  
+  --color-border: var(--border);
+
   --radius-card: 16px;
   --radius-input: 12px;
   --radius-button: 12px;
   
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-card-dark: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
   --shadow-nav: 0 -1px 0px rgba(0, 0, 0, 0.05);
+  --shadow-nav-dark: 0 -1px 0px rgba(255, 255, 255, 0.05);
+}
+
+:root {
+  /* LIGHT MODE (Apple iOS style) */
+  --bg-base: #FFFFFF;
+  --bg-secondary: #F5F7FA;
+  --bg-card: #FFFFFF;
+  
+  --primary: #007AFF;
+  --primary-active: #0056B3;
+  --primary-light: rgba(0, 122, 255, 0.1);
+  
+  --success: #34C759;
+  --success-light: rgba(52, 199, 89, 0.1);
+  
+  --text-main: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  
+  --border: #E5E7EB;
+
+  --app-shadow-card: var(--shadow-card);
+  --app-shadow-nav: var(--shadow-nav);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     /* DARK MODE (Apple iOS / Linear style) */
-    --color-bg-base: #0F1115;
-    --color-bg-secondary: #171923;
-    --color-bg-card: #1E2028;
+    --bg-base: #0F1115;
+    --bg-secondary: #171923;
+    --bg-card: #1E2028;
     
-    --color-primary: #0A84FF;
-    --color-primary-active: #006CE6;
-    --color-primary-light: rgba(10, 132, 255, 0.15);
+    --primary: #0A84FF;
+    --primary-active: #006CE6;
+    --primary-light: rgba(10, 132, 255, 0.15);
     
-    --color-success: #32D74B;
-    --color-success-light: rgba(50, 215, 75, 0.15);
+    --success: #32D74B;
+    --success-light: rgba(50, 215, 75, 0.15);
     
-    --color-text-main: #FFFFFF;
-    --color-text-secondary: #A1A1AA;
-    --color-text-tertiary: #71717A;
+    --text-main: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-tertiary: #71717A;
     
-    --color-border: #272A35;
+    --border: #272A35;
     
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-    --shadow-nav: 0 -1px 0px rgba(255, 255, 255, 0.05);
+    --app-shadow-card: var(--shadow-card-dark);
+    --app-shadow-nav: var(--shadow-nav-dark);
   }
 }
 
@@ -56,8 +80,8 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--color-bg-base);
-  color: var(--color-text-main);
+  background-color: var(--bg-base);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   touch-action: manipulation;
@@ -72,7 +96,7 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: var(--color-bg-base);
+  background-color: var(--bg-base);
 }
 
 .content-area {
@@ -84,41 +108,6 @@ html, body {
 }
 .content-area::-webkit-scrollbar {
   display: none;
-}
-
-/* iOS Component Utilities */
-.ios-card {
-  background-color: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-}
-
-.ios-input {
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-input);
-  color: var(--color-text-main);
-  transition: border-color 0.2s, background-color 0.2s;
-}
-
-.ios-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background-color: var(--color-bg-base);
-}
-
-.ios-button {
-  background-color: var(--color-primary);
-  color: #FFFFFF;
-  border-radius: var(--radius-button);
-  font-weight: 600;
-  transition: transform 0.1s, opacity 0.1s;
-}
-
-.ios-button:active:not(:disabled) {
-  transform: scale(0.97);
-  opacity: 0.9;
 }
 
 /* Typography Utilities */

@@ -20,7 +20,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-[var(--color-bg-card)]/80 backdrop-blur-xl border-t border-[var(--color-border)] shadow-[var(--shadow-nav)] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-bg-card/80 backdrop-blur-xl border-t border-border shadow-[var(--app-shadow-nav)] pb-[env(safe-area-inset-bottom)]">
       <nav className="flex justify-between items-center w-full max-w-[480px] px-2 h-[68px]">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -31,7 +31,7 @@ export default function BottomNav() {
               key={item.href} 
               href={item.href}
               className={`flex 1 flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-                isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
