@@ -1,13 +1,10 @@
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
-import { useSupabase } from '@/hooks/useSupabase';
-import { Users, Plus, BookOpen, ChevronRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2, Plus, Users, BookOpen, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-
-type Course = {
-  id: string;
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';

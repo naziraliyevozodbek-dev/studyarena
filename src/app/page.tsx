@@ -51,6 +51,8 @@ export default function Home() {
 
     return () => {
       supabase.removeChannel(channel);
+    };
+  }, [user, supabase]);
 
   useEffect(() => {
     if (user?.id) {
