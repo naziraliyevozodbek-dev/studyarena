@@ -137,57 +137,62 @@ export default function Home() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Premium Header */}
-      <div className="flex items-center justify-between mb-6 pt-4 px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
-            {user.avatar_url ? (
-               <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-               <div className="w-full h-full bg-[#ece9fe] text-[#6C4CF1] flex items-center justify-center font-bold text-lg">
-                 {user.full_name.charAt(0)}
-               </div>
-            )}
+      <div className="flex items-center justify-between mb-8 pt-4 px-4">
+        <div className="flex items-center gap-4">
+          <div className="relative w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+            <div className="w-full h-full rounded-full bg-[var(--color-bg-base)] overflow-hidden">
+              {user.avatar_url ? (
+                 <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                 <div className="w-full h-full flex items-center justify-center font-bold text-xl text-white">
+                   {user.full_name.charAt(0)}
+                 </div>
+              )}
+            </div>
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-slate-500">Hello,</h2>
-            <h1 className="text-lg font-bold text-slate-900">{user.full_name}</h1>
+            <h2 className="text-xs font-bold text-[var(--color-text-muted)] tracking-wider uppercase">Welcome back</h2>
+            <h1 className="text-xl font-bold text-white tracking-tight">{user.full_name}</h1>
           </div>
         </div>
         <div className="flex gap-2">
-          <div className="flex items-center gap-1.5 font-bold text-[#F59E0B] bg-[#FFFBEB] px-3 py-1.5 rounded-full shadow-sm text-sm">
-            <Flame fill="currentColor" size={16} />
-            <span>{user.streak || 0}</span>
+          <div className="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-white">
+            <Flame className="text-[#F59E0B] drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" fill="currentColor" size={16} />
+            <span className="font-bold text-sm">{user.streak || 0}</span>
           </div>
-          <div className="flex items-center gap-1.5 font-bold text-[#FBBF24] bg-[#FFFBEB] px-3 py-1.5 rounded-full shadow-sm text-sm">
-            <Gem fill="currentColor" size={16} />
-            <span>{user.xp || 0}</span>
+          <div className="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-white">
+            <Gem className="text-[#38BDF8] drop-shadow-[0_0_8px_rgba(56,189,248,0.6)]" fill="currentColor" size={16} />
+            <span className="font-bold text-sm">{user.xp || 0}</span>
           </div>
         </div>
       </div>
 
       {enrolledCourses.length === 0 ? (
         <div className="px-4">
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center mb-6">
-            <Target size={48} className="mx-auto text-slate-300 mb-4" />
-            <h2 className="text-lg font-bold text-slate-900 mb-2">No Courses Yet</h2>
-            <p className="text-sm text-slate-500 mb-6">Enter a course code given by your mentor to start learning.</p>
+          <div className="glass-panel rounded-3xl p-8 text-center mb-6">
+            <div className="w-20 h-20 mx-auto bg-[var(--color-primary-light)] rounded-full flex items-center justify-center mb-6 relative">
+              <div className="absolute inset-0 rounded-full bg-[var(--color-primary)] opacity-20 blur-xl"></div>
+              <Target size={40} className="text-[var(--color-primary)] relative z-10" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">No Courses Yet</h2>
+            <p className="text-[var(--color-text-sub)] mb-8 text-sm">Enter the secret course code given by your mentor to unlock your learning journey.</p>
             
-            <form onSubmit={handleEnroll} className="flex flex-col gap-3">
+            <form onSubmit={handleEnroll} className="flex flex-col gap-4">
               <input 
                 type="text" 
                 placeholder="Course Code (e.g. X7B9A)" 
                 value={courseCode}
                 onChange={(e) => setCourseCode(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center text-lg tracking-widest font-bold outline-none focus:border-[#6C4CF1] uppercase"
+                className="bg-black/20 border border-[var(--color-border)] rounded-2xl px-4 py-4 text-center text-xl tracking-[0.2em] font-bold outline-none focus:border-[var(--color-primary)] text-white uppercase transition-colors"
                 maxLength={6}
                 required
               />
               <button 
                 type="submit" 
                 disabled={enrolling}
-                className="bg-[#6C4CF1] text-white py-3 rounded-xl font-bold hover:bg-[#5534d1] flex justify-center"
+                className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-opacity flex justify-center items-center shadow-[var(--shadow-glow)] active:scale-[0.98]"
               >
-                {enrolling ? <Loader2 className="animate-spin" size={20} /> : 'Join Course'}
+                {enrolling ? <Loader2 className="animate-spin" size={24} /> : 'Unlock Course'}
               </button>
             </form>
           </div>
@@ -195,41 +200,53 @@ export default function Home() {
       ) : (
         <div className="px-4">
           {/* Main Action Banner */}
-          <div className="relative overflow-hidden mb-8 border-none bg-gradient-to-br from-[#6C4CF1] to-[#5534d1] text-white p-6 shadow-md rounded-2xl">
-            <div className="absolute top-[-20px] right-[-20px] opacity-10">
-              <Target size={120} />
+          <div className="relative overflow-hidden mb-8 rounded-3xl p-6 shadow-[var(--shadow-md)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] opacity-90 z-0"></div>
+            <div className="absolute top-[-20px] right-[-20px] opacity-20 z-0 mix-blend-overlay">
+              <Target size={150} />
             </div>
-            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 inline-block backdrop-blur-sm">
-              {enrolledCourses[0]?.title}
-            </span>
-            <h2 className="text-2xl font-bold mb-1">New Words Available!</h2>
-            <p className="text-white/80 text-sm mb-6 font-medium">Practice your recent vocabulary.</p>
-            
-            <Link href="/learn" className="inline-flex items-center justify-center bg-white text-[#6C4CF1] font-bold hover:bg-slate-50 w-full rounded-xl py-3 shadow-sm transition-transform active:scale-[0.98]">
-              START LEARNING
-            </Link>
+            <div className="relative z-10">
+              <span className="glass-panel text-white text-xs font-bold px-3 py-1 rounded-full mb-4 inline-block border-white/20">
+                {enrolledCourses[0]?.title}
+              </span>
+              <h2 className="text-3xl font-extrabold mb-1 text-white tracking-tight">Daily Quest!</h2>
+              <p className="text-white/90 text-sm mb-6 font-medium">Practice your new vocabulary to earn XP.</p>
+              
+              <Link href="/learn" className="inline-flex items-center justify-center bg-white text-[var(--color-primary-dark)] font-bold w-full rounded-2xl py-4 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform text-lg">
+                START LEARNING
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900">Recent Vocabulary (Realtime)</h3>
+          <div className="flex items-center justify-between mb-4 px-2">
+            <h3 className="text-lg font-bold text-white tracking-tight">Live Vocabulary</h3>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-success)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--color-success)]"></span>
+              </span>
+              <span className="text-[10px] font-bold text-[var(--color-success)] uppercase tracking-wider">Syncing</span>
+            </div>
           </div>
           
           <div className="space-y-3">
             {recentVocab.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">Waiting for your mentor to add words...</p>
+              <div className="glass-panel rounded-2xl p-6 text-center">
+                <p className="text-sm text-[var(--color-text-sub)]">Waiting for your mentor to add words...</p>
+              </div>
             ) : (
               recentVocab.map((v, i) => (
-                <div key={v.id || i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between animate-fade-in">
+                <div key={v.id || i} className="glass-panel glass-panel-hover rounded-2xl p-4 flex items-center justify-between transition-all">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#FFFBEB] text-[#FBBF24] flex items-center justify-center font-bold text-sm">
-                      {v.german_word.charAt(0)}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#38BDF8]/20 to-[#7C3AED]/20 text-[#38BDF8] border border-[#38BDF8]/30 flex items-center justify-center font-bold text-lg">
+                      {v.german_word.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-base leading-tight">{v.german_word}</h4>
-                      <p className="text-sm text-slate-500 font-medium">{v.translation}</p>
+                      <h4 className="font-bold text-white text-lg leading-tight mb-0.5">{v.german_word}</h4>
+                      <p className="text-sm text-[var(--color-text-muted)] font-medium">{v.translation}</p>
                     </div>
                   </div>
-                  <div className="bg-[#F0FDF4] text-[#10B981] text-xs font-bold px-2 py-1 rounded">
+                  <div className="bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20 text-[10px] font-extrabold px-2 py-1 rounded-lg uppercase tracking-wider">
                     NEW
                   </div>
                 </div>

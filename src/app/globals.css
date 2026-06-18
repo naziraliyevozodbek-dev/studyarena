@@ -1,27 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  /* StudyArena Unique Brand Colors */
-  --color-primary: #6C4CF1;
-  --color-primary-dark: #5534d1;
-  --color-primary-light: #ece9fe;
+  /* Premium Dark Theme by Default */
+  --color-bg-base: #0B0E14;
+  --color-bg-surface: rgba(20, 24, 34, 0.6);
+  --color-bg-surface-solid: #141822;
+  
+  --color-primary: #7C3AED;      /* Vibrant Violet */
+  --color-primary-dark: #6D28D9;
+  --color-primary-light: rgba(124, 58, 237, 0.15);
+  --color-primary-glow: rgba(124, 58, 237, 0.4);
+
+  --color-accent: #38BDF8;       /* Electric Blue */
+  --color-accent-glow: rgba(56, 189, 248, 0.4);
   
   --color-success: #10B981;
-  --color-success-dark: #059669;
-  
   --color-warning: #F59E0B;
-  --color-warning-dark: #D97706;
-
   --color-xp: #FBBF24;
-  --color-xp-dark: #F59E0B;
 
-  --color-bg-light: #F8FAFC;
-  --color-bg-card: #FFFFFF;
-
-  --color-text-main: #0F172A;
-  --color-text-sub: #64748B;
+  --color-text-main: #FFFFFF;
+  --color-text-sub: #94A3B8;
+  --color-text-muted: #64748B;
   
-  --color-border: #E2E8F0;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.15);
 
   /* Spacing & Borders */
   --radius-sm: 12px;
@@ -29,27 +31,31 @@
   --radius-lg: 28px;
   --radius-full: 9999px;
   
-  --shadow-sm: 0 2px 8px rgba(108, 76, 241, 0.05);
-  --shadow-md: 0 8px 24px rgba(108, 76, 241, 0.08);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px var(--color-primary-glow);
 }
 
-/* Telegram dark mode support */
-@media (prefers-color-scheme: dark) {
+/* Telegram Light Mode Override (if requested by device) */
+@media (prefers-color-scheme: light) {
   :root {
-    --color-bg-light: #0F172A;
-    --color-bg-card: #1E293B;
-    --color-text-main: #F8FAFC;
-    --color-text-sub: #94A3B8;
-    --color-border: #334155;
-    --color-primary-light: #2d2459;
+    --color-bg-base: #F8FAFC;
+    --color-bg-surface: rgba(255, 255, 255, 0.8);
+    --color-bg-surface-solid: #FFFFFF;
+    --color-text-main: #0F172A;
+    --color-text-sub: #475569;
+    --color-text-muted: #94A3B8;
+    --color-border: rgba(0, 0, 0, 0.06);
+    --color-border-hover: rgba(0, 0, 0, 0.12);
+    --shadow-sm: 0 4px 12px rgba(124, 58, 237, 0.05);
+    --shadow-md: 0 8px 32px rgba(124, 58, 237, 0.08);
   }
 }
 
 html, body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--color-bg-light);
+  background-color: var(--color-bg-base);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   touch-action: manipulation;
@@ -64,14 +70,36 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: var(--color-bg-light);
+  background-color: var(--color-bg-base);
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
 .content-area {
   flex: 1;
   padding: 20px 16px;
-  padding-bottom: 90px;
+  padding-bottom: 110px; /* Extra space for floating nav */
   overflow-y: auto;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+.content-area::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+/* Premium Glassmorphism Utility */
+.glass-panel {
+  background: var(--color-bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.glass-panel-hover:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-surface-solid);
 }
 
 /* Typography Utilities */

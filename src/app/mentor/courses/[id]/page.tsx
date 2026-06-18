@@ -77,80 +77,85 @@ export default function CourseDetail() {
   }
 
   return (
-    <div className="animate-fade-in p-4 pb-24">
+    <div className="animate-fade-in pb-32">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pt-2">
+      <div className="flex items-center gap-4 mb-8 pt-6 px-4">
         <button 
           onClick={() => router.back()} 
-          className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 shadow-sm"
+          className="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 leading-tight">{course?.title}</h1>
-          <p className="text-xs font-semibold text-[#6C4CF1] mt-0.5">Code: {course?.course_code}</p>
-        </div>
-      </div>
-
-      {/* Vocabulary Management */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-[#ece9fe] text-[#6C4CF1] flex items-center justify-center">
-            <BookOpen size={18} />
+          <h1 className="text-2xl font-extrabold text-white leading-tight tracking-tight">{course?.title}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] font-bold text-[var(--color-accent)] uppercase tracking-widest bg-[var(--color-primary-light)] px-2 py-0.5 rounded-md border border-[var(--color-primary)]/20">
+              Code: {course?.course_code}
+            </span>
           </div>
-          <h2 className="font-bold text-slate-900 text-lg">Vocabulary</h2>
-        </div>
-
-        <form onSubmit={handleAddVocab} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <input
-            type="text"
-            placeholder="German Word"
-            value={germanWord}
-            onChange={(e) => setGermanWord(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C4CF1]"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Translation"
-            value={translation}
-            onChange={(e) => setTranslation(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C4CF1]"
-            required
-          />
-          <button 
-            type="submit" 
-            disabled={isAddingVocab}
-            className="w-full bg-[#6C4CF1] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#5534d1] disabled:opacity-50 mt-1 flex justify-center"
-          >
-            {isAddingVocab ? <Loader2 className="animate-spin" size={18} /> : 'Add Word'}
-          </button>
-        </form>
-
-        {/* Word List */}
-        <div className="space-y-2">
-          {vocabularies.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">No vocabulary words added yet.</p>
-          ) : (
-            vocabularies.map(v => (
-              <div key={v.id} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                <span className="font-bold text-slate-800">{v.german_word}</span>
-                <span className="text-sm text-slate-500 font-medium">{v.translation}</span>
-              </div>
-            ))
-          )}
         </div>
       </div>
 
-      {/* Homework Placeholder */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm opacity-50 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <FileText size={18} className="text-slate-400" />
-          <h2 className="font-bold text-slate-900 text-lg">Homework Tasks</h2>
-        </div>
-        <p className="text-xs text-slate-500">Coming soon in next iteration.</p>
-      </div>
+      <div className="px-4">
+        {/* Vocabulary Management */}
+        <div className="glass-panel rounded-3xl p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center text-white shadow-[var(--shadow-glow)]">
+              <BookOpen size={20} />
+            </div>
+            <h2 className="font-bold text-white text-xl tracking-tight">Vocabulary</h2>
+          </div>
 
+          <form onSubmit={handleAddVocab} className="flex flex-col gap-4 mb-8 bg-black/20 p-5 rounded-2xl border border-[var(--color-border)]">
+            <input
+              type="text"
+              placeholder="Word (e.g. Apfel)"
+              value={germanWord}
+              onChange={(e) => setGermanWord(e.target.value)}
+              className="w-full bg-black/30 border border-[var(--color-border)] rounded-xl px-4 py-3.5 text-white outline-none focus:border-[var(--color-primary)] transition-colors placeholder:text-[var(--color-text-muted)]"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Translation (e.g. Apple)"
+              value={translation}
+              onChange={(e) => setTranslation(e.target.value)}
+              className="w-full bg-black/30 border border-[var(--color-border)] rounded-xl px-4 py-3.5 text-white outline-none focus:border-[var(--color-primary)] transition-colors placeholder:text-[var(--color-text-muted)]"
+              required
+            />
+            <button 
+              type="submit" 
+              disabled={isAddingVocab}
+              className="w-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white py-3.5 rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 mt-2 flex justify-center items-center shadow-[var(--shadow-glow)] active:scale-[0.98]"
+            >
+              {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Add Word Live'}
+            </button>
+          </form>
+
+          {/* Word List */}
+          <div className="space-y-3">
+            {vocabularies.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-sub)] text-center py-4">No vocabulary words added yet.</p>
+            ) : (
+              vocabularies.map(v => (
+                <div key={v.id} className="flex justify-between items-center py-3 px-4 bg-[var(--color-bg-surface-solid)] border border-[var(--color-border)] rounded-xl">
+                  <span className="font-bold text-white text-lg">{v.german_word}</span>
+                  <span className="text-sm text-[var(--color-text-muted)] font-medium bg-black/30 px-3 py-1 rounded-lg">{v.translation}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Homework Placeholder */}
+        <div className="glass-panel rounded-3xl p-6 opacity-60 border-dashed border-2">
+          <div className="flex items-center gap-3 mb-2">
+            <FileText size={20} className="text-[var(--color-text-sub)]" />
+            <h2 className="font-bold text-[var(--color-text-sub)] text-xl tracking-tight">Homework & Tasks</h2>
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)] mt-2">Coming soon in next iteration.</p>
+        </div>
+      </div>
     </div>
   );
 }
