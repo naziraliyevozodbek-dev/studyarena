@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Users, ChevronRight, Copy, Loader2 } from 'lucide-react';
+import { Plus, Users, ChevronRight, Copy, Loader2, Trash2 } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
@@ -80,6 +80,22 @@ export default function MentorCourses() {
     setCreating(false);
   };
 
+  const handleDeleteCourse = async (courseId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this course?')) return;
+    
+    const { error } = await supabase.from('courses').delete().eq('id', courseId);
+    
+    if (error) {
+      console.error(error);
+      alert('Failed to delete course');
+    } else {
+      setCourses(prev => prev.filter(c => c.id !== courseId));
+    }
+  };
+
   const copyCode = (code: string, e?: React.MouseEvent) => {
     e?.preventDefault();
     navigator.clipboard.writeText(code);
@@ -117,6 +133,12 @@ export default function MentorCourses() {
                   className="flex items-center gap-1.5 bg-bg-secondary px-2 py-1 rounded hover:bg-border transition"
                 >
                   <Copy size={12} /> {course.course_code}
+                </button>
+                <button
+                  onClick={(e) => handleDeleteCourse(course.id, e)}
+                  className="flex items-center gap-1.5 bg-red-500/10 text-red-500 px-2 py-1 rounded hover:bg-red-500/20 transition ml-auto"
+                >
+                  <Trash2 size={12} /> Delete
                 </button>
               </div>
             </Link>

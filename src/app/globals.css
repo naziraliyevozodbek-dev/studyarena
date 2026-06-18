@@ -51,29 +51,27 @@
   --app-shadow-nav: var(--shadow-nav);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* DARK MODE (Apple iOS / Linear style) */
-    --bg-base: #0F1115;
-    --bg-secondary: #171923;
-    --bg-card: #1E2028;
-    
-    --primary: #0A84FF;
-    --primary-active: #006CE6;
-    --primary-light: rgba(10, 132, 255, 0.15);
-    
-    --success: #32D74B;
-    --success-light: rgba(50, 215, 75, 0.15);
-    
-    --text-main: #FFFFFF;
-    --text-secondary: #A1A1AA;
-    --text-tertiary: #71717A;
-    
-    --border: #272A35;
-    
-    --app-shadow-card: var(--shadow-card-dark);
-    --app-shadow-nav: var(--shadow-nav-dark);
-  }
+.dark {
+  /* DARK MODE (Apple iOS / Linear style) */
+  --bg-base: #0F1115;
+  --bg-secondary: #171923;
+  --bg-card: #1E2028;
+  
+  --primary: #0A84FF;
+  --primary-active: #006CE6;
+  --primary-light: rgba(10, 132, 255, 0.15);
+  
+  --success: #32D74B;
+  --success-light: rgba(50, 215, 75, 0.15);
+  
+  --text-main: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #71717A;
+  
+  --border: #272A35;
+  
+  --app-shadow-card: var(--shadow-card-dark);
+  --app-shadow-nav: var(--shadow-nav-dark);
 }
 
 html, body {

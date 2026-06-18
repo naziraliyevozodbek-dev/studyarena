@@ -1,19 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Settings, LogOut, Medal, Flame, Star, Zap } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Settings, LogOut, Medal, Flame, Star, Zap, Moon, Sun } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!user) return null;
 
   const achievements = [
     { icon: Flame, name: 'On Fire', desc: '3 Day Streak', active: user.streak >= 3 },
-    { icon: Zap, name: 'Fast Learner', desc: 'Finished Unit 1', active: true },
-    { icon: Star, name: 'Perfect Score', desc: '10/10 on Homework', active: false },
+    { icon: Zap, name: 'Fast Learner', desc: '100 Total XP', active: user.xp >= 100 },
+    { icon: Star, name: 'XP Master', desc: '1000 Total XP', active: user.xp >= 1000 },
   ];
 
   return (
@@ -89,6 +97,27 @@ export default function ProfilePage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Settings */}
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-text-main mb-4">Preferences</h3>
+        {mounted && (
+          <Card 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-bg-secondary transition-colors" 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-text-main border border-border">
+                {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+              </div>
+              <span className="font-bold text-text-main">Dark Mode</span>
+            </div>
+            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-primary' : 'bg-text-tertiary'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`} />
+            </div>
+          </Card>
+        )}
       </div>
 
       <Button variant="outline" className="w-full border-none bg-red-50 text-red-500 hover:bg-red-100" onClick={() => window.location.reload()}>
