@@ -9,7 +9,6 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // Hide nav if user is not loaded
   if (!user) return null;
 
   const navItems = [
@@ -21,8 +20,8 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <nav className="glass-panel pointer-events-auto rounded-full flex justify-between items-center px-2 py-2 w-full max-w-[400px]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-[var(--color-bg-card)]/80 backdrop-blur-xl border-t border-[var(--color-border)] shadow-[var(--shadow-nav)] pb-[env(safe-area-inset-bottom)]">
+      <nav className="flex justify-between items-center w-full max-w-[480px] px-2 h-[68px]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -31,19 +30,14 @@ export default function BottomNav() {
             <Link 
               key={item.href} 
               href={item.href}
-              className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 relative ${
-                isActive ? 'text-white' : 'text-[var(--color-text-muted)] hover:text-white'
+              className={`flex 1 flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+                isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
               }`}
             >
-              {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-primary)] to-[var(--color-accent)] rounded-full opacity-100 shadow-[var(--shadow-glow)] scale-100 transition-transform duration-300" />
-              )}
-              <div className="relative z-10 flex flex-col items-center gap-1">
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'translate-y-[-2px] transition-transform duration-300' : 'transition-transform duration-300'} />
-                <span className={`text-[9px] font-bold tracking-wide transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-                  {item.label}
-                </span>
-              </div>
+              <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[10px] font-medium tracking-wide">
+                {item.label}
+              </span>
             </Link>
           );
         })}
@@ -51,4 +45,5 @@ export default function BottomNav() {
     </div>
   );
 }
+
 

@@ -68,86 +68,90 @@ export default function MentorDashboard() {
   };
 
   return (
-    <div className="animate-fade-in pb-32">
+    <div className="animate-fade-in pb-32 px-4">
       {/* Header */}
-      <div className="mb-8 pt-6 px-4">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Mentor Hub</h1>
-        <p className="text-[var(--color-text-sub)]">Manage your courses and students.</p>
+      <div className="mb-6 pt-6">
+        <h1 className="text-2xl font-bold text-[var(--color-text-main)] mb-1">Mentor Dashboard</h1>
+        <p className="text-[var(--color-text-secondary)] text-sm">Overview of your teaching progress.</p>
       </div>
 
-      <div className="px-4">
-        {/* Create Course Form */}
-        <div className="glass-panel rounded-3xl p-6 mb-8 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--color-primary)] rounded-full blur-3xl opacity-20"></div>
-          <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-widest">
-            <Plus size={16} className="text-[var(--color-accent)]" />
-            Create New Course
-          </h2>
-          <form onSubmit={handleCreateCourse} className="flex flex-col gap-3 relative z-10">
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Course Name (e.g. English B2)"
-              className="w-full bg-black/20 border border-[var(--color-border)] rounded-2xl px-4 py-4 text-[var(--color-text-main)] outline-none focus:border-[var(--color-primary)] transition-colors placeholder:text-[var(--color-text-muted)]"
-              required
-              disabled={isCreating}
-            />
-            <button 
-              type="submit" 
-              disabled={isCreating}
-              className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white py-4 rounded-2xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex justify-center items-center shadow-[var(--shadow-glow)] active:scale-[0.98]"
-            >
-              {isCreating ? <Loader2 className="animate-spin" size={20} /> : 'Create Course'}
-            </button>
-          </form>
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="ios-card p-4">
+          <div className="text-[var(--color-text-tertiary)] mb-2"><Users size={20} /></div>
+          <div className="text-2xl font-bold text-[var(--color-text-main)]">0</div>
+          <div className="text-xs text-[var(--color-text-secondary)] font-medium">Total Students</div>
         </div>
+        <div className="ios-card p-4">
+          <div className="text-[var(--color-text-tertiary)] mb-2"><BookOpen size={20} /></div>
+          <div className="text-2xl font-bold text-[var(--color-text-main)]">{courses.length}</div>
+          <div className="text-xs text-[var(--color-text-secondary)] font-medium">Active Courses</div>
+        </div>
+      </div>
 
-        {/* Courses List */}
-        <div className="flex items-center justify-between mb-4 px-2">
-          <h2 className="text-lg font-bold text-white tracking-tight">Your Courses</h2>
-          <div className="bg-[var(--color-primary-light)] text-[var(--color-primary)] px-2 py-0.5 rounded-md text-xs font-bold">
-            {courses.length}
-          </div>
+      {/* Create Course Form */}
+      <div className="ios-card p-5 mb-8">
+        <h2 className="text-sm font-semibold text-[var(--color-text-main)] mb-3 flex items-center gap-2">
+          <Plus size={18} className="text-[var(--color-primary)]" />
+          New Course
+        </h2>
+        <form onSubmit={handleCreateCourse} className="flex flex-col gap-3">
+          <input
+            type="text"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Course Name (e.g. English B2)"
+            className="ios-input px-4 py-3 w-full"
+            required
+            disabled={isCreating}
+          />
+          <button 
+            type="submit" 
+            disabled={isCreating}
+            className="ios-button py-3 flex justify-center items-center"
+          >
+            {isCreating ? <Loader2 className="animate-spin" size={20} /> : 'Create Course'}
+          </button>
+        </form>
+      </div>
+
+      {/* Courses List */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h2 className="text-lg font-semibold text-[var(--color-text-main)]">Your Courses</h2>
+      </div>
+      
+      {loading ? (
+        <div className="flex justify-center p-8">
+          <Loader2 className="animate-spin text-[var(--color-primary)]" size={32} />
         </div>
-        
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="animate-spin text-[var(--color-accent)]" size={40} />
-          </div>
-        ) : courses.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-10 text-center border-dashed border-2">
-            <BookOpen className="mx-auto text-[var(--color-border-hover)] mb-4" size={48} />
-            <h3 className="text-[var(--color-text-sub)] font-medium">No courses yet. Create your first course above!</h3>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {courses.map(course => (
-              <Link href={`/mentor/courses/${course.id}`} key={course.id}>
-                <div className="glass-panel glass-panel-hover rounded-2xl p-5 transition-all active:scale-[0.98] flex items-center justify-between group cursor-pointer relative overflow-hidden">
-                  <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[var(--color-primary-light)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  
-                  <div className="relative z-10">
-                    <h3 className="font-bold text-white text-xl mb-2 tracking-tight">{course.title}</h3>
-                    <div className="flex items-center gap-3 text-xs font-semibold text-[var(--color-text-sub)]">
-                      <span className="flex items-center gap-1.5 bg-black/30 border border-[var(--color-border)] px-2.5 py-1.5 rounded-lg text-white">
-                        <Users size={14} className="text-[var(--color-accent)]" />
-                        {course._count?.members || 0} Students
-                      </span>
-                      <span className="flex items-center gap-1.5 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 px-2.5 py-1.5 rounded-lg text-[var(--color-accent)]">
-                        Code: <span className="text-white tracking-wider">{course.course_code}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div className="relative z-10 w-12 h-12 rounded-full bg-[var(--color-bg-surface-solid)] border border-[var(--color-border)] group-hover:border-[var(--color-accent)] group-hover:text-[var(--color-accent)] flex items-center justify-center text-[var(--color-text-muted)] transition-colors shadow-sm">
-                    <ChevronRight size={24} />
+      ) : courses.length === 0 ? (
+        <div className="ios-card p-8 text-center bg-[var(--color-bg-secondary)] border-dashed">
+          <BookOpen className="mx-auto text-[var(--color-text-tertiary)] mb-3" size={32} />
+          <h3 className="text-[var(--color-text-secondary)] text-sm font-medium">No courses created yet.</h3>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {courses.map(course => (
+            <Link href={`/mentor/courses/${course.id}`} key={course.id} className="active:scale-[0.98] transition-transform">
+              <div className="ios-card p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-[var(--color-text-main)] text-base mb-1">{course.title}</h3>
+                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
+                    <span className="flex items-center gap-1">
+                      <Users size={12} />
+                      {course._count?.members || 0}
+                    </span>
+                    <span className="text-[var(--color-primary)] bg-[var(--color-primary-light)] px-2 py-0.5 rounded border border-[var(--color-primary)]/10">
+                      Code: {course.course_code}
+                    </span>
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+                <ChevronRight size={20} className="text-[var(--color-text-tertiary)]" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
