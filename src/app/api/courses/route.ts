@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get('Authorization');
@@ -7,26 +8,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  if (!supabaseUrl.startsWith('http')) supabaseUrl = 'https://placeholder.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
-  
-  // Create a client with the user's JWT so RLS policies are applied automatically
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: authHeader,
-      },
-    },
-  });
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    
+    // Fetch courses for this mentor
+    const { data: courses, error } = await supabaseAdmin
+      .from('courses')
+      .select('*')
+      .eq('mentor_id', decoded.sub);
 
-  const { data: courses, error } = await supabase.from('courses').select('*');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ courses });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
-
-  return NextResponse.json({ courses });
 }
 
 export async function POST(req: Request) {
@@ -35,46 +34,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  if (!supabaseUrl.startsWith('http')) supabaseUrl = 'https://placeholder.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
-  
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: authHeader,
-      },
-    },
-  });
-
   try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    
     const body = await req.json();
     const { title, description, course_code } = body;
 
-    // Get the user to set mentor_id
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    const { data: course, error } = await supabase
+    const { data: course, error } = await supabaseAdmin
       .from('courses')
       .insert({
         title,
-        description,
+        description: description || null,
         course_code,
-        mentor_id: user.id
+        mentor_id: decoded.sub
       })
       .select()
       .single();
 
     if (error) {
+      console.error('Course insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ course }, { status: 201 });
   } catch (err: any) {
+    console.error('Course creation error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

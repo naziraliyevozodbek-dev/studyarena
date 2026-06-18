@@ -59,22 +59,30 @@ export default function MentorCourses() {
     if (!newTitle) return;
     setCreating(true);
     
-    const { data, error } = await supabase
-      .from('courses')
-      .insert([
-        { 
-          title: newTitle, 
-          course_code: newCode,
-          mentor_id: user?.id 
-        }
-      ])
-      .select();
+    try {
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          course_code: newCode
+        })
+      });
 
-    if (data) {
-      setCourses(prev => [...prev, data[0]]);
-      setShowModal(false);
-    } else {
-      console.error(error);
+      const data = await res.json();
+      
+      if (res.ok && data.course) {
+        setCourses(prev => [...prev, data.course]);
+        setShowModal(false);
+      } else {
+        console.error(data.error);
+        alert(data.error || 'Failed to create course');
+      }
+    } catch (err: any) {
+      console.error(err);
       alert('Failed to create course');
     }
     setCreating(false);
