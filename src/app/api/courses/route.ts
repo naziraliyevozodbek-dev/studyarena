@@ -15,8 +15,12 @@ export async function GET(req: Request) {
     // Fetch courses for this mentor
     const { data: courses, error } = await supabaseAdmin
       .from('courses')
-      .select('*')
-      .eq('mentor_id', decoded.sub);
+      .select(`
+        *,
+        _count:course_members (count)
+      `)
+      .eq('mentor_id', decoded.sub)
+      .order('created_at', { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

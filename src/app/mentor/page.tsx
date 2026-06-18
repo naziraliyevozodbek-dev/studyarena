@@ -25,21 +25,19 @@ export default function MentorDashboard() {
 
   const fetchCourses = async () => {
     try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select(`
-          *,
-          _count:course_members (count)
-        `)
-        .eq('mentor_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      if (!token) return;
+      const res = await fetch('/api/courses', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
       
-      const mappedData = data?.map(course => ({
+      const mappedData = data.courses?.map((course: any) => ({
         ...course,
         _count: {
-          members: course._count[0]?.count || 0
+          members: course._count?.[0]?.count || 0
         }
       })) || [];
       
