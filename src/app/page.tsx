@@ -136,7 +136,7 @@ export default function Home() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Header Profile Section */}
-      <div className="flex items-center justify-between mb-8 pt-4 px-4">
+      <div className="flex items-center justify-between mb-8 pt-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full overflow-hidden border border-border">
             {user.avatar_url ? (
@@ -155,7 +155,7 @@ export default function Home() {
       </div>
 
       {enrolledCourses.length === 0 ? (
-        <div className="px-4">
+        <div>
           <Card padding="lg" className="text-center mb-6">
             <Target size={32} className="mx-auto text-text-tertiary mb-4" />
             <h2 className="text-lg font-semibold text-text-main mb-1">No Courses</h2>
@@ -178,7 +178,7 @@ export default function Home() {
           </Card>
         </div>
       ) : (
-        <div className="px-4">
+        <div>
           {/* iOS Style Metric Cards Grid */}
           <div className="grid grid-cols-3 gap-3 mb-8">
             <Card padding="md" className="flex flex-col items-center justify-center text-center">

@@ -97,32 +97,36 @@ export default function MentorDashboard() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
   return (
-    <div className="animate-fade-in pb-32 px-4">
+    <div className="animate-fade-in pb-24">
       {/* Header */}
-      <div className="mb-6 pt-6">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-2xl font-bold text-text-main">Mentor Dashboard</h1>
-          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
-            v2.1 (Yangi!)
-          </span>
-        </div>
+      <div className="mb-6 pt-4">
+        <h1 className="text-2xl font-bold text-text-main mb-1">Mentor Dashboard</h1>
         <p className="text-text-secondary text-sm">Overview of your teaching progress.</p>
       </div>
 
-      {/* Analytics Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Card padding="md">
-          <div className="text-text-tertiary mb-2"><Users size={20} /></div>
-          <div className="text-2xl font-bold text-text-main">0</div>
-          <div className="text-xs text-text-secondary font-medium">Total Students</div>
-        </Card>
-        <Card padding="md">
-          <div className="text-text-tertiary mb-2"><BookOpen size={20} /></div>
-          <div className="text-2xl font-bold text-text-main">{courses.length}</div>
-          <div className="text-xs text-text-secondary font-medium">Active Courses</div>
-        </Card>
-      </div>
+      <div>
+        {/* Analytics Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Card padding="md">
+            <div className="text-text-tertiary mb-2"><Users size={20} /></div>
+            <div className="text-2xl font-bold text-text-main">0</div>
+            <div className="text-xs text-text-secondary font-medium">Total Students</div>
+          </Card>
+          <Card padding="md">
+            <div className="text-text-tertiary mb-2"><BookOpen size={20} /></div>
+            <div className="text-2xl font-bold text-text-main">{courses.length}</div>
+            <div className="text-xs text-text-secondary font-medium">Active Courses</div>
+          </Card>
+        </div>
 
       {/* Create Course Form */}
       <Card padding="lg" className="mb-8">
@@ -192,6 +196,7 @@ export default function MentorDashboard() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

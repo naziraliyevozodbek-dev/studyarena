@@ -11,13 +11,18 @@ export default function BottomNav() {
 
   if (!user) return null;
 
-  const navItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/learn', label: 'Learn', icon: BookOpen },
-    { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { href: '/leaderboard', label: 'Ranks', icon: Trophy },
-    { href: '/profile', label: 'Profile', icon: User },
-  ];
+  const navItems = user.role === 'mentor'
+    ? [
+        { href: '/mentor', label: 'Dashboard', icon: Home },
+        { href: '/profile', label: 'Profile', icon: User },
+      ]
+    : [
+        { href: '/', label: 'Home', icon: Home },
+        { href: '/learn', label: 'Learn', icon: BookOpen },
+        { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+        { href: '/leaderboard', label: 'Ranks', icon: Trophy },
+        { href: '/profile', label: 'Profile', icon: User },
+      ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-bg-card/80 backdrop-blur-xl border-t border-border shadow-[var(--app-shadow-nav)] pb-[env(safe-area-inset-bottom)]">

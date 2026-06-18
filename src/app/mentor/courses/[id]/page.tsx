@@ -107,7 +107,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   return (
     <div className="animate-fade-in pb-32">
       {/* Header */}
-      <div className="flex items-center justify-between pt-4 px-4 mb-6">
+      <div className="flex items-center justify-between pt-4 mb-6">
         <button 
           onClick={() => router.back()} 
           className="text-primary active:opacity-70 transition-opacity"
@@ -126,7 +126,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         </button>
       </div>
 
-      <div className="px-4">
+      <div>
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-text-main mb-1">{course?.title}</h1>
           <p className="text-sm font-medium text-text-secondary flex items-center gap-2">

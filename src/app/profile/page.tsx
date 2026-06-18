@@ -52,52 +52,61 @@ export default function ProfilePage() {
         </span>
       </Card>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center shrink-0">
-            <Flame size={24} className="text-yellow-500" />
+      {user.role !== 'mentor' && (
+        <>
+          {/* Stats Grid */}
+          <div className="mb-8">
+            <div className="grid grid-cols-2 gap-3">
+              <Card padding="lg" className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-warning/10 text-warning flex items-center justify-center">
+                  <Flame size={24} />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-text-main">{user.streak || 0}</div>
+                  <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Streak</div>
+                </div>
+              </Card>
+              <Card padding="lg" className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <Zap size={24} />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-text-main">{user.xp || 0}</div>
+                  <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Total XP</div>
+                </div>
+              </Card>
+            </div>
           </div>
-          <div>
-            <div className="text-2xl font-black text-text-main">{user.streak}</div>
-            <div className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">Streak</div>
-          </div>
-        </Card>
-        
-        <Card className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Zap size={24} className="text-primary" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-text-main">{user.xp}</div>
-            <div className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">Total XP</div>
-          </div>
-        </Card>
-      </div>
 
-      {/* Achievements */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-text-main">Badges</h3>
-        <span className="text-sm font-semibold text-primary">See All</span>
-      </div>
-
-      <div className="space-y-3 mb-8">
-        {achievements.map((badge, idx) => {
-          const Icon = badge.icon;
-          return (
-            <Card key={idx} className={`flex items-center gap-4 p-4 ${badge.active ? '' : 'opacity-60'}`}>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${badge.active ? 'bg-yellow-500 text-white shadow-md' : 'bg-bg-secondary text-text-tertiary'}`}>
-                <Icon size={24} />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-text-main text-[15px] mb-1">{badge.name}</h4>
-                <p className="text-xs font-medium text-text-secondary">{badge.desc}</p>
-              </div>
-              {badge.active && <div className="text-green-500"><Medal size={20} /></div>}
-            </Card>
-          );
-        })}
-      </div>
+          {/* Badges Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h2 className="text-lg font-bold text-text-main tracking-tight">Badges</h2>
+              <button className="text-sm font-semibold text-primary">See All</button>
+            </div>
+            <div className="grid gap-3">
+              <Card padding="md" className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-tertiary">
+                  <Flame size={28} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-text-main text-base mb-1">On Fire</h3>
+                  <p className="text-sm text-text-secondary">3 Day Streak</p>
+                </div>
+              </Card>
+              <Card padding="md" className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-tertiary">
+                  <Zap size={28} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-text-main text-base mb-1">Fast Learner</h3>
+                  <p className="text-sm text-text-secondary">Completed 5 lessons</p>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Settings */}
       <div className="mb-6">
