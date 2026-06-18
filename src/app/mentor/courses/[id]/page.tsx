@@ -19,6 +19,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const [germanWord, setGermanWord] = useState('');
   const [translation, setTranslation] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCourseData = useCallback(async () => {
     try {
