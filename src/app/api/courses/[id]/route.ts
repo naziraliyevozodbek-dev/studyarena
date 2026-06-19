@@ -35,7 +35,16 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     if (vocabError) throw vocabError;
 
-    return NextResponse.json({ course, vocabularies });
+    // Fetch homeworks
+    const { data: homeworks, error: homeworkError } = await supabaseAdmin
+      .from('homeworks')
+      .select('*, _count:homework_submissions(count)')
+      .eq('course_id', courseId)
+      .order('created_at', { ascending: false });
+
+    if (homeworkError) throw homeworkError;
+
+    return NextResponse.json({ course, vocabularies, homeworks });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

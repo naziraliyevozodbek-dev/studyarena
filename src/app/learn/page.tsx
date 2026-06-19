@@ -1,151 +1,164 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, FileText, Video, Play, ChevronRight, RotateCw, Loader2 } from 'lucide-react';
-import { useSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Loader2, RefreshCw, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
-type Vocab = { id: string; lesson_number: number; german_word: string; translation: string };
-
 export default function LearnPage() {
-  const [activeTab, setActiveTab] = useState<'vocab' | 'resources'>('vocab');
-  const [flipped, setFlipped] = useState(false);
-  
-  const [vocabs, setVocabs] = useState<Vocab[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { user, token } = useAuth();
+  const router = useRouter();
+  const [vocabularies, setVocabularies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const supabase = useSupabase();
-  const { user } = useAuth();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
-    fetchVocabs();
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchVocabularies();
+  }, [user, router]);
 
-    // Subscribe to realtime changes on vocabularies table
-    const channel = supabase.channel('public:vocabularies')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'vocabularies' },
-        (payload) => {
-          // Add the new vocab to the list
-          const newVocab = payload.new as Vocab;
-          setVocabs((prev) => [...prev, newVocab]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'vocabularies' },
-        (payload) => {
-          setVocabs((prev) => prev.filter(v => v.id !== payload.old.id));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
-
-  const fetchVocabs = async () => {
-    setLoading(true);
-    // Fetch all vocabularies for courses the student is enrolled in
-    // RLS handles the filtering automatically!
-    const { data } = await supabase
-      .from('vocabularies')
-      .select('*')
-      .order('created_at', { ascending: true });
-    
-    if (data) setVocabs(data);
-    setLoading(false);
-  };
-
-  const handleNext = () => {
-    if (currentIndex < vocabs.length - 1) {
-      setFlipped(false);
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 150); // slight delay for flip
+  const fetchVocabularies = async () => {
+    try {
+      if (!token) return;
+      setLoading(true);
+      const res = await fetch('/api/student/learn', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      setVocabularies(data.vocabularies || []);
+    } catch (error) {
+      console.error('Error fetching vocabularies:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const currentVocab = vocabs[currentIndex];
+  const nextCard = () => {
+    if (currentIndex < vocabularies.length - 1) {
+      setIsFlipped(false);
+      setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
+    }
+  };
+
+  const prevCard = () => {
+    if (currentIndex > 0) {
+      setIsFlipped(false);
+      setTimeout(() => setCurrentIndex(prev => prev - 1), 150);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
 
   return (
-    <div className="animate-fade-in">
-      <h1 className="text-h1 mb-4 text-center">Learn</h1>
-
-      {/* Tabs */}
-      <div className="flex bg-bg-secondary rounded-[var(--radius-button)] p-1 mb-6">
-        <button 
-          className={`flex-1 py-2 rounded-[var(--radius-button)] font-bold text-sm transition-all ${activeTab === 'vocab' ? 'bg-bg-card shadow-sm text-primary' : 'text-text-secondary'}`}
-          onClick={() => setActiveTab('vocab')}
-        >
-          Vocabulary
-        </button>
-        <button 
-          className={`flex-1 py-2 rounded-[var(--radius-button)] font-bold text-sm transition-all ${activeTab === 'resources' ? 'bg-bg-card shadow-sm text-primary' : 'text-text-secondary'}`}
-          onClick={() => setActiveTab('resources')}
-        >
-          Resources
-        </button>
+    <div className="animate-fade-in pb-24 h-screen flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between pt-4 mb-6">
+        <h1 className="text-2xl font-bold text-text-main">Flashcards</h1>
       </div>
 
-      {activeTab === 'vocab' && (
-        <>
-          {loading ? (
-             <div className="flex justify-center p-12"><Loader2 className="animate-spin text-text-tertiary" size={32} /></div>
-          ) : vocabs.length === 0 ? (
-             <div className="text-center py-12 text-text-tertiary font-bold">No vocabulary available. Wait for your mentor to add some!</div>
-          ) : (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-h2 m-0">Daily Review</h2>
-                <span className="text-sm font-bold text-text-tertiary">{currentIndex + 1} / {vocabs.length}</span>
+      <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
+        {vocabularies.length === 0 ? (
+          <Card padding="lg" className="text-center mt-10 border-dashed">
+            <h2 className="text-xl font-bold text-text-main mb-2">No Vocabulary Yet!</h2>
+            <p className="text-text-secondary text-sm mb-6">
+              Join a course or wait for your mentor to add new words.
+            </p>
+            <Button onClick={() => router.push('/')}>Go to Dashboard</Button>
+          </Card>
+        ) : (
+          <>
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm font-medium text-text-secondary mb-2">
+                <span>Card {currentIndex + 1} of {vocabularies.length}</span>
+                <span>{Math.round(((currentIndex + 1) / vocabularies.length) * 100)}%</span>
               </div>
-
-              {/* Flashcard */}
-              <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
-                <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
-                  <div className="flashcard-front">
-                    <span className="text-text-tertiary mb-4 font-bold uppercase tracking-widest text-xs">Tap to flip</span>
-                    <h3 className="text-3xl font-black text-text-main">{currentVocab?.german_word}</h3>
-                    <div className="mt-auto opacity-50"><RotateCw size={24} /></div>
-                  </div>
-                  <div className="flashcard-back">
-                    <span className="text-white/80 mb-4 font-bold uppercase tracking-widest text-xs">Translation</span>
-                    <h3 className="text-3xl font-black text-white">{currentVocab?.translation}</h3>
-                    <div className="mt-auto opacity-50"><RotateCw size={24} /></div>
-                  </div>
-                </div>
+              <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentIndex + 1) / vocabularies.length) * 100}%` }}
+                />
               </div>
+            </div>
 
-              <div className="flex gap-4">
-                <Button variant="outline" className="flex-1 text-red-500 border-red-500 hover:bg-red-50" onClick={handleNext}>
-                  HARD
-                </Button>
-                <Button variant="primary" className="flex-1" onClick={handleNext}>
-                  EASY
-                </Button>
-              </div>
-
-              <h3 className="text-h3 mt-8 mb-4 border-t border-border pt-6">Lessons</h3>
-              <Card interactive className="flex items-center justify-between border-b-4 border-b-primary">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
-                    1
+            {/* Flashcard Area */}
+            <div className="flex-1 flex flex-col justify-center min-h-[300px] mb-8 perspective-1000">
+              <div 
+                className={`relative w-full h-64 sm:h-80 transition-transform duration-500 transform-style-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`}
+                onClick={() => setIsFlipped(!isFlipped)}
+              >
+                {/* Front (German) */}
+                <Card className="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-6 text-center border-2 border-border shadow-md">
+                  <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-4 px-3 py-1 bg-bg-secondary rounded-full">
+                    {vocabularies[currentIndex]?.courses?.title || 'Vocabulary'}
+                  </span>
+                  <h2 className="text-4xl font-black text-text-main mb-4 break-words w-full">
+                    {vocabularies[currentIndex]?.german_word}
+                  </h2>
+                  <div className="flex items-center gap-2 text-primary text-sm font-medium mt-auto bg-primary/10 px-4 py-2 rounded-full">
+                    <RefreshCw size={16} />
+                    <span>Tap to flip</span>
                   </div>
-                  <span className="font-bold text-text-main">Latest Words</span>
-                </div>
-                <ChevronRight className="text-text-tertiary" />
-              </Card>
-            </>
-          )}
-        </>
-      )}
+                </Card>
 
-      {activeTab === 'resources' && (
-        <div className="text-center py-12 text-text-tertiary font-bold">No resources uploaded yet.</div>
-      )}
+                {/* Back (Translation) */}
+                <Card className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 text-center border-2 border-primary shadow-md bg-primary/5">
+                  <span className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-3 py-1 bg-primary/10 rounded-full">
+                    Translation
+                  </span>
+                  <h2 className="text-3xl font-bold text-text-main mb-4 break-words w-full">
+                    {vocabularies[currentIndex]?.translation}
+                  </h2>
+                  <div className="flex items-center gap-2 text-text-secondary text-sm font-medium mt-auto bg-bg-secondary px-4 py-2 rounded-full">
+                    <RefreshCw size={16} />
+                    <span>Tap to flip back</span>
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-between gap-4 mt-auto mb-4">
+              <Button 
+                variant="outline" 
+                onClick={prevCard} 
+                disabled={currentIndex === 0}
+                className="flex-1 py-6 bg-bg-card border-2"
+              >
+                <ChevronLeft size={24} />
+              </Button>
+              <Button 
+                onClick={nextCard}
+                className={`flex-1 py-6 text-white border-2 border-transparent ${currentIndex === vocabularies.length - 1 ? 'bg-success hover:bg-success-hover' : 'bg-primary hover:bg-primary-hover'}`}
+              >
+                {currentIndex === vocabularies.length - 1 ? (
+                  <div className="flex items-center justify-center gap-2 text-lg font-bold">
+                    <Check size={24} /> Finish
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-lg font-bold">
+                    Next <ChevronRight size={24} />
+                  </div>
+                )}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

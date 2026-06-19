@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -13,12 +13,27 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const router = useRouter();
   const supabase = useSupabase();
   const { user, token } = useAuth();
+  
   const [course, setCourse] = useState<any>(null);
   const [vocabularies, setVocabularies] = useState<any[]>([]);
+  const [homeworks, setHomeworks] = useState<any[]>([]);
+  
   const [loading, setLoading] = useState(true);
+  
+  const [activeTab, setActiveTab] = useState<'vocab' | 'homework'>('vocab');
+  
+  // Vocab State
   const [germanWord, setGermanWord] = useState('');
   const [translation, setTranslation] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
+  
+  // Homework State
+  const [hwTitle, setHwTitle] = useState('');
+  const [hwDescription, setHwDescription] = useState('');
+  const [hwXp, setHwXp] = useState('50');
+  const [hwDeadline, setHwDeadline] = useState('');
+  const [isAddingHw, setIsAddingHw] = useState(false);
+
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCourseData = useCallback(async () => {
@@ -34,6 +49,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       
       setCourse(data.course);
       setVocabularies(data.vocabularies || []);
+      setHomeworks(data.homeworks || []);
     } catch (error) {
       console.error('Error fetching course data:', error);
     } finally {
@@ -74,6 +90,42 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       alert("Xatolik yuz berdi");
     } finally {
       setIsAddingVocab(false);
+    }
+  };
+
+  const handleAddHomework = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hwTitle.trim() || !hwXp) return;
+
+    setIsAddingHw(true);
+    try {
+      const res = await fetch(`/api/homeworks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          course_id: params.id,
+          title: hwTitle,
+          description: hwDescription,
+          xp_reward: parseInt(hwXp),
+          deadline: hwDeadline || null
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to add homework');
+      
+      setHwTitle('');
+      setHwDescription('');
+      setHwXp('50');
+      setHwDeadline('');
+      fetchCourseData();
+    } catch (error) {
+      console.error('Error adding homework:', error);
+      alert("Xatolik yuz berdi");
+    } finally {
+      setIsAddingHw(false);
     }
   };
 
@@ -136,63 +188,154 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         </div>
 
         {/* Analytics Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          <Card padding="md">
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Card padding="md" className={`${activeTab === 'vocab' ? 'ring-2 ring-primary border-transparent' : ''}`} onClick={() => setActiveTab('vocab')}>
             <div className="text-text-tertiary mb-2"><BookOpen size={20} /></div>
             <div className="text-2xl font-bold text-text-main">{vocabularies.length}</div>
             <div className="text-xs text-text-secondary font-medium">Vocabulary</div>
           </Card>
-          <Card padding="md">
+          <Card padding="md" className={`${activeTab === 'homework' ? 'ring-2 ring-primary border-transparent' : ''}`} onClick={() => setActiveTab('homework')}>
             <div className="text-text-tertiary mb-2"><FileText size={20} /></div>
-            <div className="text-2xl font-bold text-text-main">0</div>
+            <div className="text-2xl font-bold text-text-main">{homeworks.length}</div>
             <div className="text-xs text-text-secondary font-medium">Homeworks</div>
           </Card>
         </div>
 
-        {/* Vocabulary Management */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-text-main mb-3">Add Vocabulary</h2>
-          <Card padding="md">
-            <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
-              <Input
-                type="text"
-                placeholder="Word (e.g. Apfel)"
-                value={germanWord}
-                onChange={(e) => setGermanWord(e.target.value)}
-                required
-              />
-              <Input
-                type="text"
-                placeholder="Translation (e.g. Apple)"
-                value={translation}
-                onChange={(e) => setTranslation(e.target.value)}
-                required
-              />
-              <Button type="submit" disabled={isAddingVocab} fullWidth className="mt-1">
-                {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Save Word'}
-              </Button>
-            </form>
-          </Card>
+        {/* Tab Selection */}
+        <div className="flex bg-bg-secondary rounded-lg p-1 mb-6">
+          <button
+            onClick={() => setActiveTab('vocab')}
+            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'vocab' ? 'bg-bg-card text-text-main shadow-sm' : 'text-text-secondary'}`}
+          >
+            Vocabulary
+          </button>
+          <button
+            onClick={() => setActiveTab('homework')}
+            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'homework' ? 'bg-bg-card text-text-main shadow-sm' : 'text-text-secondary'}`}
+          >
+            Homeworks
+          </button>
         </div>
 
-        {/* Word List */}
-        <div>
-          <h2 className="text-lg font-semibold text-text-main mb-3">Word List</h2>
-          <Card padding="none">
-            {vocabularies.length === 0 ? (
-              <p className="text-sm text-text-secondary text-center py-6">No vocabulary added yet.</p>
-            ) : (
-              <div className="divide-y divide-border">
-                {vocabularies.map(v => (
-                  <div key={v.id} className="flex justify-between items-center py-3 px-4 bg-bg-card">
-                    <span className="font-medium text-text-main">{v.german_word}</span>
-                    <span className="text-sm text-text-secondary">{v.translation}</span>
+        {/* Vocabulary Tab Content */}
+        {activeTab === 'vocab' && (
+          <div className="animate-fade-in">
+            <h2 className="text-lg font-semibold text-text-main mb-3">Add Vocabulary</h2>
+            <Card padding="md" className="mb-8">
+              <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
+                <Input
+                  type="text"
+                  placeholder="Word (e.g. Apfel)"
+                  value={germanWord}
+                  onChange={(e) => setGermanWord(e.target.value)}
+                  required
+                />
+                <Input
+                  type="text"
+                  placeholder="Translation (e.g. Apple)"
+                  value={translation}
+                  onChange={(e) => setTranslation(e.target.value)}
+                  required
+                />
+                <Button type="submit" disabled={isAddingVocab} fullWidth className="mt-1">
+                  {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Save Word'}
+                </Button>
+              </form>
+            </Card>
+
+            <h2 className="text-lg font-semibold text-text-main mb-3">Word List</h2>
+            <Card padding="none">
+              {vocabularies.length === 0 ? (
+                <p className="text-sm text-text-secondary text-center py-6">No vocabulary added yet.</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {vocabularies.map(v => (
+                    <div key={v.id} className="flex justify-between items-center py-3 px-4 bg-bg-card">
+                      <span className="font-medium text-text-main">{v.german_word}</span>
+                      <span className="text-sm text-text-secondary">{v.translation}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
+
+        {/* Homeworks Tab Content */}
+        {activeTab === 'homework' && (
+          <div className="animate-fade-in">
+            <h2 className="text-lg font-semibold text-text-main mb-3">Create Homework</h2>
+            <Card padding="md" className="mb-8">
+              <form onSubmit={handleAddHomework} className="flex flex-col gap-3">
+                <Input
+                  type="text"
+                  placeholder="Title (e.g. Lektion 1 Arbeitsbuch)"
+                  value={hwTitle}
+                  onChange={(e) => setHwTitle(e.target.value)}
+                  required
+                />
+                <Input
+                  type="text"
+                  placeholder="Description (Optional)"
+                  value={hwDescription}
+                  onChange={(e) => setHwDescription(e.target.value)}
+                />
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-text-secondary mb-1 block">XP Reward</label>
+                    <Input
+                      type="number"
+                      placeholder="50"
+                      value={hwXp}
+                      onChange={(e) => setHwXp(e.target.value)}
+                      required
+                    />
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-text-secondary mb-1 block">Deadline (Optional)</label>
+                    <Input
+                      type="date"
+                      value={hwDeadline}
+                      onChange={(e) => setHwDeadline(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button type="submit" disabled={isAddingHw} fullWidth className="mt-1">
+                  {isAddingHw ? <Loader2 className="animate-spin" size={20} /> : 'Publish Homework'}
+                </Button>
+              </form>
+            </Card>
+
+            <h2 className="text-lg font-semibold text-text-main mb-3">Homework List</h2>
+            <Card padding="none">
+              {homeworks.length === 0 ? (
+                <p className="text-sm text-text-secondary text-center py-6">No homeworks created yet.</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {homeworks.map(hw => (
+                    <div 
+                      key={hw.id} 
+                      className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer"
+                      onClick={() => router.push(`/mentor/courses/${params.id}/homeworks/${hw.id}`)}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-semibold text-text-main">{hw.title}</span>
+                        <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">+{hw.xp_reward} XP</span>
+                      </div>
+                      {hw.description && (
+                        <p className="text-sm text-text-secondary line-clamp-1 mb-2">{hw.description}</p>
+                      )}
+                      <div className="flex justify-between items-center text-xs text-text-tertiary">
+                        <span>{hw._count?.[0]?.count || 0} Submissions</span>
+                        {hw.deadline && <span>Due: {new Date(hw.deadline).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
