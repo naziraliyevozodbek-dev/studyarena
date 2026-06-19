@@ -18,6 +18,7 @@ export default function Home() {
   const [courseCode, setCourseCode] = useState('');
   const [enrolling, setEnrolling] = useState(false);
   const [recentVocab, setRecentVocab] = useState<any[]>([]);
+  const [pendingTasksCount, setPendingTasksCount] = useState(0);
 
   // Redirect Mentors
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function Home() {
       
       if (courses.length > 0) {
         fetchRecentVocab(courses[0].id);
+        fetchPendingTasksCount();
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -83,6 +85,22 @@ export default function Home() {
       setRecentVocab(data.vocabularies || []);
     } catch (error) {
       console.error('Error fetching vocab:', error);
+    }
+  };
+
+  const fetchPendingTasksCount = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch('/api/student/tasks', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      const tasks = data.tasks || [];
+      const pending = tasks.filter((t: any) => !t.submission || t.submission.status === 'rejected');
+      setPendingTasksCount(pending.length);
+    } catch (error) {
+      console.error('Error fetching tasks count:', error);
     }
   };
 
@@ -212,7 +230,7 @@ export default function Home() {
                    <CheckSquare size={20} />
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Homework</h3>
-                 <p className="text-xs text-text-secondary">0 pending tasks</p>
+                 <p className="text-xs text-text-secondary">{pendingTasksCount} pending tasks</p>
                </Card>
              </Link>
           </div>
