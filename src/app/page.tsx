@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Target, Loader2, BookOpen, CheckSquare } from 'lucide-react';
+import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -19,6 +19,8 @@ export default function Home() {
   const [enrolling, setEnrolling] = useState(false);
   const [recentVocab, setRecentVocab] = useState<any[]>([]);
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [weakWords, setWeakWords] = useState<any[]>([]);
+  const [activityDays, setActivityDays] = useState<any[]>([]);
 
   // Redirect Mentors
   useEffect(() => {
@@ -30,6 +32,8 @@ export default function Home() {
   useEffect(() => {
     if (user?.id && user.role !== 'mentor') {
       fetchEnrolledCourses();
+      fetchWeakWords();
+      fetchActivity();
 
       // Setup Realtime Listener for new vocabularies
       const channel = supabase
@@ -101,6 +105,34 @@ export default function Home() {
       setPendingTasksCount(pending.length);
     } catch (error) {
       console.error('Error fetching tasks count:', error);
+    }
+  };
+
+  const fetchWeakWords = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch('/api/student/learn/weak', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setWeakWords(data.vocabularies || []);
+    } catch (error) {
+      console.error('Error fetching weak words:', error);
+    }
+  };
+
+  const fetchActivity = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch('/api/student/activity', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setActivityDays(data.activityDays || []);
+    } catch (error) {
+      console.error('Error fetching activity:', error);
     }
   };
 
@@ -198,20 +230,36 @@ export default function Home() {
       ) : (
         <div>
           {/* iOS Style Metric Cards Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="grid grid-cols-3 gap-3 mb-4">
             <Card padding="md" className="flex flex-col items-center justify-center text-center">
               <span className="text-text-tertiary text-xs font-medium mb-1">XP</span>
               <span className="text-xl font-semibold text-primary">{user.xp || 0}</span>
             </Card>
             <Card padding="md" className="flex flex-col items-center justify-center text-center">
-              <span className="text-text-tertiary text-xs font-medium mb-1">Streak</span>
-              <span className="text-xl font-semibold text-success">{user.streak || 0}</span>
-            </Card>
-            <Card padding="md" className="flex flex-col items-center justify-center text-center">
               <span className="text-text-tertiary text-xs font-medium mb-1">Level</span>
               <span className="text-xl font-semibold text-text-main">1</span>
             </Card>
+            <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200">
+              <span className="text-orange-600/80 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>
+              <span className="text-xl font-semibold text-orange-500">{user.streak || 0}</span>
+            </Card>
           </div>
+
+          {/* Activity Calendar Widget */}
+          {activityDays.length > 0 && (
+            <Card padding="md" className="mb-8 overflow-hidden bg-bg-card">
+              <div className="flex justify-between w-full">
+                {activityDays.map((day, idx) => (
+                  <div key={idx} className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold text-text-tertiary tracking-wider">{day.day}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${day.active ? 'bg-success text-white shadow-sm' : 'bg-bg-secondary text-text-tertiary'}`}>
+                      {day.active ? '✓' : '✗'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Action Cards Grid */}
           <div className="grid grid-cols-2 gap-3 mb-8">
@@ -234,6 +282,26 @@ export default function Home() {
                </Card>
              </Link>
           </div>
+
+          {/* Weak Words Section */}
+          {weakWords.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="text-lg font-semibold text-text-main tracking-tight flex items-center gap-2">
+                  <AlertTriangle size={20} className="text-error" /> 
+                  Words to Improve
+                </h3>
+              </div>
+              <Card padding="md" className="border-error/20 bg-error/5">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-text-secondary"><span className="font-bold text-error">{weakWords.length}</span> words need practice.</p>
+                </div>
+                <Button fullWidth className="bg-error hover:bg-error-hover text-white" onClick={() => router.push('/learn/weak')}>
+                  Practice Weak Words
+                </Button>
+              </Card>
+            </div>
+          )}
 
           {/* Recent Vocabulary Section */}
           <div className="flex items-center justify-between mb-3 px-1">

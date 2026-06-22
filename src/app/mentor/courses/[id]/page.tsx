@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -17,14 +17,17 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const [course, setCourse] = useState<any>(null);
   const [vocabularies, setVocabularies] = useState<any[]>([]);
   const [homeworks, setHomeworks] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<'vocab' | 'homework'>('vocab');
+  const [activeTab, setActiveTab] = useState<'vocab' | 'homework' | 'students'>('vocab');
   
   // Vocab State
   const [germanWord, setGermanWord] = useState('');
   const [translation, setTranslation] = useState('');
+  const [exampleGerman, setExampleGerman] = useState('');
+  const [exampleUzbek, setExampleUzbek] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
   
   // Homework State
@@ -50,6 +53,15 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       setCourse(data.course);
       setVocabularies(data.vocabularies || []);
       setHomeworks(data.homeworks || []);
+
+      // Fetch students
+      const studentsRes = await fetch(`/api/mentor/courses/${params.id}/students`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (studentsRes.ok) {
+        const studentsData = await studentsRes.json();
+        setStudents(studentsData.students || []);
+      }
     } catch (error) {
       console.error('Error fetching course data:', error);
     } finally {
@@ -76,7 +88,9 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         body: JSON.stringify({
           course_id: params.id,
           german_word: germanWord,
-          translation: translation
+          translation: translation,
+          example_german: exampleGerman || null,
+          example_uzbek: exampleUzbek || null
         })
       });
 
@@ -84,6 +98,8 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       
       setGermanWord('');
       setTranslation('');
+      setExampleGerman('');
+      setExampleUzbek('');
       fetchCourseData();
     } catch (error) {
       console.error('Error adding vocab:', error);
@@ -188,7 +204,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         </div>
 
         {/* Analytics Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <Card padding="md" className={`${activeTab === 'vocab' ? 'ring-2 ring-primary border-transparent' : ''}`} onClick={() => setActiveTab('vocab')}>
             <div className="text-text-tertiary mb-2"><BookOpen size={20} /></div>
             <div className="text-2xl font-bold text-text-main">{vocabularies.length}</div>
@@ -198,6 +214,11 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
             <div className="text-text-tertiary mb-2"><FileText size={20} /></div>
             <div className="text-2xl font-bold text-text-main">{homeworks.length}</div>
             <div className="text-xs text-text-secondary font-medium">Homeworks</div>
+          </Card>
+          <Card padding="md" className={`${activeTab === 'students' ? 'ring-2 ring-primary border-transparent' : ''}`} onClick={() => setActiveTab('students')}>
+            <div className="text-text-tertiary mb-2"><Users size={20} /></div>
+            <div className="text-2xl font-bold text-text-main">{students.length}</div>
+            <div className="text-xs text-text-secondary font-medium">Students</div>
           </Card>
         </div>
 
@@ -214,6 +235,12 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
             className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'homework' ? 'bg-bg-card text-text-main shadow-sm' : 'text-text-secondary'}`}
           >
             Homeworks
+          </button>
+          <button
+            onClick={() => setActiveTab('students')}
+            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'students' ? 'bg-bg-card text-text-main shadow-sm' : 'text-text-secondary'}`}
+          >
+            Students
           </button>
         </div>
 
@@ -237,6 +264,18 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                   onChange={(e) => setTranslation(e.target.value)}
                   required
                 />
+                <Input
+                  type="text"
+                  placeholder="German Example (Optional)"
+                  value={exampleGerman}
+                  onChange={(e) => setExampleGerman(e.target.value)}
+                />
+                <Input
+                  type="text"
+                  placeholder="Uzbek Example (Optional)"
+                  value={exampleUzbek}
+                  onChange={(e) => setExampleUzbek(e.target.value)}
+                />
                 <Button type="submit" disabled={isAddingVocab} fullWidth className="mt-1">
                   {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Save Word'}
                 </Button>
@@ -250,9 +289,14 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
               ) : (
                 <div className="divide-y divide-border">
                   {vocabularies.map(v => (
-                    <div key={v.id} className="flex justify-between items-center py-3 px-4 bg-bg-card">
-                      <span className="font-medium text-text-main">{v.german_word}</span>
-                      <span className="text-sm text-text-secondary">{v.translation}</span>
+                    <div key={v.id} className="flex flex-col py-3 px-4 bg-bg-card">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-semibold text-text-main">{v.german_word}</span>
+                        <span className="text-sm text-text-secondary">{v.translation}</span>
+                      </div>
+                      {v.example_german && (
+                        <span className="text-xs text-text-tertiary">📝 {v.example_german}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -328,6 +372,42 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                       <div className="flex justify-between items-center text-xs text-text-tertiary">
                         <span>{hw._count?.[0]?.count || 0} Submissions</span>
                         {hw.deadline && <span>Due: {new Date(hw.deadline).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
+
+        {/* Students Tab Content */}
+        {activeTab === 'students' && (
+          <div className="animate-fade-in">
+            <h2 className="text-lg font-semibold text-text-main mb-3">Enrolled Students</h2>
+            <Card padding="none">
+              {students.length === 0 ? (
+                <p className="text-sm text-text-secondary text-center py-6">No students enrolled yet.</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {students.map(student => (
+                    <div 
+                      key={student.id} 
+                      className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer flex items-center justify-between"
+                      onClick={() => router.push(`/mentor/courses/${params.id}/students/${student.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold">
+                          {student.avatar_url ? (
+                            <img src={student.avatar_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            student.full_name?.charAt(0) || '?'
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-text-main text-sm">{student.full_name}</p>
+                          <p className="text-xs text-text-secondary">View Analytics</p>
+                        </div>
                       </div>
                     </div>
                   ))}

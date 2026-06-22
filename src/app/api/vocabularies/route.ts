@@ -9,34 +9,53 @@ export async function POST(req: Request) {
   try {
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    const mentorId = decoded.sub;
 
     const body = await req.json();
-    const { course_id, german_word, translation } = body;
+    const { course_id, german_word, translation, example_german, example_uzbek } = body;
 
-    // Verify course ownership
-    const { data: course, error: courseError } = await supabaseAdmin
-      .from('courses')
-      .select('mentor_id')
-      .eq('id', course_id)
-      .single();
-
-    if (courseError || !course || course.mentor_id !== decoded.sub) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!course_id || !german_word || !translation) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    const { data: vocab, error: vocabError } = await supabaseAdmin
+    // Verify mentor owns this course
+    const { data: course } = await supabaseAdmin
+      .from('courses')
+      .select('id')
+      .eq('id', course_id)
+      .eq('mentor_id', mentorId)
+      .single();
+
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found or unauthorized' }, { status: 403 });
+    }
+
+    // Get current max lesson_number
+    const { data: vocab } = await supabaseAdmin
+      .from('vocabularies')
+      .select('lesson_number')
+      .eq('course_id', course_id)
+      .order('lesson_number', { ascending: false })
+      .limit(1);
+    
+    const nextLessonNumber = vocab && vocab.length > 0 ? vocab[0].lesson_number + 1 : 1;
+
+    const { data: newVocab, error } = await supabaseAdmin
       .from('vocabularies')
       .insert({
         course_id,
         german_word,
-        translation
+        translation,
+        example_german,
+        example_uzbek,
+        lesson_number: nextLessonNumber
       })
       .select()
       .single();
 
-    if (vocabError) throw vocabError;
+    if (error) throw error;
 
-    return NextResponse.json({ vocabulary: vocab }, { status: 201 });
+    return NextResponse.json({ vocabulary: newVocab }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

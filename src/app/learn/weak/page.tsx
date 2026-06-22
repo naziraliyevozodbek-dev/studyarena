@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, RefreshCw, X, Check, Volume2 } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Check, Volume2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
-export default function LearnPage() {
+export default function WeakWordsPage() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [vocabularies, setVocabularies] = useState<any[]>([]);
@@ -30,7 +30,7 @@ export default function LearnPage() {
     try {
       if (!token) return;
       setLoading(true);
-      const res = await fetch('/api/student/learn', {
+      const res = await fetch('/api/student/learn/weak', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('API Error');
@@ -46,7 +46,7 @@ export default function LearnPage() {
   const playTTS = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'de-DE'; // German
+      utterance.lang = 'de-DE';
       window.speechSynthesis.speak(utterance);
     } else {
       alert("Text-to-speech is not supported in this browser.");
@@ -72,7 +72,6 @@ export default function LearnPage() {
         })
       });
 
-      // Move to next card
       if (currentIndex < vocabularies.length - 1) {
         setIsFlipped(false);
         setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
@@ -96,7 +95,6 @@ export default function LearnPage() {
 
   return (
     <div className="animate-fade-in pb-24 h-screen flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between pt-4 mb-6">
         <button onClick={() => router.push('/')} className="text-primary active:opacity-70 transition-opacity">
           <div className="flex items-center gap-1">
@@ -104,16 +102,19 @@ export default function LearnPage() {
             <span className="text-lg">Dashboard</span>
           </div>
         </button>
-        <h1 className="text-xl font-bold text-text-main">Flashcards</h1>
+        <h1 className="text-xl font-bold text-error flex items-center gap-2"><AlertTriangle size={20} /> Weak Words</h1>
         <div className="w-20"></div>
       </div>
 
       <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
         {vocabularies.length === 0 ? (
-          <Card padding="lg" className="text-center mt-10 border-dashed">
-            <h2 className="text-xl font-bold text-text-main mb-2">No Vocabulary Yet!</h2>
+          <Card padding="lg" className="text-center mt-10 border-dashed border-success">
+            <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-text-main mb-2">No Weak Words!</h2>
             <p className="text-text-secondary text-sm mb-6">
-              Join a course or wait for your mentor to add new words.
+              You're doing great! Keep learning new words.
             </p>
             <Button onClick={() => router.push('/')}>Go to Dashboard</Button>
           </Card>
@@ -124,43 +125,38 @@ export default function LearnPage() {
             </div>
             <h2 className="text-xl font-bold text-text-main mb-2">Session Completed!</h2>
             <p className="text-text-secondary text-sm mb-6">
-              Great job! You've reviewed all your pending words for today.
+              You've practiced your weak words. Great job!
             </p>
             <Button onClick={() => router.push('/')} fullWidth>Return Home</Button>
           </Card>
         ) : (
           <>
-            {/* Progress Bar */}
             <div className="mb-6">
-              <div className="flex justify-between text-sm font-medium text-text-secondary mb-2">
+              <div className="flex justify-between text-sm font-medium text-error mb-2">
                 <span>Card {currentIndex + 1} of {vocabularies.length}</span>
                 <span>{Math.round(((currentIndex + 1) / vocabularies.length) * 100)}%</span>
               </div>
-              <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-error/10 rounded-full h-2 overflow-hidden">
                 <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  className="bg-error h-2 rounded-full transition-all duration-300"
                   style={{ width: `${((currentIndex + 1) / vocabularies.length) * 100}%` }}
                 />
               </div>
             </div>
 
-            {/* Flashcard Area */}
             <div className="flex-1 flex flex-col justify-center min-h-[300px] mb-8 perspective-1000">
-              <div 
-                className={`relative w-full h-80 sm:h-96 transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
-              >
-                {/* Front (German) */}
-                <Card className="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-6 text-center border-2 border-border shadow-md">
+              <div className={`relative w-full h-80 sm:h-96 transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                <Card className="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-6 text-center border-2 border-error shadow-md bg-error/5">
                   <div className="absolute top-4 right-4">
                     <button 
                       onClick={(e) => { e.stopPropagation(); playTTS(vocabularies[currentIndex]?.german_word); }}
-                      className="p-3 bg-primary/10 text-primary rounded-full hover:bg-primary/20 active:bg-primary/30 transition-colors"
+                      className="p-3 bg-error/10 text-error rounded-full hover:bg-error/20 active:bg-error/30 transition-colors"
                     >
                       <Volume2 size={24} />
                     </button>
                   </div>
                   
-                  <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-4 px-3 py-1 bg-bg-secondary rounded-full mt-4">
+                  <span className="text-xs font-bold text-error uppercase tracking-widest mb-4 px-3 py-1 bg-error/10 rounded-full mt-4">
                     🇩🇪 German
                   </span>
                   
@@ -169,8 +165,8 @@ export default function LearnPage() {
                   </h2>
                   
                   {vocabularies[currentIndex]?.example_german && (
-                    <div className="w-full bg-bg-secondary p-4 rounded-xl mt-2 text-left border-l-4 border-primary">
-                      <span className="text-xs text-text-tertiary font-bold mb-1 block">📝 Example:</span>
+                    <div className="w-full bg-white p-4 rounded-xl mt-2 text-left border-l-4 border-error">
+                      <span className="text-xs text-error font-bold mb-1 block">📝 Example:</span>
                       <p className="text-sm font-medium text-text-main leading-relaxed">
                         {vocabularies[currentIndex]?.example_german}
                       </p>
@@ -184,7 +180,6 @@ export default function LearnPage() {
                   </div>
                 </Card>
 
-                {/* Back (Translation) */}
                 <Card className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 text-center border-2 border-primary shadow-md bg-primary/5">
                   <span className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-3 py-1 bg-primary/10 rounded-full mt-4">
                     🇺🇿 Uzbek
@@ -209,14 +204,14 @@ export default function LearnPage() {
                       onClick={() => handleProgress('weak')}
                       disabled={savingProgress}
                     >
-                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Don't know</>}
+                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Still don't know</>}
                     </Button>
                     <Button 
                       className="flex-1 py-6 bg-success text-white hover:bg-success-hover" 
                       onClick={() => handleProgress('learned')}
                       disabled={savingProgress}
                     >
-                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><Check size={24} className="mr-2" /> I know</>}
+                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><Check size={24} className="mr-2" /> I know it now</>}
                     </Button>
                   </div>
                 </Card>
