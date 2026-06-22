@@ -96,6 +96,37 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Forbidden or Not Found' }, { status: 403 });
     }
 
+    // Storage Cleanup: Find and delete all homework submission files
+    const { data: homeworks } = await supabaseAdmin
+      .from('homeworks')
+      .select('id')
+      .eq('course_id', courseId);
+
+    if (homeworks && homeworks.length > 0) {
+      const homeworkIds = homeworks.map((hw: any) => hw.id);
+      
+      const { data: submissions } = await supabaseAdmin
+        .from('homework_submissions')
+        .select('content')
+        .in('homework_id', homeworkIds);
+
+      if (submissions && submissions.length > 0) {
+        const filesToRemove: string[] = [];
+        submissions.forEach((sub: any) => {
+          if (sub.content && sub.content.includes('/storage/v1/object/public/homework-files/')) {
+            const parts = sub.content.split('/homework-files/');
+            if (parts.length > 1) {
+              filesToRemove.push(parts[1]);
+            }
+          }
+        });
+
+        if (filesToRemove.length > 0) {
+          await supabaseAdmin.storage.from('homework-files').remove(filesToRemove);
+        }
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from('courses')
       .delete()

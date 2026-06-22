@@ -105,6 +105,8 @@ export default function MentorDashboard() {
     );
   }
 
+  const totalStudents = courses.reduce((sum, course) => sum + (course._count?.members || 0), 0);
+
   return (
     <div className="animate-fade-in pb-24">
       {/* Header */}
@@ -118,7 +120,7 @@ export default function MentorDashboard() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Card padding="md">
             <div className="text-text-tertiary mb-2"><Users size={20} /></div>
-            <div className="text-2xl font-bold text-text-main">0</div>
+            <div className="text-2xl font-bold text-text-main">{totalStudents}</div>
             <div className="text-xs text-text-secondary font-medium">Total Students</div>
           </Card>
           <Card padding="md">
@@ -185,7 +187,7 @@ export default function MentorDashboard() {
                       <Users size={12} />
                       {course._count?.members || 0}
                     </span>
-                    <span className="text-primary bg-primary-light px-2 py-0.5 rounded border border-primary/10">
+                    <span className="text-text-main font-mono bg-bg-secondary px-2 py-0.5 rounded">
                       Code: {course.course_code}
                     </span>
                   </div>
