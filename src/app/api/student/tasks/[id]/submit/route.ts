@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin
         .storage
-        .from('homeworks')
+        .from('homework-files')
         .upload(fileName, buffer, {
           contentType: file.type,
           upsert: true
@@ -44,7 +44,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
       const { data: publicUrlData } = supabaseAdmin
         .storage
-        .from('homeworks')
+        .from('homework-files')
         .getPublicUrl(fileName);
 
       fileUrl = publicUrlData.publicUrl;
