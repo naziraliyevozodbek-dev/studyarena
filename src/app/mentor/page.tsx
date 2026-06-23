@@ -18,6 +18,7 @@ export default function MentorDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showNewCourse, setShowNewCourse] = useState(false);
 
   useEffect(() => {
     if (user?.id) fetchCourses();
