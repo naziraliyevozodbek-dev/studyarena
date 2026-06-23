@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,7 +13,7 @@ export async function GET(
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     const mentorId = decoded.sub;
-    const courseId = params.id;
+    const courseId = (await params).id;
 
     // Verify course
     const { data: course } = await supabaseAdmin

@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Check, X, User } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
-export default function HomeworkReview({ params }: { params: { id: string, homeworkId: string } }) {
+export default function HomeworkReview({ params }: { params: Promise<{ id: string, homeworkId: string }> }) {
+  const resolvedParams = use(params);
+
   const { user, token } = useAuth();
   const router = useRouter();
   const [homework, setHomework] = useState<any>(null);
@@ -22,12 +24,12 @@ export default function HomeworkReview({ params }: { params: { id: string, homew
       return;
     }
     fetchData();
-  }, [user, router, params.homeworkId]);
+  }, [user, router, resolvedParams.homeworkId]);
 
   const fetchData = async () => {
     try {
       if (!token) return;
-      const res = await fetch(`/api/homeworks/${params.homeworkId}`, {
+      const res = await fetch(`/api/homeworks/${resolvedParams.homeworkId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('API Error');
@@ -91,7 +93,7 @@ export default function HomeworkReview({ params }: { params: { id: string, homew
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-6">
         <button 
-          onClick={() => router.push(`/mentor/courses/${params.id}`)} 
+          onClick={() => router.push(`/mentor/courses/${resolvedParams.id}`)} 
           className="text-primary active:opacity-70 transition-opacity"
         >
           <div className="flex items-center gap-1">

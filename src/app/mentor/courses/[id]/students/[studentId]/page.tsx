@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowLeft, Loader2, BookOpen, AlertTriangle, Target, Clock, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 
-export default function StudentAnalytics({ params }: { params: { id: string, studentId: string } }) {
+export default function StudentAnalytics({ params }: { params: Promise<{ id: string, studentId: string }> }) {
+  const resolvedParams = use(params);
+
   const router = useRouter();
   const { user, token } = useAuth();
   
@@ -21,7 +23,7 @@ export default function StudentAnalytics({ params }: { params: { id: string, stu
     
     const fetchAnalytics = async () => {
       try {
-        const res = await fetch(`/api/mentor/analytics?courseId=${params.id}&studentId=${params.studentId}`, {
+        const res = await fetch(`/api/mentor/analytics?courseId=${resolvedParams.id}&studentId=${resolvedParams.studentId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('API Error');
@@ -35,7 +37,7 @@ export default function StudentAnalytics({ params }: { params: { id: string, stu
     };
 
     fetchAnalytics();
-  }, [user, token, params.id, params.studentId, router]);
+  }, [user, token, resolvedParams.id, resolvedParams.studentId, router]);
 
   if (loading) {
     return (

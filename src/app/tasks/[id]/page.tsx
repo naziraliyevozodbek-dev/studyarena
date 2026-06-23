@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { use, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, UploadCloud, FileImage, CheckCircle, XCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
-export default function TaskDetail({ params }: { params: { id: string } }) {
+export default function TaskDetail({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
   const { user, token } = useAuth();
   const router = useRouter();
   const [task, setTask] = useState<any>(null);
@@ -23,7 +25,7 @@ export default function TaskDetail({ params }: { params: { id: string } }) {
       return;
     }
     fetchTask();
-  }, [user, router, params.id]);
+  }, [user, router, resolvedParams.id]);
 
   const fetchTask = async () => {
     try {
@@ -33,7 +35,7 @@ export default function TaskDetail({ params }: { params: { id: string } }) {
       });
       if (!res.ok) throw new Error('API Error');
       const data = await res.json();
-      const currentTask = data.tasks?.find((t: any) => t.id === params.id);
+      const currentTask = data.tasks?.find((t: any) => t.id === resolvedParams.id);
       setTask(currentTask);
     } catch (error) {
       console.error('Error fetching task:', error);
@@ -60,7 +62,7 @@ export default function TaskDetail({ params }: { params: { id: string } }) {
       formData.append('file', file);
       formData.append('content', 'Image submission');
 
-      const res = await fetch(`/api/student/tasks/${params.id}/submit`, {
+      const res = await fetch(`/api/student/tasks/${resolvedParams.id}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

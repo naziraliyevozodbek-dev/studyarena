@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users } from 'lucide-react';
@@ -9,7 +9,9 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/context/AuthContext';
 
-export default function CourseDetails({ params }: { params: { id: string } }) {
+export default function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
   const router = useRouter();
   const supabase = useSupabase();
   const { user, token } = useAuth();
@@ -44,7 +46,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const fetchCourseData = useCallback(async () => {
     try {
       if (!token) return;
-      const res = await fetch(`/api/courses/${params.id}`, {
+      const res = await fetch(`/api/courses/${resolvedParams.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -57,7 +59,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       setHomeworks(data.homeworks || []);
 
       // Fetch students
-      const studentsRes = await fetch(`/api/mentor/courses/${params.id}/students`, {
+      const studentsRes = await fetch(`/api/mentor/courses/${resolvedParams.id}/students`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (studentsRes.ok) {
@@ -69,7 +71,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false);
     }
-  }, [params.id, token]);
+  }, [resolvedParams.id, token]);
 
   useEffect(() => {
     fetchCourseData();
@@ -86,7 +88,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
       const words = lines.map(line => {
         const parts = line.includes('-') ? line.split('-') : line.split(',');
         return {
-          course_id: params.id,
+          course_id: resolvedParams.id,
           german_word: parts[0]?.trim() || '',
           translation: parts[1]?.trim() || ''
         };
@@ -100,7 +102,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     } else {
       if (!germanWord.trim() || !translation.trim()) return;
       bodyData = {
-        course_id: params.id,
+        course_id: resolvedParams.id,
         german_word: germanWord,
         translation: translation,
         example_german: exampleGerman || null,
@@ -151,7 +153,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          course_id: params.id,
+          course_id: resolvedParams.id,
           title: hwTitle,
           description: hwDescription,
           xp_reward: parseInt(hwXp),
@@ -181,7 +183,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
     if (!confirm("Rostan ham bu kursni o'chirib tashlamoqchimisiz? Undagi barcha ma'lumotlar o'chib ketadi!")) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/courses?id=${params.id}`, {
+      const res = await fetch(`/api/courses?id=${resolvedParams.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -420,7 +422,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                     <div 
                       key={hw.id} 
                       className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer"
-                      onClick={() => router.push(`/mentor/courses/${params.id}/homeworks/${hw.id}`)}
+                      onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/homeworks/${hw.id}`)}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <span className="font-semibold text-text-main">{hw.title}</span>
@@ -454,7 +456,7 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
                     <div 
                       key={student.id} 
                       className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer flex items-center justify-between"
-                      onClick={() => router.push(`/mentor/courses/${params.id}/students/${student.id}`)}
+                      onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/students/${student.id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold">
