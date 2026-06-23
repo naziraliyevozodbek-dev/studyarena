@@ -87,6 +87,7 @@ export default function MentorDashboard() {
         setNewTitle('');
         setSuccessMsg("Zo'r! Kurs muvaffaqiyatli yaratildi: " + data.course.title);
         fetchCourses(); // Refresh list
+        setShowNewCourse(false);
       } else {
         setErrorMsg(`API Xatosi: ${data.error || 'Nomaʼlum xatolik'}`);
       }
@@ -110,9 +111,14 @@ export default function MentorDashboard() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Header */}
-      <div className="mb-6 pt-4">
-        <h1 className="text-2xl font-bold text-text-main mb-1">Mentor Dashboard</h1>
-        <p className="text-text-secondary text-sm">Overview of your teaching progress.</p>
+      <div className="mb-6 pt-4 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-text-main mb-1">Mentor Dashboard</h1>
+          <p className="text-text-secondary text-sm">Overview of your teaching progress.</p>
+        </div>
+        <Button onClick={() => setShowNewCourse(!showNewCourse)} size="sm" className="flex items-center gap-1">
+          <Plus size={16} /> New
+        </Button>
       </div>
 
       <div>
@@ -131,37 +137,39 @@ export default function MentorDashboard() {
         </div>
 
       {/* Create Course Form */}
-      <Card padding="lg" className="mb-8">
-        <h2 className="text-sm font-semibold text-text-main mb-3 flex items-center gap-2">
-          <Plus size={18} className="text-primary" />
-          New Course
-        </h2>
-        <form onSubmit={handleCreateCourse} className="flex flex-col gap-3">
-          <Input
-            type="text"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Course Name (e.g. English B2)"
-            required
-            disabled={isCreating}
-          />
-          {errorMsg && (
-            <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
-              {errorMsg}
-            </div>
-          )}
-          {successMsg && (
-            <div className="p-3 bg-green-100 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
-              {successMsg}
-            </div>
-          )}
-          <Button type="submit" disabled={isCreating} fullWidth>
-            {isCreating ? <Loader2 className="animate-spin" size={20} /> : 'Create Course'}
-          </Button>
-        </form>
-      </Card>
+      {showNewCourse && (
+        <Card padding="lg" className="mb-8">
+          <h2 className="text-sm font-semibold text-text-main mb-3 flex items-center gap-2">
+            <Plus size={18} className="text-primary" />
+            New Course
+          </h2>
+          <form onSubmit={handleCreateCourse} className="flex flex-col gap-3">
+            <Input
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Course Name (e.g. English B2)"
+              required
+              disabled={isCreating}
+            />
+            {errorMsg && (
+              <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
+                {errorMsg}
+              </div>
+            )}
+            {successMsg && (
+              <div className="p-3 bg-green-100 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
+                {successMsg}
+              </div>
+            )}
+            <Button type="submit" disabled={isCreating} fullWidth>
+              {isCreating ? <Loader2 className="animate-spin" size={20} /> : 'Create Course'}
+            </Button>
+          </form>
+        </Card>
+      )}
 
-      {/* Courses List */}
+      {/* Course List */}
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-lg font-semibold text-text-main">Your Courses</h2>
       </div>

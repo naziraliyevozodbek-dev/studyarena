@@ -122,7 +122,11 @@ export async function DELETE(req: Request) {
         });
 
         if (filesToRemove.length > 0) {
-          await supabaseAdmin.storage.from('homework-files').remove(filesToRemove);
+          try {
+            await supabaseAdmin.storage.from('homework-files').remove(filesToRemove);
+          } catch (storageError) {
+            console.error('Storage cleanup failed, ignoring:', storageError);
+          }
         }
       }
     }

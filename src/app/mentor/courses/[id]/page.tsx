@@ -29,6 +29,8 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
   const [exampleGerman, setExampleGerman] = useState('');
   const [exampleUzbek, setExampleUzbek] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkVocabText, setBulkVocabText] = useState('');
   
   // Homework State
   const [hwTitle, setHwTitle] = useState('');
@@ -75,7 +77,36 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
 
   const handleAddVocab = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!germanWord.trim() || !translation.trim()) return;
+
+    let bodyData: any = {};
+    
+    if (isBulkMode) {
+      if (!bulkVocabText.trim()) return;
+      const lines = bulkVocabText.split('\n').filter(line => line.trim() !== '');
+      const words = lines.map(line => {
+        const parts = line.includes('-') ? line.split('-') : line.split(',');
+        return {
+          course_id: params.id,
+          german_word: parts[0]?.trim() || '',
+          translation: parts[1]?.trim() || ''
+        };
+      }).filter(w => w.german_word && w.translation);
+      
+      if (words.length === 0) {
+        alert("Noto'g'ri format! Iltimos, Word - Translation shaklida kiriting.");
+        return;
+      }
+      bodyData = { words };
+    } else {
+      if (!germanWord.trim() || !translation.trim()) return;
+      bodyData = {
+        course_id: params.id,
+        german_word: germanWord,
+        translation: translation,
+        example_german: exampleGerman || null,
+        example_uzbek: exampleUzbek || null
+      };
+    }
 
     setIsAddingVocab(true);
     try {
@@ -85,25 +116,23 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          course_id: params.id,
-          german_word: germanWord,
-          translation: translation,
-          example_german: exampleGerman || null,
-          example_uzbek: exampleUzbek || null
-        })
+        body: JSON.stringify(bodyData)
       });
 
-      if (!res.ok) throw new Error('Failed to add vocab');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to add vocab');
+      }
       
       setGermanWord('');
       setTranslation('');
       setExampleGerman('');
       setExampleUzbek('');
+      setBulkVocabText('');
       fetchCourseData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding vocab:', error);
-      alert("Xatolik yuz berdi");
+      alert("Xatolik: " + error.message);
     } finally {
       setIsAddingVocab(false);
     }
@@ -130,16 +159,19 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         })
       });
 
-      if (!res.ok) throw new Error('Failed to add homework');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to add homework');
+      }
       
       setHwTitle('');
       setHwDescription('');
       setHwXp('50');
       setHwDeadline('');
       fetchCourseData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding homework:', error);
-      alert("Xatolik yuz berdi");
+      alert("Xatolik: " + error.message);
     } finally {
       setIsAddingHw(false);
     }
@@ -247,37 +279,62 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
         {/* Vocabulary Tab Content */}
         {activeTab === 'vocab' && (
           <div className="animate-fade-in">
-            <h2 className="text-lg font-semibold text-text-main mb-3">Add Vocabulary</h2>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-semibold text-text-main">Add Vocabulary</h2>
+              <button 
+                onClick={() => setIsBulkMode(!isBulkMode)}
+                className="text-sm text-primary font-semibold underline"
+              >
+                {isBulkMode ? "Single Word" : "Bulk Upload"}
+              </button>
+            </div>
+            
             <Card padding="md" className="mb-8">
               <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
-                <Input
-                  type="text"
-                  placeholder="Word (e.g. Apfel)"
-                  value={germanWord}
-                  onChange={(e) => setGermanWord(e.target.value)}
-                  required
-                />
-                <Input
-                  type="text"
-                  placeholder="Translation (e.g. Apple)"
-                  value={translation}
-                  onChange={(e) => setTranslation(e.target.value)}
-                  required
-                />
-                <Input
-                  type="text"
-                  placeholder="German Example (Optional)"
-                  value={exampleGerman}
-                  onChange={(e) => setExampleGerman(e.target.value)}
-                />
-                <Input
-                  type="text"
-                  placeholder="Uzbek Example (Optional)"
-                  value={exampleUzbek}
-                  onChange={(e) => setExampleUzbek(e.target.value)}
-                />
+                {isBulkMode ? (
+                  <>
+                    <p className="text-xs text-text-secondary">Pasting format: <code>Word - Translation</code>. Har bir qatorda bittadan so'z yozing.</p>
+                    <textarea
+                      placeholder={`Apfel - Olma\nHaus - Uy\nAuto - Mashina`}
+                      value={bulkVocabText}
+                      onChange={(e) => setBulkVocabText(e.target.value)}
+                      className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 transition-all border border-border min-h-[150px]"
+                      required
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type="text"
+                      placeholder="Word (e.g. Apfel)"
+                      value={germanWord}
+                      onChange={(e) => setGermanWord(e.target.value)}
+                      required
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Translation (e.g. Apple)"
+                      value={translation}
+                      onChange={(e) => setTranslation(e.target.value)}
+                      required
+                    />
+                    <Input
+                      type="text"
+                      placeholder="German Example (Optional)"
+                      value={exampleGerman}
+                      onChange={(e) => setExampleGerman(e.target.value)}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Uzbek Example (Optional)"
+                      value={exampleUzbek}
+                      onChange={(e) => setExampleUzbek(e.target.value)}
+                    />
+                  </>
+                )}
+                
                 <Button type="submit" disabled={isAddingVocab} fullWidth className="mt-1">
-                  {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Save Word'}
+                  {isAddingVocab ? <Loader2 className="animate-spin" size={20} /> : 'Save Word' + (isBulkMode ? 's' : '')}
                 </Button>
               </form>
             </Card>

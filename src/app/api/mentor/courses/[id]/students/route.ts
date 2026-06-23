@@ -30,15 +30,27 @@ export async function GET(
     // Get students in course
     const { data: members, error } = await supabaseAdmin
       .from('course_members')
-      .select('student_id, users(id, full_name, avatar_url)')
+      .select('student_id')
       .eq('course_id', courseId);
 
     if (error) throw error;
 
-    const students = members.map(m => m.users);
+    if (!members || members.length === 0) {
+      return NextResponse.json({ students: [] });
+    }
 
-    return NextResponse.json({ students });
+    const studentIds = members.map((m: any) => m.student_id);
+
+    const { data: users, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('id, full_name, avatar_url')
+      .in('id', studentIds);
+
+    if (usersError) throw usersError;
+
+    return NextResponse.json({ students: users || [] });
   } catch (err: any) {
+    console.error('Students API error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

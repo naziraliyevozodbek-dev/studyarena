@@ -12,17 +12,15 @@ export async function POST(req: Request) {
     const mentorId = decoded.sub;
 
     const body = await req.json();
-    const { course_id, german_word, translation, example_german, example_uzbek } = body;
-
-    if (!course_id || !german_word || !translation) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
-    }
 
     // Verify mentor owns this course
+    const courseId = body.course_id || (body.words && body.words[0]?.course_id);
+    if (!courseId) return NextResponse.json({ error: 'Missing course_id' }, { status: 400 });
+
     const { data: course } = await supabaseAdmin
       .from('courses')
       .select('id')
-      .eq('id', course_id)
+      .eq('id', courseId)
       .eq('mentor_id', mentorId)
       .single();
 
@@ -34,28 +32,60 @@ export async function POST(req: Request) {
     const { data: vocab } = await supabaseAdmin
       .from('vocabularies')
       .select('lesson_number')
-      .eq('course_id', course_id)
+      .eq('course_id', courseId)
       .order('lesson_number', { ascending: false })
       .limit(1);
     
     const nextLessonNumber = vocab && vocab.length > 0 ? vocab[0].lesson_number + 1 : 1;
 
-    const { data: newVocab, error } = await supabaseAdmin
-      .from('vocabularies')
-      .insert({
+    let result;
+    if (body.words && Array.isArray(body.words)) {
+      // Bulk insert
+      const insertData = body.words.map((w: any) => ({
+        course_id: courseId,
+        german_word: w.german_word,
+        translation: w.translation,
+        lesson_number: nextLessonNumber
+      }));
+
+      const { data, error } = await supabaseAdmin
+        .from('vocabularies')
+        .insert(insertData)
+        .select();
+
+      if (error) throw error;
+      result = data;
+    } else {
+      // Single insert
+      const { course_id, german_word, translation, example_german, example_uzbek } = body;
+      if (!german_word || !translation) {
+        return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      }
+
+      // We only insert example fields if they are provided, to prevent errors if the DB migration wasn't fully run
+      const insertObj: any = {
         course_id,
         german_word,
         translation,
-        example_german,
-        example_uzbek,
         lesson_number: nextLessonNumber
-      })
-      .select()
-      .single();
+      };
+      if (example_german) insertObj.example_german = example_german;
+      if (example_uzbek) insertObj.example_uzbek = example_uzbek;
 
-    if (error) throw error;
+      const { data: newVocab, error } = await supabaseAdmin
+        .from('vocabularies')
+        .insert(insertObj)
+        .select()
+        .single();
 
-    return NextResponse.json({ vocabulary: newVocab }, { status: 201 });
+      if (error) {
+        console.error("Vocab insert error:", error);
+        throw error;
+      }
+      result = newVocab;
+    }
+
+    return NextResponse.json({ vocabulary: result }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -29,7 +29,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-h1 m-0">Profile</h1>
-        <button className="text-text-secondary hover:text-text-main bg-bg-card p-2 rounded-full shadow-sm">
+        <button onClick={() => alert("Settings menyusi tez kunda ishga tushadi!")} className="text-text-secondary hover:text-text-main bg-bg-card p-2 rounded-full shadow-sm">
           <Settings size={20} />
         </button>
       </div>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
               <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-text-main border border-border">
                 {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
               </div>
-              <span className="font-bold text-text-main">Dark Mode</span>
+              <span className="font-bold text-text-main">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
             </div>
             <div className={`w-12 h-6 rounded-full p-1 transition-colors ${theme === 'dark' ? 'bg-primary' : 'bg-text-tertiary'}`}>
               <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`} />
