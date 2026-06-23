@@ -12,42 +12,55 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     
     const homeworkId = (await params).id;
     const formData = await req.formData();
-    const file = formData.get('file') as File;
+    const files = formData.getAll('files') as File[];
     const content = formData.get('content') as string;
+    const description = formData.get('description') as string;
 
-    if (!file && !content) {
+    if ((!files || files.length === 0) && !content) {
       return NextResponse.json({ error: 'Missing submission content' }, { status: 400 });
     }
 
-    let fileUrl = null;
+    const fileUrls: string[] = [];
 
-    if (file) {
-      // Upload to Supabase Storage using admin client
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${homeworkId}_${decoded.sub}_${Date.now()}.${fileExt}`;
-      
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file instanceof File) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${homeworkId}_${decoded.sub}_${Date.now()}_${i}.${fileExt}`;
+          
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
 
-      const { data: uploadData, error: uploadError } = await supabaseAdmin
-        .storage
-        .from('homework-files')
-        .upload(fileName, buffer, {
-          contentType: file.type,
-          upsert: true
-        });
+          const { data: uploadData, error: uploadError } = await supabaseAdmin
+            .storage
+            .from('homework-files')
+            .upload(fileName, buffer, {
+              contentType: file.type,
+              upsert: true
+            });
 
-      if (uploadError) {
-        console.error('Upload Error:', uploadError);
-        throw new Error('File upload failed');
+          if (uploadError) {
+            console.error('Upload Error:', uploadError);
+            throw new Error('File upload failed');
+          }
+
+          const { data: publicUrlData } = supabaseAdmin
+            .storage
+            .from('homework-files')
+            .getPublicUrl(fileName);
+
+          fileUrls.push(publicUrlData.publicUrl);
+        }
       }
+    }
 
-      const { data: publicUrlData } = supabaseAdmin
-        .storage
-        .from('homework-files')
-        .getPublicUrl(fileName);
-
-      fileUrl = publicUrlData.publicUrl;
+    let finalContent = content;
+    if (fileUrls.length > 0 || description) {
+      finalContent = JSON.stringify({
+        files: fileUrls,
+        description: description || ''
+      });
     }
 
     // Upsert submission
@@ -56,7 +69,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .upsert({
         homework_id: homeworkId,
         student_id: decoded.sub,
-        content: fileUrl ? fileUrl : content,
+        content: finalContent,
         status: 'submitted',
         created_at: new Date().toISOString()
       }, { onConflict: 'homework_id,student_id' })

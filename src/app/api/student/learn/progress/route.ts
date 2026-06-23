@@ -76,17 +76,46 @@ export async function POST(req: Request) {
         created_at: new Date().toISOString()
       }, { onConflict: 'student_id,date' });
 
-    // 4. Update total XP in users table
+    // 4. Update total XP and streak in users table
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('xp')
+      .select('xp, streak')
       .eq('id', studentId)
       .single();
       
     if (user) {
+      let newStreak = user.streak || 0;
+      
+      // If this is the first activity today, update streak
+      if (!existingLog) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        const { data: lastLog } = await supabaseAdmin
+          .from('user_activity_logs')
+          .select('date')
+          .eq('student_id', studentId)
+          .neq('date', today)
+          .order('date', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (lastLog && lastLog.date === yesterdayStr) {
+          newStreak += 1; // Practiced yesterday, increment
+        } else if (!lastLog) {
+          newStreak = 1; // First time ever
+        } else {
+          newStreak = 1; // Missed yesterday, reset to 1
+        }
+      }
+
       await supabaseAdmin
         .from('users')
-        .update({ xp: (user.xp || 0) + (status === 'learned' ? 2 : 1) })
+        .update({ 
+          xp: (user.xp || 0) + (status === 'learned' ? 2 : 1),
+          streak: newStreak
+        })
         .eq('id', studentId);
     }
 

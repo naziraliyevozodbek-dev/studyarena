@@ -15,6 +15,7 @@ export default function Home() {
   const router = useRouter();
   
   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [fetchingCourses, setFetchingCourses] = useState(true);
   const [courseCode, setCourseCode] = useState('');
   const [enrolling, setEnrolling] = useState(false);
   const [recentVocab, setRecentVocab] = useState<any[]>([]);
@@ -75,6 +76,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
+    } finally {
+      setFetchingCourses(false);
     }
   };
 
@@ -175,6 +178,21 @@ export default function Home() {
     }
   };
 
+  const handleLeaveCourse = async (courseId: string) => {
+    if (!confirm("Rostan ham bu kursdan chiqmoqchimisiz? Barcha natijalaringiz o'chib ketadi!")) return;
+    try {
+      const res = await fetch(`/api/student/leave?courseId=${courseId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to leave');
+      fetchEnrolledCourses();
+    } catch (error) {
+      console.error(error);
+      alert('Xatolik yuz berdi');
+    }
+  };
+
   if (!user || user.role === 'mentor') {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -204,7 +222,11 @@ export default function Home() {
         </div>
       </div>
 
-      {enrolledCourses.length === 0 ? (
+      {fetchingCourses ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="animate-spin text-primary" size={32} />
+        </div>
+      ) : enrolledCourses.length === 0 ? (
         <div>
           <Card padding="lg" className="text-center mb-6">
             <Target size={32} className="mx-auto text-text-tertiary mb-4" />
@@ -239,8 +261,8 @@ export default function Home() {
               <span className="text-text-tertiary text-xs font-medium mb-1">Level</span>
               <span className="text-xl font-semibold text-text-main">1</span>
             </Card>
-            <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200">
-              <span className="text-orange-600/80 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>
+            <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/10 dark:to-orange-500/5 border-orange-200 dark:border-orange-500/20">
+              <span className="text-orange-600/80 dark:text-orange-500 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>
               <span className="text-xl font-semibold text-orange-500">{user.streak || 0}</span>
             </Card>
           </div>
@@ -327,7 +349,45 @@ export default function Home() {
               </div>
             )}
           </Card>
-        </div>
+
+          {/* Course Management */}
+          <div className="mt-8 flex flex-col gap-3">
+            <h3 className="text-lg font-semibold text-text-main tracking-tight px-1">Manage Courses</h3>
+            <Card padding="md">
+              <form onSubmit={handleEnroll} className="flex flex-col gap-3 mb-4">
+                <p className="text-sm text-text-secondary">Join another course</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text" 
+                    placeholder="Course Code" 
+                    value={courseCode}
+                    onChange={(e) => setCourseCode(e.target.value)}
+                    className="flex-1 uppercase font-semibold"
+                    maxLength={6}
+                    required
+                  />
+                  <Button type="submit" disabled={enrolling}>
+                    {enrolling ? <Loader2 className="animate-spin" size={20} /> : 'Join'}
+                  </Button>
+                </div>
+              </form>
+              <div className="border-t border-border pt-4">
+                <p className="text-sm text-text-secondary mb-3">Your enrolled courses</p>
+                {enrolledCourses.map(c => (
+                  <div key={c.id} className="flex justify-between items-center bg-bg-secondary p-3 rounded-xl mb-2">
+                    <span className="font-semibold text-text-main text-sm">{c.title}</span>
+                    <button 
+                      onClick={() => handleLeaveCourse(c.id)}
+                      className="text-xs font-bold text-error bg-error/10 px-3 py-1.5 rounded-lg active:bg-error/20"
+                    >
+                      Leave
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </>
       )}
     </div>
   );

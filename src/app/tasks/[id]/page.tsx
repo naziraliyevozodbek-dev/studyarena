@@ -15,7 +15,8 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [description, setDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,22 +46,29 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setFiles(prev => [...prev, ...newFiles]);
     }
+    // reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      alert("Iltimos, rasm yuklang!");
+    if (files.length === 0 && !description.trim()) {
+      alert("Iltimos, rasm yuklang yoki matn kiriting!");
       return;
     }
 
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('content', 'Image submission');
+      files.forEach(f => formData.append('files', f));
+      formData.append('description', description);
 
       const res = await fetch(`/api/student/tasks/${resolvedParams.id}/submit`, {
         method: 'POST',
@@ -106,8 +114,20 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   const isRejected = task.submission?.status === 'rejected';
   const isGraded = task.submission?.status === 'graded';
 
+  let parsedSubmission: any = null;
+  if (task.submission?.content) {
+    try {
+      parsedSubmission = JSON.parse(task.submission.content);
+    } catch {
+      parsedSubmission = { 
+        files: task.submission.content.startsWith('http') ? [task.submission.content] : [], 
+        description: task.submission.content.startsWith('http') ? '' : task.submission.content 
+      };
+    }
+  }
+
   return (
-    <div className="animate-fade-in pb-24 h-screen flex flex-col">
+    <div className="animate-fade-in pb-24 min-h-screen flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 mb-6">
         <button 
@@ -121,7 +141,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col px-4">
         <div className="mb-6">
           <div className="flex justify-between items-start mb-2">
             <h1 className="text-2xl font-bold text-text-main leading-tight">{task.title}</h1>
@@ -161,9 +181,22 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 : 'Sizning vazifangiz mentorga yuborildi. Tekshirilishini kuting.'}
             </p>
             
-            {task.submission.content && task.submission.content.startsWith('http') && (
-              <div className="mt-4 rounded-lg overflow-hidden border border-border">
-                <img src={task.submission.content} alt="Your submission" className="w-full object-cover max-h-48" />
+            {parsedSubmission && (
+              <div className="mt-4 text-left">
+                {parsedSubmission.description && (
+                  <p className="text-sm bg-bg-secondary p-3 rounded-xl whitespace-pre-wrap mb-4 border border-border">
+                    {parsedSubmission.description}
+                  </p>
+                )}
+                {parsedSubmission.files && parsedSubmission.files.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {parsedSubmission.files.map((url: string, idx: number) => (
+                      <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-secondary aspect-square flex items-center justify-center">
+                        <img src={url} alt={`Submission ${idx+1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </Card>
@@ -177,45 +210,57 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
               </Card>
             )}
 
-            <Card padding="md" className="border-dashed">
-              <h3 className="font-semibold text-text-main mb-4 text-center">Vazifani yuborish</h3>
+            <Card padding="md" className="border-dashed flex flex-col gap-4">
+              <h3 className="font-semibold text-text-main text-center">Vazifani yuborish</h3>
               
+              <textarea
+                placeholder="Qo'shimcha izoh yoki matn (ixtiyoriy)..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="w-full bg-bg-secondary border border-border rounded-xl p-3 text-sm min-h-[80px]"
+              />
+
               <input 
                 type="file" 
                 accept="image/*"
+                multiple
                 className="hidden" 
                 ref={fileInputRef}
                 onChange={handleFileChange}
               />
 
-              {!file ? (
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-8 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 flex flex-col items-center justify-center gap-3 active:bg-primary/10 transition-colors"
-                >
-                  <UploadCloud size={32} className="text-primary" />
-                  <span className="text-sm font-medium text-primary">Rasm yuklash yoki kameraga olish</span>
-                </button>
-              ) : (
-                <div className="w-full p-4 rounded-xl border border-border bg-bg-secondary flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <FileImage size={24} className="text-primary flex-shrink-0" />
-                    <span className="text-sm font-medium text-text-main truncate">{file.name}</span>
-                  </div>
-                  <button 
-                    onClick={() => setFile(null)}
-                    className="text-xs font-semibold text-error p-2"
-                  >
-                    O'chirish
-                  </button>
+              {files.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="w-full p-3 rounded-xl border border-border bg-bg-secondary flex items-center justify-between">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <FileImage size={20} className="text-primary flex-shrink-0" />
+                        <span className="text-xs font-medium text-text-main truncate">{f.name}</span>
+                      </div>
+                      <button 
+                        onClick={() => removeFile(idx)}
+                        className="text-xs font-semibold text-error p-1"
+                      >
+                        O'chirish
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-4 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 flex flex-col items-center justify-center gap-2 active:bg-primary/10 transition-colors"
+              >
+                <UploadCloud size={24} className="text-primary" />
+                <span className="text-xs font-medium text-primary">Rasm qo'shish</span>
+              </button>
+
               <Button 
                 onClick={handleSubmit} 
-                disabled={!file || submitting} 
+                disabled={(files.length === 0 && !description.trim()) || submitting} 
                 fullWidth 
-                className="mt-4"
+                className="mt-2"
               >
                 {submitting ? (
                   <div className="flex items-center justify-center gap-2">

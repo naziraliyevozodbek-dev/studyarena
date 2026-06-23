@@ -22,17 +22,47 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      if (!user) return;
+      
+      // Get student's courses
+      const { data: myCourses } = await supabase
+        .from('course_members')
+        .select('course_id')
+        .eq('student_id', user.id);
+        
+      if (!myCourses || myCourses.length === 0) {
+        // Just show self
+        setLeaderboard([{
+          rank: 1,
+          name: user.full_name || `@${user.username}`,
+          xp: user.xp || 0,
+          isMe: true,
+          avatar: user.avatar_url
+        }]);
+        setLoading(false);
+        return;
+      }
+      
+      const courseIds = myCourses.map(c => c.course_id);
+      const { data: peers } = await supabase
+        .from('course_members')
+        .select('student_id')
+        .in('course_id', courseIds);
+        
+      const peerIds = [...new Set(peers?.map(p => p.student_id) || [])];
+
       const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('total_xp', { ascending: false });
+        .from('users')
+        .select('id, full_name, username, xp, avatar_url')
+        .in('id', peerIds)
+        .order('xp', { ascending: false });
 
       if (data) {
         const mapped = data.map((l: any, index: number) => ({
           rank: index + 1,
           name: l.full_name || `@${l.username}` || 'Unknown',
-          xp: l.total_xp || 0,
-          isMe: user ? l.user_id === user.id : false,
+          xp: l.xp || 0,
+          isMe: l.id === user.id,
           avatar: l.avatar_url
         }));
         setLeaderboard(mapped);

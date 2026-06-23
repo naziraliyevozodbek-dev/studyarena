@@ -145,12 +145,10 @@ export default function LearnPage() {
             </div>
 
             {/* Flashcard Area */}
-            <div className="flex-1 flex flex-col justify-center min-h-[300px] mb-8 perspective-1000">
-              <div 
-                className={`relative w-full h-80 sm:h-96 transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
-              >
+            <div className="flex-1 flex flex-col justify-center min-h-[300px] mb-8 [perspective:1000px]">
+              <div className={`relative w-full h-80 sm:h-96 transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
                 {/* Front (German) */}
-                <Card className="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-6 text-center border-2 border-border shadow-md">
+                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center border-2 border-border shadow-md">
                   <div className="absolute top-4 right-4">
                     <button 
                       onClick={(e) => { e.stopPropagation(); playTTS(vocabularies[currentIndex]?.german_word); }}
@@ -185,7 +183,7 @@ export default function LearnPage() {
                 </Card>
 
                 {/* Back (Translation) */}
-                <Card className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 text-center border-2 border-primary shadow-md bg-primary/5">
+                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col items-center justify-center p-6 text-center border-2 border-primary shadow-md bg-primary/5">
                   <span className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-3 py-1 bg-primary/10 rounded-full mt-4">
                     🇺🇿 Uzbek
                   </span>

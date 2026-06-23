@@ -149,15 +149,37 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                 </div>
 
                 <div className="mb-4">
-                  {submission.content.startsWith('http') ? (
-                    <div className="rounded-lg overflow-hidden border border-border bg-bg-secondary">
-                      <img src={submission.content} alt="Homework" className="w-full h-auto max-h-96 object-contain" />
-                    </div>
-                  ) : (
-                    <p className="text-text-main text-sm bg-bg-secondary p-3 rounded-lg whitespace-pre-wrap">
-                      {submission.content}
-                    </p>
-                  )}
+                  {(() => {
+                    let parsedContent: any = null;
+                    try {
+                      parsedContent = JSON.parse(submission.content);
+                    } catch {
+                      parsedContent = { 
+                        files: submission.content.startsWith('http') ? [submission.content] : [], 
+                        description: submission.content.startsWith('http') ? '' : submission.content 
+                      };
+                    }
+
+                    return (
+                      <div className="flex flex-col gap-3">
+                        {parsedContent.description && (
+                          <p className="text-text-main text-sm bg-bg-secondary p-3 rounded-lg whitespace-pre-wrap border border-border">
+                            {parsedContent.description}
+                          </p>
+                        )}
+                        
+                        {parsedContent.files && parsedContent.files.length > 0 && (
+                          <div className={`grid gap-2 ${parsedContent.files.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            {parsedContent.files.map((url: string, idx: number) => (
+                              <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
+                                <img src={url} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-contain" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {submission.status === 'submitted' && (
