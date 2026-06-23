@@ -40,11 +40,14 @@ export async function GET(
     }
 
     const studentIds = members.map((m: any) => m.student_id);
+    console.log("studentIds for course", courseId, ":", studentIds);
 
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
       .select('id, full_name, avatar_url')
       .in('id', studentIds);
+      
+    console.log("Fetched users:", users);
 
     if (usersError) throw usersError;
 

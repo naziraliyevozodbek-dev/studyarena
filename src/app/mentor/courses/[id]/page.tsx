@@ -187,11 +187,14 @@ export default function CourseDetails({ params }: { params: { id: string } }) {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to delete');
+      }
       router.push('/mentor');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting course:', error);
-      alert("Xatolik: Kursni o'chirib bo'lmadi");
+      alert("Xatolik: " + error.message);
     } finally {
       setIsDeleting(false);
     }
