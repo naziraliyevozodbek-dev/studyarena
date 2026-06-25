@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -161,8 +161,7 @@ export default function LearnPage() {
 
   const currentVocab = filteredVocabs[currentIndex];
 
-  return (
-    <div className="animate-fade-in pb-24 flex flex-col h-full w-full">
+    <div className="animate-fade-in pb-20 pt-2 flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-4">
         <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
@@ -223,21 +222,7 @@ export default function LearnPage() {
                 </div>
                 <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
               </div>
-              <div className="flex justify-between mt-2">
-                <button 
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0}
-                  className="p-2 bg-bg-secondary rounded-full disabled:opacity-30 hover:bg-border transition-colors text-text-main"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button 
-                  onClick={handleNext}
-                  disabled={currentIndex === filteredVocabs.length - 1}
-                  className="p-2 bg-bg-secondary rounded-full disabled:opacity-30 hover:bg-border transition-colors text-text-main"
-                >
-                  <ChevronRight size={24} />
-                </button>
+                <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
               </div>
             </div>
 
@@ -247,9 +232,9 @@ export default function LearnPage() {
                 
                 {/* Front (German) */}
                 <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
-                  <div className="flex justify-end mb-4">
-                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={24} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                  <div className="flex justify-end mb-2">
+                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
                     </button>
                   </div>
                   
@@ -257,21 +242,25 @@ export default function LearnPage() {
                     <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                       Nemischa
                     </span>
-                    <h2 className="text-4xl font-bold text-text-main mb-8 break-words w-full">
+                    <h2 className="text-4xl font-bold text-text-main mb-6 break-words w-full">
                       {currentVocab?.german_word}
                     </h2>
                     
                     <button 
                       onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
-                      className="flex items-center gap-2 px-6 py-3 bg-bg-secondary text-text-main rounded-full hover:bg-border active:scale-95 transition-all font-semibold text-sm"
+                      className="flex items-center gap-4 active:scale-95 transition-all font-semibold text-[15px] text-text-main"
                     >
-                      <Volume2 size={20} className="text-primary" /> So'zni eshitish
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Volume2 size={24} className="text-primary" />
+                      </div>
+                      So'zni eshitish
                     </button>
                   </div>
                   
                   {currentVocab?.example_german && (
-                    <div className="mt-auto mb-6 text-left">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="w-full text-left mt-6">
+                      <div className="w-full h-px bg-border mb-6"></div>
+                      <div className="flex items-center gap-2 mb-3">
                         <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
                           <span className="text-[10px] text-primary font-bold">T</span>
                         </div>
@@ -283,9 +272,10 @@ export default function LearnPage() {
                     </div>
                   )}
 
-                  <div className="w-full flex justify-center pb-2">
-                    <button className="flex items-center gap-2 text-sm font-semibold text-text-tertiary hover:text-text-secondary transition-colors">
-                      <X size={16} /> Tarjimani ko'rish <ChevronDown size={16} />
+                  <div className="w-full flex justify-center mt-auto pt-4">
+                    <button className="w-full flex items-center justify-center gap-3 py-4 border border-border rounded-2xl text-primary font-bold hover:bg-primary/5 transition-colors">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      Tarjimani ko'rish <ChevronDown size={20} />
                     </button>
                   </div>
                 </Card>
@@ -293,8 +283,8 @@ export default function LearnPage() {
                 {/* Back (Translation) */}
                 <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
                   <div className="flex justify-end mb-2">
-                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={24} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
                     </button>
                   </div>
                   
@@ -331,12 +321,15 @@ export default function LearnPage() {
                     )}
                   </div>
                   
-                  <div className="flex justify-center mb-6">
+                  <div className="flex justify-center mb-6 mt-4">
                     <button 
                       onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
-                      className="flex items-center gap-2 px-6 py-2 bg-transparent text-text-secondary hover:text-primary transition-colors text-sm font-semibold"
+                      className="flex items-center gap-4 active:scale-95 transition-all font-semibold text-[15px] text-text-main"
                     >
-                      <Volume2 size={18} /> So'zni eshitish
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Volume2 size={24} className="text-primary" />
+                      </div>
+                      So'zni eshitish
                     </button>
                   </div>
 
@@ -360,9 +353,24 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center px-4 font-bold text-primary text-sm">
-              <span className={isFlipped ? "text-text-tertiary" : ""}>Old tomoni<br/><span className="text-xs font-medium">(Tarjima yopiq)</span></span>
-              <span className={!isFlipped ? "text-text-tertiary" : ""}>Orqa tomoni<br/><span className="text-xs font-medium">(Tarjima ochiq)</span></span>
+            <div className="flex justify-between items-center mt-auto pt-4 pb-2 px-4">
+              <button 
+                onClick={handlePrev}
+                disabled={currentIndex === 0}
+                className="w-14 h-14 bg-white dark:bg-bg-card border border-border rounded-2xl flex items-center justify-center disabled:opacity-30 shadow-sm text-text-main active:scale-95 transition-all"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              
+              <span className="font-bold text-text-main text-lg">{currentIndex + 1} / {filteredVocabs.length}</span>
+              
+              <button 
+                onClick={handleNext}
+                disabled={currentIndex === filteredVocabs.length - 1}
+                className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center disabled:opacity-30 shadow-md shadow-primary/20 active:scale-95 transition-all"
+              >
+                <ArrowRight size={24} /> 
+              </button>
             </div>
           </>
         )}
