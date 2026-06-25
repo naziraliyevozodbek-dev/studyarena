@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
 export default function OnboardingPage() {
-  const { user, token, checkAuth } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +42,7 @@ export default function OnboardingPage() {
       localStorage.setItem('studyarena_onboarded', 'true');
       
       // Update AuthContext user state by triggering a re-check
-      await checkAuth();
+      await refreshUser();
 
       if (role === 'mentor') {
         router.push('/mentor');
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#F9F9FB] dark:bg-bg-main">
+    <div className="flex flex-col items-center justify-center p-4 pt-12 h-full">
       <div className="w-full max-w-md animate-fade-in text-center">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <BookOpen size={40} className="text-primary" />

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
 export default function SettingsPage() {
-  const { user, token, checkAuth } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const router = useRouter();
   
   const [loading, setLoading] = useState(false);
@@ -52,6 +52,14 @@ export default function SettingsPage() {
 
       // Save server settings
       if (fullName !== user?.full_name || role !== user?.role) {
+        if (role !== user?.role) {
+          const confirmRole = window.confirm("Rolingizni o'zgartirmoqchimisiz? Bu ilova interfeysini butunlay o'zgartiradi.");
+          if (!confirmRole) {
+            setLoading(false);
+            return;
+          }
+        }
+
         const res = await fetch('/api/user/settings', {
           method: 'POST',
           headers: {
@@ -62,7 +70,7 @@ export default function SettingsPage() {
         });
         
         if (!res.ok) throw new Error("Profilni saqlashda xatolik yuz berdi");
-        await checkAuth(); // refresh context
+        await refreshUser(); // refresh context
       }
 
       alert("Sozlamalar saqlandi!");
@@ -76,8 +84,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="animate-fade-in pb-24 min-h-screen bg-[#F9F9FB] dark:bg-bg-main text-text-main">
-      <div className="flex items-center justify-between pt-4 px-4 mb-6">
+    <div className="animate-fade-in pb-24 text-text-main">
+      <div className="flex items-center justify-between pt-4 mb-6">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
           <ArrowLeft size={20} />
           <span>Orqaga</span>
@@ -213,12 +221,12 @@ export default function SettingsPage() {
         {/* Support */}
         <section>
           <Card padding="none" className="overflow-hidden">
-            <a href="https://t.me/your_admin_username" target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 hover:bg-bg-secondary transition-colors">
+            <a href="https://t.me/naz1raliyev_05" target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 hover:bg-bg-secondary transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <HelpCircle size={18} />
                 </div>
-                <span className="font-semibold text-sm">Yordam va Aloqa</span>
+                <span className="font-semibold text-sm">Yordam va Aloqa (@naz1raliyev_05)</span>
               </div>
               <ArrowLeft size={16} className="rotate-135 text-text-tertiary" />
             </a>

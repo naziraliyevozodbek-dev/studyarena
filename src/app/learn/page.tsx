@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -16,8 +16,27 @@ export default function LearnPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [savedWords, setSavedWords] = useState<Record<string, boolean>>({});
   
   const [selectedLesson, setSelectedLesson] = useState<number | 'all'>('all');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('studyarena_saved_words');
+    if (saved) {
+      try {
+        setSavedWords(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const toggleSave = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setSavedWords(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem('studyarena_saved_words', JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -47,13 +66,20 @@ export default function LearnPage() {
 
   const playTTS = (text: string) => {
     if (!text) return;
-    // Use Google Translate TTS to bypass browser WebSpeechAPI limitations on mobile
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=de&q=${encodeURIComponent(text)}`;
-    const audio = new Audio(url);
-    audio.play().catch(e => {
-      console.error("Audio play failed:", e);
-      alert("Ovozni o'ynatish imkoni bo'lmadi. Telefoningiz ovozini tekshiring.");
-    });
+    try {
+      // Primary: Web Speech API
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'de-DE';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      // Fallback
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=de&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      audio.play().catch(err => {
+        console.error("Audio play failed:", err);
+      });
+    }
   };
 
   const availableLessons = useMemo(() => {
@@ -111,6 +137,20 @@ export default function LearnPage() {
     }
   };
 
+  const handleNext = () => {
+    if (currentIndex < filteredVocabs.length - 1) {
+      setIsFlipped(false);
+      setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setIsFlipped(false);
+      setTimeout(() => setCurrentIndex(prev => prev - 1), 150);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -122,7 +162,7 @@ export default function LearnPage() {
   const currentVocab = filteredVocabs[currentIndex];
 
   return (
-    <div className="animate-fade-in pb-24 min-h-screen flex flex-col bg-[#F9F9FB] dark:bg-bg-main">
+    <div className="animate-fade-in pb-24 flex flex-col h-full w-full">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-4">
         <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
@@ -183,6 +223,22 @@ export default function LearnPage() {
                 </div>
                 <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
               </div>
+              <div className="flex justify-between mt-2">
+                <button 
+                  onClick={handlePrev}
+                  disabled={currentIndex === 0}
+                  className="p-2 bg-bg-secondary rounded-full disabled:opacity-30 hover:bg-border transition-colors text-text-main"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button 
+                  onClick={handleNext}
+                  disabled={currentIndex === filteredVocabs.length - 1}
+                  className="p-2 bg-bg-secondary rounded-full disabled:opacity-30 hover:bg-border transition-colors text-text-main"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </div>
             </div>
 
             {/* Flashcard Area */}
@@ -192,20 +248,22 @@ export default function LearnPage() {
                 {/* Front (German) */}
                 <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
                   <div className="flex justify-end mb-4">
-                    <Star size={24} className="text-text-tertiary" />
+                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                      <Star size={24} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                    </button>
                   </div>
                   
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
                     <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                       Nemischa
                     </span>
-                    <h2 className="text-4xl font-bold text-[#1a1a2e] dark:text-white mb-8 break-words w-full">
+                    <h2 className="text-4xl font-bold text-text-main mb-8 break-words w-full">
                       {currentVocab?.german_word}
                     </h2>
                     
                     <button 
                       onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
-                      className="flex items-center gap-2 px-6 py-3 bg-[#F0F0F5] dark:bg-bg-secondary text-[#1a1a2e] dark:text-white rounded-full hover:bg-border active:scale-95 transition-all font-semibold text-sm"
+                      className="flex items-center gap-2 px-6 py-3 bg-bg-secondary text-text-main rounded-full hover:bg-border active:scale-95 transition-all font-semibold text-sm"
                     >
                       <Volume2 size={20} className="text-primary" /> So'zni eshitish
                     </button>
@@ -219,14 +277,14 @@ export default function LearnPage() {
                         </div>
                         <span className="text-xs font-bold text-text-tertiary">Misol gap</span>
                       </div>
-                      <p className="text-lg font-bold text-[#1a1a2e] dark:text-white leading-snug">
+                      <p className="text-lg font-bold text-text-main leading-snug">
                         {currentVocab?.example_german}
                       </p>
                     </div>
                   )}
 
                   <div className="w-full flex justify-center pb-2">
-                    <button className="flex items-center gap-2 text-sm font-semibold text-text-tertiary hover:text-primary transition-colors">
+                    <button className="flex items-center gap-2 text-sm font-semibold text-text-tertiary hover:text-text-secondary transition-colors">
                       <X size={16} /> Tarjimani ko'rish <ChevronDown size={16} />
                     </button>
                   </div>
@@ -235,36 +293,38 @@ export default function LearnPage() {
                 {/* Back (Translation) */}
                 <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
                   <div className="flex justify-end mb-2">
-                    <Star size={24} className="text-warning fill-warning" />
+                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                      <Star size={24} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                    </button>
                   </div>
                   
                   <div className="text-center mb-6">
                     <span className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">
                       Nemischa
                     </span>
-                    <h2 className="text-3xl font-bold text-[#1a1a2e] dark:text-white break-words">
+                    <h2 className="text-3xl font-bold text-text-main break-words">
                       {currentVocab?.german_word}
                     </h2>
                   </div>
                   
-                  <div className="flex-1 flex flex-col gap-4">
-                    <div className="bg-[#EAF6ED] dark:bg-success/10 rounded-2xl p-4 border border-[#C3E6CB] dark:border-success/20">
+                  <div className="flex-1 flex flex-col gap-4 mt-4">
+                    <div className="bg-[#EAF6ED] dark:bg-[#1C2C22] rounded-2xl p-4 border border-[#C3E6CB] dark:border-[#234A2E]">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xl">🇺🇿</span>
                         <span className="text-xs font-bold text-[#2E7D32] dark:text-success">Tarjima</span>
                       </div>
-                      <p className="text-xl font-bold text-[#1a1a2e] dark:text-white ml-8">
+                      <p className="text-xl font-bold text-text-main ml-8">
                         {currentVocab?.translation}
                       </p>
                     </div>
 
                     {currentVocab?.example_uzbek && (
-                      <div className="bg-[#F4F0FF] dark:bg-primary/10 rounded-2xl p-4 border border-[#E0D4FF] dark:border-primary/20">
+                      <div className="bg-[#F4F0FF] dark:bg-[#2A243D] rounded-2xl p-4 border border-[#E0D4FF] dark:border-[#3E345C]">
                         <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare size={16} className="text-[#6200EE] dark:text-primary" />
-                          <span className="text-xs font-bold text-[#6200EE] dark:text-primary">Misol gapning tarjimasi</span>
+                          <MessageSquare size={16} className="text-[#6200EE] dark:text-[#B388FF]" />
+                          <span className="text-xs font-bold text-[#6200EE] dark:text-[#B388FF]">Misol gapning tarjimasi</span>
                         </div>
-                        <p className="text-sm font-semibold text-[#1a1a2e] dark:text-white ml-6">
+                        <p className="text-sm font-semibold text-text-main ml-6">
                           {currentVocab?.example_uzbek}
                         </p>
                       </div>
@@ -282,14 +342,14 @@ export default function LearnPage() {
 
                   <div className="mt-auto w-full flex gap-3">
                     <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FFF0F0] dark:bg-error/10 text-error rounded-2xl font-bold hover:bg-[#FFE5E5] dark:hover:bg-error/20 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FFF0F0] dark:bg-[#FFEAED]/10 text-error rounded-2xl font-bold hover:bg-[#FFE5E5] dark:hover:bg-[#FFEAED]/20 transition-colors"
                       onClick={() => handleProgress('weak')}
                       disabled={savingProgress}
                     >
                       {savingProgress ? <Loader2 size={20} className="animate-spin" /> : <><X size={20} /> Bilmayman</>}
                     </button>
                     <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#EAF6ED] dark:bg-success/20 text-success rounded-2xl font-bold hover:bg-[#D4EED8] dark:hover:bg-success/30 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#EAF6ED] dark:bg-[#E8F8ED]/10 text-success rounded-2xl font-bold hover:bg-[#D4EED8] dark:hover:bg-[#E8F8ED]/20 transition-colors"
                       onClick={() => handleProgress('learned')}
                       disabled={savingProgress}
                     >
