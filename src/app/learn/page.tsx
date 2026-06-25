@@ -162,7 +162,7 @@ export default function LearnPage() {
   const currentVocab = filteredVocabs[currentIndex];
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100dvh-110px)] w-full overflow-hidden">
+    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-4">
         <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
