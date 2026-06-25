@@ -7,6 +7,59 @@ import { ArrowLeft, Loader2, UploadCloud, FileImage, CheckCircle, XCircle } from
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
+const compressImage = async (file: File): Promise<File> => {
+  if (!file.type.startsWith('image/')) return file;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 1280; // Max width or height
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); // fallback
+            }
+          },
+          'image/jpeg',
+          0.75 // 75% quality
+        );
+      };
+      img.onerror = () => resolve(file); // fallback
+    };
+    reader.onerror = () => resolve(file); // fallback
+  });
+};
+
 export default function TaskDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
 
@@ -17,6 +70,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,10 +99,18 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      setFiles(prev => [...prev, ...newFiles]);
+      setIsCompressing(true);
+      try {
+        const fileList = Array.from(e.target.files);
+        const compressedFiles = await Promise.all(fileList.map(f => compressImage(f)));
+        setFiles(prev => [...prev, ...compressedFiles]);
+      } catch (err) {
+        console.error("Compression failed:", err);
+      } finally {
+        setIsCompressing(false);
+      }
     }
     // reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -250,10 +312,24 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-4 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 flex flex-col items-center justify-center gap-2 active:bg-primary/10 transition-colors"
+                disabled={isCompressing}
+                className={`w-full py-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
+                  isCompressing 
+                    ? 'border-text-tertiary bg-bg-secondary cursor-not-allowed opacity-70' 
+                    : 'border-primary/50 bg-primary/5 active:bg-primary/10'
+                }`}
               >
-                <UploadCloud size={24} className="text-primary" />
-                <span className="text-xs font-medium text-primary">Rasm qo'shish</span>
+                {isCompressing ? (
+                  <>
+                    <Loader2 size={24} className="text-text-tertiary animate-spin" />
+                    <span className="text-xs font-medium text-text-tertiary">Qisqartirilmoqda...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={24} className="text-primary" />
+                    <span className="text-xs font-medium text-primary">Rasm qo'shish</span>
+                  </>
+                )}
               </button>
 
               <Button 
