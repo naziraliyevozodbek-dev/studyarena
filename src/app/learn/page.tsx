@@ -161,6 +161,7 @@ export default function LearnPage() {
 
   const currentVocab = filteredVocabs[currentIndex];
 
+  return (
     <div className="animate-fade-in pb-20 pt-2 flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-4">
@@ -220,8 +221,6 @@ export default function LearnPage() {
                     style={{ width: `${((currentIndex + 1) / filteredVocabs.length) * 100}%` }}
                   />
                 </div>
-                <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
-              </div>
                 <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
               </div>
             </div>
