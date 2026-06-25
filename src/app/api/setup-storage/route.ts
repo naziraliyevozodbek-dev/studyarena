@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export async function GET() {
   try {
     // Create bucket
-    const { data, error } = await supabaseAdmin.storage.createBucket('homeworks', {
+    const { data, error } = await supabaseAdmin.storage.createBucket('homework-files', {
       public: true,
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
       fileSizeLimit: 5242880 // 5MB

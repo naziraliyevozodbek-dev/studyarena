@@ -8,7 +8,8 @@ if (!token) {
 
 export const bot = new Bot(token);
 
-const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'; // Must be HTTPS
+const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://example.com');
 
 // Setup commands
 bot.command('start', async (ctx) => {

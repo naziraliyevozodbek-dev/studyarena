@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 import { Settings, LogOut, Medal, Flame, Star, Zap, Moon, Sun } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 export default function ProfilePage() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-h1 m-0">Profile</h1>
-        <button onClick={() => alert("Settings menyusi tez kunda ishga tushadi!")} className="text-text-secondary hover:text-text-main bg-bg-card p-2 rounded-full shadow-sm">
+        <button onClick={() => router.push('/profile/settings')} className="text-text-secondary hover:text-text-main bg-bg-card p-2 rounded-full shadow-sm">
           <Settings size={20} />
         </button>
       </div>

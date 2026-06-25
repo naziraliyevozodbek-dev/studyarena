@@ -30,6 +30,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
   const [translation, setTranslation] = useState('');
   const [exampleGerman, setExampleGerman] = useState('');
   const [exampleUzbek, setExampleUzbek] = useState('');
+  const [lessonNumber, setLessonNumber] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkVocabText, setBulkVocabText] = useState('');
@@ -90,7 +91,8 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         return {
           course_id: resolvedParams.id,
           german_word: parts[0]?.trim() || '',
-          translation: parts[1]?.trim() || ''
+          translation: parts[1]?.trim() || '',
+          lesson_number: lessonNumber ? parseInt(lessonNumber, 10) : undefined
         };
       }).filter(w => w.german_word && w.translation);
       
@@ -106,7 +108,8 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         german_word: germanWord,
         translation: translation,
         example_german: exampleGerman || null,
-        example_uzbek: exampleUzbek || null
+        example_uzbek: exampleUzbek || null,
+        lesson_number: lessonNumber ? parseInt(lessonNumber, 10) : undefined
       };
     }
 
@@ -296,6 +299,13 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             
             <Card padding="md" className="mb-8">
               <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
+                <Input
+                  type="number"
+                  placeholder="Dars raqami (masalan: 1, ixtiyoriy)"
+                  value={lessonNumber}
+                  onChange={(e) => setLessonNumber(e.target.value)}
+                  className="mb-2"
+                />
                 {isBulkMode ? (
                   <>
                     <p className="text-xs text-text-secondary">Pasting format: <code>Word - Translation</code>. Har bir qatorda bittadan so'z yozing.</p>

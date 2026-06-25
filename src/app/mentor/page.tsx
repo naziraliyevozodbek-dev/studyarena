@@ -112,14 +112,16 @@ export default function MentorDashboard() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Header */}
-      <div className="mb-6 pt-4 flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-text-main mb-1">Mentor Dashboard</h1>
-          <p className="text-text-secondary text-sm">Overview of your teaching progress.</p>
+      <div className="mb-6 pt-4 flex justify-between items-center mb-6 px-1">
+        <h1 className="text-2xl font-bold text-text-main m-0">Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <Link href="/profile/settings" className="text-text-secondary hover:text-text-main bg-bg-card p-2 rounded-xl shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </Link>
+          <button className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-xl flex items-center gap-2" onClick={() => setShowNewCourse(true)}>
+            <Plus size={18} /> Yangi
+          </button>
         </div>
-        <Button onClick={() => setShowNewCourse(!showNewCourse)} size="sm" className="flex items-center gap-1">
-          <Plus size={16} /> New
-        </Button>
       </div>
 
       <div>

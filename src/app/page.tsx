@@ -36,6 +36,13 @@ export default function Home() {
       fetchWeakWords();
       fetchActivity();
 
+      if (!localStorage.getItem('studyarena_onboarded')) {
+        // If they have no enrolled courses and not onboarded yet
+        // Wait for fetchEnrolledCourses to finish? 
+        // We'll just rely on localStorage to keep it simple and fast
+        router.push('/onboarding');
+      }
+
       // Setup Realtime Listener for new vocabularies
       const channel = supabase
         .channel('schema-db-changes')

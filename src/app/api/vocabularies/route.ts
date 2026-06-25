@@ -35,8 +35,8 @@ export async function POST(req: Request) {
       .eq('course_id', courseId)
       .order('lesson_number', { ascending: false })
       .limit(1);
-    
-    const nextLessonNumber = vocab && vocab.length > 0 ? vocab[0].lesson_number + 1 : 1;
+    const providedLessonNumber = body.lesson_number ? parseInt(body.lesson_number, 10) : null;
+    const nextLessonNumber = providedLessonNumber || (vocab && vocab.length > 0 ? vocab[0].lesson_number + 1 : 1);
 
     let result;
     if (body.words && Array.isArray(body.words)) {
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         course_id: courseId,
         german_word: w.german_word,
         translation: w.translation,
-        lesson_number: nextLessonNumber
+        lesson_number: providedLessonNumber || (w.lesson_number ? parseInt(w.lesson_number, 10) : nextLessonNumber)
       }));
 
       const { data, error } = await supabaseAdmin
