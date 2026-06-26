@@ -117,6 +117,8 @@ export default function WeakWordsPage() {
     );
   }
 
+  const currentVocab = vocabularies[currentIndex];
+
   return (
     <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
       <audio id="tts-player" playsInline className="hidden" />
