@@ -65,24 +65,35 @@ export default function LearnPage() {
     }
   };
 
+  const fallbackTTS = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'de-DE';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const playTTS = (text: string) => {
     if (!text) return;
     try {
-      // In Telegram WebApps, SpeechSynthesis is often buggy. 
-      // We use Google Translate TTS via Audio object which works reliably.
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=dict-chrome-ex&q=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
-      audio.play().catch((err) => {
-        console.error("Audio playback failed, falling back to Web Speech API", err);
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'de-DE';
-          window.speechSynthesis.speak(utterance);
+      const player = document.getElementById('tts-player') as HTMLAudioElement;
+      if (player) {
+        player.src = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
+        const playPromise = player.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.error("Audio playback failed", err);
+            fallbackTTS(text);
+          });
         }
-      });
+      } else {
+        fallbackTTS(text);
+      }
     } catch (e) {
       console.error("TTS Error:", e);
+      fallbackTTS(text);
     }
   };
 
@@ -184,6 +195,7 @@ export default function LearnPage() {
 
   return (
     <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
+      <audio id="tts-player" playsInline className="hidden" />
       {/* Header */}
       <div className="flex items-center justify-between pt-4 px-4 mb-4">
         <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
