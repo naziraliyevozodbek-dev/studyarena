@@ -324,7 +324,7 @@ export default function Home() {
              </Link>
              <Link href="/challenges">
                <Card interactive padding="md">
-                 <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center mb-3">
+                 <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/10 text-orange-500 flex items-center justify-center mb-3">
                    <Target size={20} />
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Challenges</h3>
@@ -333,7 +333,7 @@ export default function Home() {
              </Link>
              <Link href="/resources">
                <Card interactive padding="md">
-                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mb-3">
+                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
                    <BookOpen size={20} />
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Resources</h3>

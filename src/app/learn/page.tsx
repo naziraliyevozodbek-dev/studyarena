@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { toast } from 'sonner';
 
 export default function LearnPage() {
   const { user, token } = useAuth();
@@ -80,11 +81,13 @@ export default function LearnPage() {
     try {
       const player = document.getElementById('tts-player') as HTMLAudioElement;
       if (player) {
-        player.src = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
+        // Use our proxy API to bypass mobile user-agent blocks by Google
+        player.src = `/api/tts?text=${encodeURIComponent(text)}`;
         const playPromise = player.play();
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
             console.error("Audio playback failed", err);
+            toast.error("Ovozni eshitish uchun telefoningiz 'Silent' (ovozsiz) rejimda emasligiga ishonch hosil qiling.");
             fallbackTTS(text);
           });
         }
