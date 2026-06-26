@@ -22,43 +22,16 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      if (!user) return;
-      
-      // Get student's courses
-      const { data: myCourses } = await supabase
-        .from('course_members')
-        .select('course_id')
-        .eq('student_id', user.id);
+      if (!user || !token) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/leaderboard?filter=${timeFilter}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
         
-      if (!myCourses || myCourses.length === 0) {
-        // Just show self
-        setLeaderboard([{
-          rank: 1,
-          name: user.full_name || `@${user.username}`,
-          xp: user.xp || 0,
-          isMe: true,
-          avatar: user.avatar_url
-        }]);
-        setLoading(false);
-        return;
-      }
-      
-      const courseIds = myCourses.map(c => c.course_id);
-      const { data: peers } = await supabase
-        .from('course_members')
-        .select('student_id')
-        .in('course_id', courseIds);
-        
-      const peerIds = [...new Set(peers?.map(p => p.student_id) || [])];
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, full_name, username, xp, avatar_url')
-        .in('id', peerIds)
-        .order('xp', { ascending: false });
-
-      if (data) {
-        const mapped = data.map((l: any, index: number) => ({
+        const mapped = (data.leaderboard || []).map((l: any, index: number) => ({
           rank: index + 1,
           name: l.full_name || `@${l.username}` || 'Unknown',
           xp: l.xp || 0,
@@ -66,14 +39,15 @@ export default function LeaderboardPage() {
           avatar: l.avatar_url
         }));
         setLeaderboard(mapped);
-      } else if (error) {
-        console.error('Failed to fetch leaderboard:', error);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchLeaderboard();
-  }, [supabase, user]);
+  }, [user, token, timeFilter]);
 
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);

@@ -96,10 +96,22 @@ export default function LearnPage() {
     return Array.from(lessons).sort((a, b) => a - b);
   }, [vocabularies]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const filteredVocabs = useMemo(() => {
-    if (selectedLesson === 'all') return vocabularies;
-    return vocabularies.filter(v => v.lesson_number === selectedLesson);
-  }, [vocabularies, selectedLesson]);
+    let result = vocabularies;
+    if (selectedLesson !== 'all') {
+      result = result.filter(v => v.lesson_number === selectedLesson);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(v => 
+        (v.german_word && v.german_word.toLowerCase().includes(q)) || 
+        (v.translation && v.translation.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [vocabularies, selectedLesson, searchQuery]);
 
   // Reset index when lesson changes
   useEffect(() => {
@@ -199,6 +211,16 @@ export default function LearnPage() {
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
           </div>
         )}
+      </div>
+
+      <div className="px-4 mb-4">
+        <input 
+          type="text" 
+          placeholder="So'z qidirish..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white dark:bg-bg-secondary border border-border text-text-main text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+        />
       </div>
 
       <div className="flex-1 flex flex-col w-full px-4">

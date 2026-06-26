@@ -320,6 +320,24 @@ export default function Home() {
                  <p className="text-xs text-text-secondary">{pendingTasksCount} pending tasks</p>
                </Card>
              </Link>
+             <Link href="/challenges">
+               <Card interactive padding="md">
+                 <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center mb-3">
+                   <Target size={20} />
+                 </div>
+                 <h3 className="font-semibold text-text-main mb-1">Challenges</h3>
+                 <p className="text-xs text-text-secondary">Earn extra XP</p>
+               </Card>
+             </Link>
+             <Link href="/resources">
+               <Card interactive padding="md">
+                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mb-3">
+                   <BookOpen size={20} />
+                 </div>
+                 <h3 className="font-semibold text-text-main mb-1">Resources</h3>
+                 <p className="text-xs text-text-secondary">Files & Links</p>
+               </Card>
+             </Link>
           </div>
 
           {/* Weak Words Section */}

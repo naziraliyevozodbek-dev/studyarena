@@ -1,0 +1,219 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSupabase } from '@/hooks/useSupabase';
+import { useAuth } from '@/context/AuthContext';
+import { ArrowLeft, Loader2, Plus, Target, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+export default function MentorChallenges() {
+  const { user, token } = useAuth();
+  const supabase = useSupabase();
+  const router = useRouter();
+  
+  const [courses, setCourses] = useState<any[]>([]);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Form State
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [xpReward, setXpReward] = useState('100');
+  const [deadline, setDeadline] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
+
+  useEffect(() => {
+    if (user?.id && token) {
+      fetchData();
+    }
+  }, [user, token]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Fetch my courses
+      const { data: myCourses } = await supabase
+        .from('courses')
+        .select('id, title');
+      
+      setCourses(myCourses || []);
+      
+      if (myCourses && myCourses.length > 0) {
+        if (!selectedCourse) setSelectedCourse(myCourses[0].id);
+        
+        // Fetch challenges
+        const { data: challData } = await supabase
+          .from('challenges')
+          .select('id, course_id, title, description, xp_reward, deadline, courses(title)')
+          .order('deadline', { ascending: true, nullsFirst: false });
+          
+        setChallenges(challData || []);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !xpReward || !selectedCourse) return;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('challenges')
+        .insert([{
+          course_id: selectedCourse,
+          title,
+          description,
+          xp_reward: parseInt(xpReward),
+          deadline: deadline || null
+        }])
+        .select('*, courses(title)')
+        .single();
+        
+      if (error) throw error;
+      
+      setChallenges(prev => [...prev, data]);
+      setShowModal(false);
+      setTitle('');
+      setDescription('');
+      setXpReward('100');
+      setDeadline('');
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this challenge?")) return;
+    try {
+      const { error } = await supabase.from('challenges').delete().eq('id', id);
+      if (error) throw error;
+      setChallenges(prev => prev.filter(c => c.id !== id));
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in pb-24 relative">
+      {/* Header */}
+      <div className="flex items-center justify-between pt-4 px-4 mb-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="text-primary">
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-2xl font-bold text-text-main">Challenges</h1>
+        </div>
+        <Button variant="primary" onClick={() => setShowModal(true)} className="px-3 py-1.5 h-auto text-xs">
+          <Plus size={16} className="mr-1" /> New
+        </Button>
+      </div>
+
+      <div className="px-4">
+        {challenges.length === 0 ? (
+          <Card padding="lg" className="text-center border-dashed">
+            <Target size={32} className="mx-auto text-text-tertiary mb-4" />
+            <h2 className="text-lg font-semibold text-text-main mb-1">No Challenges</h2>
+            <p className="text-sm text-text-secondary mb-4">Create competitive challenges for students.</p>
+            <Button onClick={() => setShowModal(true)}>Add Challenge</Button>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {challenges.map(ch => (
+              <Card key={ch.id} padding="md" className="flex justify-between items-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                  {ch.xp_reward} XP
+                </div>
+                <div className="pr-12">
+                  <h3 className="font-semibold text-text-main text-base mb-1">{ch.title}</h3>
+                  <div className="text-xs text-text-secondary flex gap-2">
+                    <span className="font-medium px-2 py-0.5 rounded bg-bg-secondary">{ch.courses?.title}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleDelete(ch.id)}
+                  className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-bg-card rounded-t-3xl p-6 pb-12 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-text-main">New Challenge</h2>
+              <button onClick={() => setShowModal(false)} className="text-text-tertiary p-2 -mr-2">
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreate} className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm font-bold text-text-secondary mb-1 block">Course</label>
+                <select 
+                  value={selectedCourse} 
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                  className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none border border-border"
+                  required
+                >
+                  <option value="" disabled>Select course</option>
+                  {courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-text-secondary mb-1 block">Title</label>
+                <Input type="text" value={title} onChange={e => setTitle(e.target.value)} required placeholder="e.g. Read 5 articles" />
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-text-secondary mb-1 block">Description</label>
+                <Input type="text" value={description} onChange={e => setDescription(e.target.value)} required placeholder="Rules..." />
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-sm font-bold text-text-secondary mb-1 block">XP Reward</label>
+                  <Input type="number" value={xpReward} onChange={e => setXpReward(e.target.value)} required placeholder="100" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-sm font-bold text-text-secondary mb-1 block">Deadline</label>
+                  <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
+                </div>
+              </div>
+
+              <Button type="submit" disabled={saving} className="mt-4">
+                {saving ? <Loader2 className="animate-spin" /> : 'Create Challenge'}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
