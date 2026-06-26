@@ -117,7 +117,7 @@ export default function SettingsPage() {
         <div className="w-20"></div>
       </div>
 
-      <div className="w-full px-4 flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-6">
         
         {/* Profile Settings */}
         <section>

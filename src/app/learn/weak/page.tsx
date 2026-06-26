@@ -118,9 +118,9 @@ export default function WeakWordsPage() {
   }
 
   return (
-    <div className="animate-fade-in pb-24 h-screen flex flex-col">
+    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
       <audio id="tts-player" playsInline className="hidden" />
-      <div className="flex items-center justify-between pt-4 mb-6">
+      <div className="flex items-center justify-between pt-4 mb-4">
         <button onClick={() => router.push('/')} className="text-primary active:opacity-70 transition-opacity">
           <div className="flex items-center gap-1">
             <ArrowLeft size={22} />
@@ -131,7 +131,7 @@ export default function WeakWordsPage() {
         <div className="w-20"></div>
       </div>
 
-      <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
+      <div className="flex-1 flex flex-col w-full min-h-0 px-4 pb-6">
         {vocabularies.length === 0 ? (
           <Card padding="lg" className="text-center mt-10 border-dashed border-success">
             <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
@@ -156,7 +156,7 @@ export default function WeakWordsPage() {
           </Card>
         ) : (
           <>
-            <div className="mb-6">
+            <div className="mb-4 flex-shrink-0">
               <div className="flex justify-between text-sm font-medium text-error mb-2">
                 <span>Card {currentIndex + 1} of {vocabularies.length}</span>
                 <span>{Math.round(((currentIndex + 1) / vocabularies.length) * 100)}%</span>
@@ -169,31 +169,31 @@ export default function WeakWordsPage() {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center min-h-[300px] mb-8 [perspective:1000px]">
-              <div className={`relative w-full h-80 sm:h-96 transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
-                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center border-2 border-error shadow-md bg-error/5">
+            <div className="flex-1 flex flex-col min-h-0 [perspective:1000px]">
+              <div className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border-2 border-error shadow-md bg-error/5 rounded-3xl">
                   <div className="absolute top-4 right-4">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); playTTS(vocabularies[currentIndex]?.german_word); }}
+                      onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
                       className="p-3 bg-error/10 text-error rounded-full hover:bg-error/20 active:bg-error/30 transition-colors"
                     >
                       <Volume2 size={24} />
                     </button>
                   </div>
                   
-                  <span className="text-xs font-bold text-error uppercase tracking-widest mb-4 px-3 py-1 bg-error/10 rounded-full mt-4">
+                  <span className="text-xs font-bold text-error uppercase tracking-widest mb-4 px-3 py-1 bg-error/10 rounded-full w-fit">
                     🇩🇪 German
                   </span>
                   
                   <h2 className="text-4xl font-black text-text-main mb-6 break-words w-full">
-                    {vocabularies[currentIndex]?.german_word}
+                    {currentVocab?.german_word}
                   </h2>
                   
-                  {vocabularies[currentIndex]?.example_german && (
+                  {currentVocab?.example_german && (
                     <div className="w-full bg-white p-4 rounded-xl mt-2 text-left border-l-4 border-error">
                       <span className="text-xs text-error font-bold mb-1 block">📝 Example:</span>
                       <p className="text-sm font-medium text-text-main leading-relaxed">
-                        {vocabularies[currentIndex]?.example_german}
+                        {currentVocab?.example_german}
                       </p>
                     </div>
                   )}
@@ -205,20 +205,20 @@ export default function WeakWordsPage() {
                   </div>
                 </Card>
 
-                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col items-center justify-center p-6 text-center border-2 border-primary shadow-md bg-primary/5">
-                  <span className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-3 py-1 bg-primary/10 rounded-full mt-4">
+                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border-2 border-primary shadow-md bg-primary/5 rounded-3xl">
+                  <span className="text-xs font-bold text-primary uppercase tracking-widest mb-4 px-3 py-1 bg-primary/10 rounded-full w-fit">
                     🇺🇿 Uzbek
                   </span>
                   
                   <h2 className="text-3xl font-bold text-text-main mb-6 break-words w-full">
-                    {vocabularies[currentIndex]?.translation}
+                    {currentVocab?.translation}
                   </h2>
                   
-                  {vocabularies[currentIndex]?.example_uzbek && (
+                  {currentVocab?.example_uzbek && (
                     <div className="w-full bg-white p-4 rounded-xl mt-2 text-left border-l-4 border-success">
                       <span className="text-xs text-text-tertiary font-bold mb-1 block">📝 Misol:</span>
                       <p className="text-sm font-medium text-text-main leading-relaxed">
-                        {vocabularies[currentIndex]?.example_uzbek}
+                        {currentVocab?.example_uzbek}
                       </p>
                     </div>
                   )}

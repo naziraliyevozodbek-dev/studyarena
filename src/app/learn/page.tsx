@@ -183,8 +183,8 @@ export default function LearnPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col px-4 pt-10">
-        <Skeleton className="w-full h-[450px] rounded-3xl" />
+      <div className="flex-1 flex flex-col pt-10">
+        <Skeleton className="w-full h-full min-h-[300px] rounded-3xl" />
         <div className="flex justify-between items-center mt-auto pb-28">
           <Skeleton className="w-14 h-14 rounded-2xl" />
           <Skeleton className="w-20 h-6" />
@@ -200,7 +200,7 @@ export default function LearnPage() {
     <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
       <audio id="tts-player" playsInline className="hidden" />
       {/* Header */}
-      <div className="flex items-center justify-between pt-4 px-4 mb-4">
+      <div className="flex items-center justify-between pt-4 mb-4">
         <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
           <ArrowLeft size={20} />
           <span>Flashcardlar</span>
@@ -223,7 +223,7 @@ export default function LearnPage() {
         )}
       </div>
 
-      <div className="px-4 mb-4">
+      <div className="mb-4 flex-shrink-0">
         <input 
           type="text" 
           placeholder="So'z qidirish..." 
@@ -233,7 +233,7 @@ export default function LearnPage() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col w-full px-4">
+      <div className="flex-1 flex flex-col w-full min-h-0">
         {filteredVocabs.length === 0 ? (
           <Card padding="lg" className="text-center mt-10 border-dashed">
             <h2 className="text-xl font-bold text-text-main mb-2">So'zlar yo'q!</h2>
@@ -256,7 +256,7 @@ export default function LearnPage() {
         ) : (
           <>
             {/* Progress Bar */}
-            <div className="mb-6">
+            <div className="mb-4 flex-shrink-0">
               <div className="flex items-center gap-4 text-sm font-bold text-text-secondary mb-2">
                 <span className="bg-white dark:bg-bg-secondary px-3 py-1 rounded-full shadow-sm">
                   {currentIndex + 1} / {filteredVocabs.length}
@@ -272,22 +272,22 @@ export default function LearnPage() {
             </div>
 
             {/* Flashcard Area */}
-            <div className="flex-1 flex flex-col justify-center min-h-[420px] mb-8 [perspective:1000px]">
-              <div className={`relative w-full h-[450px] transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+            <div className="flex-1 flex flex-col justify-center min-h-0 mb-4 [perspective:1000px]">
+              <div className={`relative w-full h-full min-h-[300px] transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
                 
                 {/* Front (German) */}
-                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
-                  <div className="flex justify-end mb-2">
+                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer overflow-hidden" onClick={() => !isFlipped && setIsFlipped(true)}>
+                  <div className="flex justify-end mb-2 flex-shrink-0">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                       <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
                     </button>
                   </div>
                   
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 flex-shrink-0">
                       Nemischa
                     </span>
-                    <h2 className="text-4xl font-bold text-text-main mb-6 break-words w-full">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-text-main mb-6 break-words w-full">
                       {currentVocab?.german_word}
                     </h2>
                     
@@ -303,9 +303,9 @@ export default function LearnPage() {
                   </div>
                   
                   {currentVocab?.example_german && (
-                    <div className="w-full text-left mt-6">
-                      <div className="w-full h-px bg-border mb-6"></div>
-                      <div className="flex items-center gap-2 mb-3">
+                    <div className="w-full text-left mt-4 flex-shrink-0">
+                      <div className="w-full h-px bg-border mb-4"></div>
+                      <div className="flex items-center gap-2 mb-2">
                         <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
                           <span className="text-[10px] text-primary font-bold">T</span>
                         </div>
@@ -317,8 +317,8 @@ export default function LearnPage() {
                     </div>
                   )}
 
-                  <div className="w-full flex justify-center mt-auto pt-4">
-                    <button className="w-full flex items-center justify-center gap-3 py-4 border border-border rounded-2xl text-primary font-bold hover:bg-primary/5 transition-colors">
+                  <div className="w-full flex justify-center mt-auto pt-4 flex-shrink-0">
+                    <button className="w-full flex items-center justify-center gap-3 py-3 border border-border rounded-2xl text-primary font-bold hover:bg-primary/5 transition-colors">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                       Tarjimani ko'rish <ChevronDown size={20} />
                     </button>
@@ -326,8 +326,8 @@ export default function LearnPage() {
                 </Card>
 
                 {/* Back (Translation) */}
-                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
-                  <div className="flex justify-end mb-2">
+                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl overflow-hidden">
+                  <div className="flex justify-end mb-2 flex-shrink-0">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                       <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
                     </button>
@@ -398,7 +398,8 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center mt-auto pt-4 pb-28 px-4">
+            {/* Bottom Controls */}
+            <div className="flex justify-between items-center mt-auto pt-2 pb-2 flex-shrink-0">
               <button 
                 onClick={handlePrev}
                 disabled={currentIndex === 0}
