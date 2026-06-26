@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export default function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -97,7 +98,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       }).filter(w => w.german_word && w.translation);
       
       if (words.length === 0) {
-        alert("Noto'g'ri format! Iltimos, Word - Translation shaklida kiriting.");
+        toast.error("Noto'g'ri format! Iltimos, Word - Translation shaklida kiriting.");
         return;
       }
       bodyData = { words };
@@ -135,9 +136,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       setExampleUzbek('');
       setBulkVocabText('');
       fetchCourseData();
+      toast.success("Vocabulary qo'shildi!");
     } catch (error: any) {
       console.error('Error adding vocab:', error);
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setIsAddingVocab(false);
     }
@@ -174,9 +176,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       setHwXp('50');
       setHwDeadline('');
       fetchCourseData();
+      toast.success("Homework yaratildi!");
     } catch (error: any) {
       console.error('Error adding homework:', error);
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setIsAddingHw(false);
     }
@@ -196,10 +199,11 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         const errData = await res.json();
         throw new Error(errData.error || 'Failed to delete');
       }
+      toast.success("Kurs o'chirildi!");
       router.push('/mentor');
     } catch (error: any) {
       console.error('Error deleting course:', error);
-      alert("Xatolik: " + error.message);
+      toast.error("Xatolik: " + error.message);
     } finally {
       setIsDeleting(false);
     }

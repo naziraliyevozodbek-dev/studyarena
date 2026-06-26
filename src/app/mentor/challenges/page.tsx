@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { toast } from 'sonner';
 
 export default function MentorChallenges() {
   const { user, token } = useAuth();
@@ -86,8 +88,9 @@ export default function MentorChallenges() {
       setDescription('');
       setXpReward('100');
       setDeadline('');
+      toast.success("Challenge created successfully");
     } catch (error: any) {
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
     } finally {
       setSaving(false);
     }
@@ -99,8 +102,9 @@ export default function MentorChallenges() {
       const { error } = await supabase.from('challenges').delete().eq('id', id);
       if (error) throw error;
       setChallenges(prev => prev.filter(c => c.id !== id));
+      toast.success("Challenge deleted");
     } catch (error: any) {
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
     }
   };
 
@@ -160,16 +164,7 @@ export default function MentorChallenges() {
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-bg-card rounded-t-3xl p-6 pb-12 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-text-main">New Challenge</h2>
-              <button onClick={() => setShowModal(false)} className="text-text-tertiary p-2 -mr-2">
-                ✕
-              </button>
-            </div>
-            
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="New Challenge">
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
               <div>
                 <label className="text-sm font-bold text-text-secondary mb-1 block">Course</label>
@@ -211,9 +206,7 @@ export default function MentorChallenges() {
                 {saving ? <Loader2 className="animate-spin" /> : 'Create Challenge'}
               </Button>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

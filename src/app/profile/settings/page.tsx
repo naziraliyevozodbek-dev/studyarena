@@ -7,6 +7,7 @@ import { ArrowLeft, Moon, Sun, Bell, Volume2, Globe, HelpCircle, User as UserIco
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const { user, token, refreshUser } = useAuth();
@@ -73,11 +74,11 @@ export default function SettingsPage() {
         await refreshUser(); // refresh context
       }
 
-      alert("Sozlamalar saqlandi!");
+      toast.success("Sozlamalar saqlandi!");
       router.push(role === 'mentor' ? '/mentor' : '/profile');
     } catch (error: any) {
       console.error(error);
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -96,10 +97,10 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Progressni tozalashda xatolik yuz berdi");
       
-      alert("Progress muvaffaqiyatli tozalandi!");
+      toast.success("Progress muvaffaqiyatli tozalandi!");
       await refreshUser();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }

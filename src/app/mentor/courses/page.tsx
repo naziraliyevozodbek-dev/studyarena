@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { toast } from 'sonner';
 
 type Course = {
   id: string;
@@ -59,7 +61,7 @@ export default function MentorCourses() {
     if (!newTitle) return;
     
     if (!token) {
-      alert("Xatolik: Avtorizatsiya tokeni topilmadi. Iltimos, Telegram ilovani yopib boshqatdan kiring yoki keshni tozalang!");
+      toast.error("Xatolik: Avtorizatsiya tokeni topilmadi. Iltimos, Telegram ilovani yopib boshqatdan kiring yoki keshni tozalang!");
       return;
     }
 
@@ -83,13 +85,14 @@ export default function MentorCourses() {
       if (res.ok && data.course) {
         setCourses(prev => [...prev, data.course]);
         setShowModal(false);
+        toast.success("Kurs muvaffaqiyatli yaratildi");
       } else {
         console.error("API Error:", data.error);
-        alert(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}. Iltimos, Telegram keshni tozalab qayta kiring.`);
+        toast.error(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}.`);
       }
     } catch (err: unknown) {
       console.error("Network Error:", err);
-      alert('Tarmoq xatosi: ' + (err instanceof Error ? err.message : String(err)));
+      toast.error('Tarmoq xatosi: ' + (err instanceof Error ? err.message : String(err)));
     }
     setCreating(false);
   };
@@ -99,7 +102,7 @@ export default function MentorCourses() {
     e.stopPropagation();
     
     if (!token) {
-      alert("Xatolik: Token yo'q!");
+      toast.error("Xatolik: Token yo'q!");
       return;
     }
 
@@ -117,19 +120,20 @@ export default function MentorCourses() {
       
       if (res.ok && data.success) {
         setCourses(prev => prev.filter(c => c.id !== courseId));
+        toast.success("Kurs o'chirildi");
       } else {
         console.error(data.error);
-        alert("O'chirishda xatolik: " + data.error);
+        toast.error("O'chirishda xatolik: " + data.error);
       }
     } catch (err: unknown) {
-      alert("Tarmoq xatosi: " + (err instanceof Error ? err.message : String(err)));
+      toast.error("Tarmoq xatosi: " + (err instanceof Error ? err.message : String(err)));
     }
   };
 
   const copyCode = (code: string, e?: React.MouseEvent) => {
     e?.preventDefault();
     navigator.clipboard.writeText(code);
-    alert('Code copied!');
+    toast.success('Code copied!');
   };
 
   return (
@@ -176,11 +180,7 @@ export default function MentorCourses() {
         ))}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-bg-card rounded-xl w-full max-w-sm p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-text-main mb-4">Create New Course</h2>
-            
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Create New Course">
             <label className="block text-sm font-bold text-text-secondary mb-1">Course Title</label>
             <Input 
               type="text" 
@@ -199,18 +199,15 @@ export default function MentorCourses() {
             </div>
 
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
               <Button 
                 variant="primary"
                 onClick={handleCreateCourse}
                 disabled={creating}
               >
-                {creating ? <Loader2 size={16} className="animate-spin" /> : 'Create'}
+                {creating ? <Loader2 size={16} className="animate-spin" /> : 'Create Course'}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

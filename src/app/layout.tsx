@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import BottomNav from "@/components/BottomNav";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({
                 {children}
               </div>
               <BottomNav />
+              <Toaster position="top-center" theme="system" richColors closeButton />
             </div>
           </AuthProvider>
         </ThemeProvider>

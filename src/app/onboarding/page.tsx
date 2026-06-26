@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { BookOpen, GraduationCap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { toast } from 'sonner';
 
 export default function OnboardingPage() {
   const { user, token, refreshUser } = useAuth();
@@ -51,7 +52,7 @@ export default function OnboardingPage() {
       }
     } catch (error) {
       console.error('Error in onboarding:', error);
-      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+      toast.error('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
     } finally {
       setLoading(false);
     }

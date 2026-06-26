@@ -43,29 +43,24 @@ export default function WeakWordsPage() {
     }
   };
 
-  const playAudioFallback = (text: string) => {
-    try {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
-      audio.play().catch(() => {});
-    } catch (e) {}
-  };
-
   const playTTS = (text: string) => {
     if (!text) return;
     try {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'de-DE';
-        utterance.rate = 0.9;
-        utterance.onerror = () => playAudioFallback(text);
-        window.speechSynthesis.speak(utterance);
-      } else {
-        playAudioFallback(text);
-      }
+      // In Telegram WebApps, SpeechSynthesis is often buggy. 
+      // We use Google Translate TTS via Audio object which works reliably.
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=dict-chrome-ex&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      audio.play().catch((err) => {
+        console.error("Audio playback failed, falling back to Web Speech API", err);
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'de-DE';
+          window.speechSynthesis.speak(utterance);
+        }
+      });
     } catch (e) {
-      playAudioFallback(text);
+      console.error("TTS Error:", e);
     }
   };
 

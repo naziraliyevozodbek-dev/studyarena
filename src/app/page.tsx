@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function Home() {
   const { user, token } = useAuth();
@@ -166,21 +167,21 @@ export default function Home() {
 
       if (!res.ok) {
         if (data.error === 'Course not found') {
-          alert('Bunday kodli kurs topilmadi. Kodni tekshiring.');
+          toast.error('Bunday kodli kurs topilmadi. Kodni tekshiring.');
         } else if (data.error === 'Already enrolled') {
-          alert('Siz bu kursga avval qo\'shilgansiz.');
+          toast.error('Siz bu kursga avval qo\'shilgansiz.');
         } else {
-          alert('Xatolik yuz berdi: ' + data.error);
+          toast.error('Xatolik yuz berdi: ' + data.error);
         }
         return;
       }
 
-      alert('Kursga muvaffaqiyatli qo\'shildingiz!');
+      toast.success('Kursga muvaffaqiyatli qo\'shildingiz!');
       setCourseCode('');
       fetchEnrolledCourses();
     } catch (error: any) {
       console.error('Enrollment error:', error.message);
-      alert('Tarmoq xatosi yuz berdi');
+      toast.error('Tarmoq xatosi yuz berdi');
     } finally {
       setEnrolling(false);
     }
@@ -194,10 +195,11 @@ export default function Home() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to leave');
+      toast.success('Kursdan chiqdingiz');
       fetchEnrolledCourses();
     } catch (error) {
       console.error(error);
-      alert('Xatolik yuz berdi');
+      toast.error('Xatolik yuz berdi');
     }
   };
 

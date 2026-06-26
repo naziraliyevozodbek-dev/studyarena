@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Check, X, User } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { toast } from 'sonner';
 
 export default function HomeworkReview({ params }: { params: Promise<{ id: string, homeworkId: string }> }) {
   const resolvedParams = use(params);
@@ -61,9 +62,10 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
       setSubmissions(prev => prev.map(s => 
         s.id === submissionId ? { ...s, status } : s
       ));
+      toast.success(`Javob ${status === 'graded' ? 'qabul qilindi' : 'qaytarildi'}!`);
     } catch (error) {
       console.error('Grading error:', error);
-      alert('Xatolik yuz berdi');
+      toast.error('Xatolik yuz berdi');
     } finally {
       setGradingId(null);
     }
