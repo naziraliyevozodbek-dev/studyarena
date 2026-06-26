@@ -14,7 +14,7 @@ type LeaderboardEntry = {
 };
 
 export default function LeaderboardPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const supabase = useSupabase();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
