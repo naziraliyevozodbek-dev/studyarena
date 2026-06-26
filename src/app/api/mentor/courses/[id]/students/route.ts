@@ -40,20 +40,21 @@ export async function GET(
     }
 
     const studentIds = members.map((m: any) => m.student_id);
-    console.log("studentIds for course", courseId, ":", studentIds);
+
+    if (studentIds.length === 0) {
+      return NextResponse.json({ students: [] });
+    }
 
     const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
-      .select('id, full_name, avatar_url')
+      .select('id, full_name, username, avatar_url, xp, level')
       .in('id', studentIds);
-      
-    console.log("Fetched users:", users);
 
     if (usersError) throw usersError;
 
     return NextResponse.json({ students: users || [] });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Students API error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

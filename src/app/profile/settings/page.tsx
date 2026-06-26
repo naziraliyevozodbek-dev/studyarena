@@ -83,6 +83,28 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResetProgress = async () => {
+    if (!token) return;
+    const confirmReset = window.confirm("Rostdan ham barcha progressni noldan boshlamoqchimisiz? XP va yodlangan so'zlar o'chib ketadi. Bu amalni ortga qaytarib bo'lmaydi!");
+    if (!confirmReset) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch('/api/user/reset-progress', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Progressni tozalashda xatolik yuz berdi");
+      
+      alert("Progress muvaffaqiyatli tozalandi!");
+      await refreshUser();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in pb-24 text-text-main">
       <div className="flex items-center justify-between pt-4 mb-6">
@@ -94,7 +116,7 @@ export default function SettingsPage() {
         <div className="w-20"></div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 flex flex-col gap-6">
+      <div className="w-full px-4 flex flex-col gap-6">
         
         {/* Profile Settings */}
         <section>
@@ -214,6 +236,26 @@ export default function SettingsPage() {
                 onChange={(e) => setDailyGoal(e.target.value)}
                 className="w-full accent-primary"
               />
+            </Card>
+          </section>
+        )}
+
+        {/* Data Management */}
+        {role === 'student' && (
+          <section>
+            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-3 px-2">Ma'lumotlar</h2>
+            <Card padding="md" className="border-error/20 bg-error/5">
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-sm text-error">Progressni tozalash</span>
+                <span className="text-xs text-text-secondary">Yig'ilgan barcha XP va yodlangan so'zlarni noldan boshlash.</span>
+                <Button 
+                  onClick={handleResetProgress} 
+                  variant="outline" 
+                  className="mt-2 text-error border-error/50 hover:bg-error/10"
+                >
+                  <RefreshCcw size={16} className="mr-2"/> Noldan boshlash
+                </Button>
+              </div>
             </Card>
           </section>
         )}

@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     if (insertError) throw insertError;
 
     return NextResponse.json({ homework }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Create homework error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

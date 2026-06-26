@@ -51,7 +51,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ tasks });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

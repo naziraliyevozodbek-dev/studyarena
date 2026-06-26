@@ -114,7 +114,7 @@ export default function WeakWordsPage() {
             </div>
             <h2 className="text-xl font-bold text-text-main mb-2">No Weak Words!</h2>
             <p className="text-text-secondary text-sm mb-6">
-              You're doing great! Keep learning new words.
+              You&apos;re doing great! Keep learning new words.
             </p>
             <Button onClick={() => router.push('/')}>Go to Dashboard</Button>
           </Card>
@@ -204,7 +204,7 @@ export default function WeakWordsPage() {
                       onClick={() => handleProgress('weak')}
                       disabled={savingProgress}
                     >
-                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Still don't know</>}
+                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Still don&apos;t know</>}
                     </Button>
                     <Button 
                       className="flex-1 py-6 bg-success text-white hover:bg-success-hover" 

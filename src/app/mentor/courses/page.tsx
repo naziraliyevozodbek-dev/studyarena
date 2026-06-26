@@ -87,9 +87,9 @@ export default function MentorCourses() {
         console.error("API Error:", data.error);
         alert(`Kechirasiz, kurs yaratishda xatolik yuz berdi: ${data.error}. Iltimos, Telegram keshni tozalab qayta kiring.`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Network Error:", err);
-      alert('Tarmoq xatosi: ' + err.message);
+      alert('Tarmoq xatosi: ' + (err instanceof Error ? err.message : String(err)));
     }
     setCreating(false);
   };
@@ -121,8 +121,8 @@ export default function MentorCourses() {
         console.error(data.error);
         alert("O'chirishda xatolik: " + data.error);
       }
-    } catch (err: any) {
-      alert("Tarmoq xatosi: " + err.message);
+    } catch (err: unknown) {
+      alert("Tarmoq xatosi: " + (err instanceof Error ? err.message : String(err)));
     }
   };
 

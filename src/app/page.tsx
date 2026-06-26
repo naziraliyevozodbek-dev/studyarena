@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -230,8 +231,17 @@ export default function Home() {
       </div>
 
       {fetchingCourses ? (
-        <div className="flex justify-center items-center py-20">
-          <Loader2 className="animate-spin text-primary" size={32} />
+        <div className="flex flex-col gap-4 py-4">
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-20 w-full rounded-[var(--radius-card)]" />
+            <Skeleton className="h-20 w-full rounded-[var(--radius-card)]" />
+            <Skeleton className="h-20 w-full rounded-[var(--radius-card)]" />
+          </div>
+          <Skeleton className="h-16 w-full rounded-[var(--radius-card)] mt-4" />
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <Skeleton className="h-28 w-full rounded-[var(--radius-card)]" />
+            <Skeleton className="h-28 w-full rounded-[var(--radius-card)]" />
+          </div>
         </div>
       ) : enrolledCourses.length === 0 ? (
         <div>

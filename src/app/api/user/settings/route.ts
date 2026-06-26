@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
+import { z } from 'zod';
+
+const SettingsSchema = z.object({
+  full_name: z.string().min(2, "Full name must be at least 2 characters").max(50).optional(),
+  role: z.enum(['student', 'mentor']).optional()
+});
+
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -12,7 +19,7 @@ export async function POST(req: Request) {
     const userId = decoded.sub;
 
     const body = await req.json();
-    const { full_name, role } = body;
+    const { full_name, role } = SettingsSchema.parse(body);
 
     const updateData: any = {};
     if (full_name) updateData.full_name = full_name;
@@ -32,8 +39,8 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ user });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Update settings error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

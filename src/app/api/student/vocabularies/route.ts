@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     if (vocabError) throw vocabError;
 
     return NextResponse.json({ vocabularies });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

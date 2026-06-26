@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     const courses = memberData?.map(m => m.courses) || [];
 
     return NextResponse.json({ courses });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

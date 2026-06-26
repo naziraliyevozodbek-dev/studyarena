@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
+import { z } from 'zod';
+
+const JoinSchema = z.object({
+  course_code: z.string().length(6, "Course code must be exactly 6 characters")
+});
+
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -10,9 +16,8 @@ export async function POST(req: Request) {
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
 
-    const { course_code } = await req.json();
-
-    if (!course_code) return NextResponse.json({ error: 'Missing course_code' }, { status: 400 });
+    const body = await req.json();
+    const { course_code } = JoinSchema.parse(body);
 
     // Find course
     const { data: course, error: courseError } = await supabaseAdmin
@@ -48,7 +53,7 @@ export async function POST(req: Request) {
     if (enrollError) throw enrollError;
 
     return NextResponse.json({ success: true, course_id: course.id });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

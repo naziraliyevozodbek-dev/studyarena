@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     if (status === 'weak') {
       newMistakesCount += 1;
-      // If student clicks "Don't know" even once, it becomes weak until they learn it properly
+      // If student clicks "Don&apos;t know" even once, it becomes weak until they learn it properly
       finalStatus = 'weak';
     } else if (status === 'learned') {
       // If they had too many mistakes, maybe we still keep it 'weak' but just incremented? 
@@ -120,8 +120,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Progress error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

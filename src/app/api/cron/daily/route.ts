@@ -5,7 +5,7 @@ import { bot } from '@/lib/bot';
 // This endpoint should be protected in production (e.g., verifying Vercel CRON headers)
 export async function GET(req: Request) {
   try {
-    // Find all students who haven't completed a lesson today or need a reminder
+    // Find all students who haven&apos;t completed a lesson today or need a reminder
     // For this prototype, we'll send a reminder to all active students
     const { data: students, error } = await supabaseAdmin
       .from('users')
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     const promises = students.map(async (student: any) => {
       const telegramId = student.telegram_id;
       if (telegramId) {
-        let message = `Hey ${student.full_name?.split(' ')[0]}! 👋\n\nIt's time for your daily learning session! Keep your 🔥 ${student.streak} day streak alive!`;
+        const message = `Hey ${student.full_name?.split(' ')[0]}! 👋\n\nIt&apos;s time for your daily learning session! Keep your 🔥 ${student.streak} day streak alive!`;
         
         try {
           await bot.api.sendMessage(telegramId, message);

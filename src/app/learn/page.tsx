@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function LearnPage() {
   const { user, token } = useAuth();
@@ -153,8 +154,13 @@ export default function LearnPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div className="flex-1 flex flex-col px-4 pt-10">
+        <Skeleton className="w-full h-[450px] rounded-3xl" />
+        <div className="flex justify-between items-center mt-auto pb-28">
+          <Skeleton className="w-14 h-14 rounded-2xl" />
+          <Skeleton className="w-20 h-6" />
+          <Skeleton className="w-14 h-14 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -187,7 +193,7 @@ export default function LearnPage() {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col max-w-md mx-auto w-full px-4">
+      <div className="flex-1 flex flex-col w-full px-4">
         {filteredVocabs.length === 0 ? (
           <Card padding="lg" className="text-center mt-10 border-dashed">
             <h2 className="text-xl font-bold text-text-main mb-2">So'zlar yo'q!</h2>
@@ -233,7 +239,7 @@ export default function LearnPage() {
                 <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
                   <div className="flex justify-end mb-2">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
                     </button>
                   </div>
                   
@@ -283,7 +289,7 @@ export default function LearnPage() {
                 <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
                   <div className="flex justify-end mb-2">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-warning fill-warning" : "text-text-tertiary dark:text-white/50"} />
+                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
                     </button>
                   </div>
                   
@@ -352,7 +358,7 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center mt-auto pt-4 pb-2 px-4">
+            <div className="flex justify-between items-center mt-auto pt-4 pb-28 px-4">
               <button 
                 onClick={handlePrev}
                 disabled={currentIndex === 0}

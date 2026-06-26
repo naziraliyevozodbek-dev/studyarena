@@ -10,10 +10,13 @@ export default function BottomNav() {
   const { user } = useAuth();
 
   if (!user) return null;
+  if (pathname === '/onboarding') return null;
 
   const navItems = user.role === 'mentor'
     ? [
         { href: '/mentor', label: 'Dashboard', icon: Home },
+        { href: '/mentor/courses', label: 'Courses', icon: BookOpen },
+        { href: '/mentor/homework', label: 'Homework', icon: CheckSquare },
         { href: '/profile', label: 'Profile', icon: User },
       ]
     : [
@@ -26,7 +29,7 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center bg-bg-card/80 backdrop-blur-xl border-t border-border shadow-[var(--app-shadow-nav)] pb-[env(safe-area-inset-bottom)]">
-      <nav className="flex justify-between items-center w-full max-w-[480px] px-2 h-[68px]">
+      <nav className="flex justify-between items-center w-full px-2 h-[68px]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));

@@ -1,29 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, CheckSquare, Clock, CheckCircle } from 'lucide-react';
+import { Loader2, CheckSquare, Clock, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
+interface Task {
+  id: string;
+  title: string;
+  xp_reward: number;
+  deadline?: string;
+  courses?: { title: string };
+  submission?: { status: string; score?: number };
+}
+
 export default function TasksPage() {
   const { user, token } = useAuth();
   const router = useRouter();
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === 'mentor') {
-      router.push('/mentor');
-      return;
-    }
-    fetchTasks();
-  }, [user, router]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch('/api/student/tasks', {
@@ -37,7 +37,16 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchTasks();
+  }, [user, router, fetchTasks]);
 
   if (loading) {
     return (
@@ -63,7 +72,7 @@ export default function TasksPage() {
             <CheckSquare size={48} className="mx-auto text-text-tertiary mb-4" />
             <h2 className="text-xl font-bold text-text-main mb-2">No Homeworks!</h2>
             <p className="text-text-secondary text-sm mb-6">
-              You're all caught up. Wait for your mentor to add new homeworks.
+              You&apos;re all caught up. Wait for your mentor to add new homeworks.
             </p>
             <Button onClick={() => router.push('/')}>Go to Dashboard</Button>
           </Card>
@@ -110,9 +119,9 @@ export default function TasksPage() {
                       <Card interactive padding="md" className="opacity-80">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-text-main leading-tight line-through">{task.title}</h3>
-                          {task.submission.status === 'graded' ? (
+                          {task.submission?.status === 'graded' ? (
                             <span className="text-xs font-bold text-success flex items-center gap-1">
-                              <CheckCircle size={14} /> +{task.submission.score || task.xp_reward} XP
+                              <CheckCircle size={14} /> +{task.submission?.score || task.xp_reward} XP
                             </span>
                           ) : (
                             <span className="text-xs font-medium text-warning bg-warning/10 px-2 py-1 rounded-full">

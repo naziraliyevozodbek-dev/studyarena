@@ -92,8 +92,8 @@ export default function MentorDashboard() {
       } else {
         setErrorMsg(`API Xatosi: ${data.error || 'Nomaʼlum xatolik'}`);
       }
-    } catch (err: any) {
-      setErrorMsg(`Tizim xatosi: ${err.message}`);
+    } catch (err: unknown) {
+      setErrorMsg(`Tizim xatosi: ${(err instanceof Error ? err.message : String(err))}`);
     } finally {
       setIsCreating(false);
     }

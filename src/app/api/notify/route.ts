@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         message = `📚 *New Vocabulary added!*\nYour mentor has added new words to lesson ${data.lesson_number}.\n\nTime to learn: ${data.word}`;
         break;
       case 'homework':
-        message = `📝 *New Homework: ${data.title}*\n\nReward: ${data.xp} XP\nDon't forget to submit before the deadline!`;
+        message = `📝 *New Homework: ${data.title}*\n\nReward: ${data.xp} XP\nDon&apos;t forget to submit before the deadline!`;
         break;
       case 'challenge':
         message = `🔥 *New Challenge Unlocked!*\n\n${data.title}\nComplete this quest to earn extra XP!`;

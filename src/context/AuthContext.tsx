@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       setError(null);
 
-      // @ts-ignore
+      // @ts-expect-error - Telegram WebApp is injected dynamically
       const tg = window.Telegram?.WebApp;
       if (!tg) {
         throw new Error('Please open inside Telegram');
@@ -53,16 +53,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       const initData = tg.initData;
       if (!initData) {
-        // For local testing without Telegram, you could uncomment the following:
-        /*
-        setUser({
-          id: 'test-id', full_name: 'Test Student', username: 'test_student',
-          avatar_url: '', role: 'student', xp: 1250, level: 5, streak: 3
-        });
-        setToken('dummy-token');
-        setIsLoading(false);
-        return;
-        */
         throw new Error('No Telegram initData found');
       }
 
@@ -79,8 +69,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await res.json();
       setUser(data.user);
       setToken(data.token);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -88,11 +82,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Load Telegram Web App JS if not present
-    if (typeof window !== 'undefined' && !(window as any).Telegram) {
+    if (typeof window !== 'undefined' && !('Telegram' in window)) {
       const script = document.createElement('script');
       script.src = 'https://telegram.org/js/telegram-web-app.js';
       script.async = true;
-      script.onload = authenticate;
+      script.onload = () => { authenticate(); };
       document.body.appendChild(script);
       return () => {
         if (document.body.contains(script)) {
@@ -100,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       };
     } else {
-      authenticate();
+      setTimeout(() => authenticate(), 0);
     }
   }, []);
 

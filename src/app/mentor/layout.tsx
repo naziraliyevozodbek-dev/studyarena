@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import MentorNav from '@/components/MentorNav';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -42,11 +41,8 @@ export default function MentorLayout({
   }
 
   return (
-    <div className="app-container">
-      <div className="content-area">
-        {children}
-      </div>
-      <MentorNav />
+    <div className="w-full h-full">
+      {children}
     </div>
   );
 }

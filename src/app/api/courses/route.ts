@@ -23,14 +23,22 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
     }
 
     return NextResponse.json({ courses });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 }
+
+import { z } from 'zod';
+
+const CourseSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters").max(100),
+  description: z.string().optional(),
+  course_code: z.string().length(6, "Course code must be exactly 6 characters")
+});
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
@@ -43,7 +51,10 @@ export async function POST(req: Request) {
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
     const body = await req.json();
-    const { title, description, course_code } = body;
+    
+    // Validate request body
+    const validatedData = CourseSchema.parse(body);
+    const { title, description, course_code } = validatedData;
 
     const { data: course, error } = await supabaseAdmin
       .from('courses')
@@ -58,13 +69,13 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error('Course insert error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
     }
 
     return NextResponse.json({ course }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Course creation error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }
 
@@ -138,12 +149,12 @@ export async function DELETE(req: Request) {
 
     if (error) {
       console.error('Course delete error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Course deletion error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

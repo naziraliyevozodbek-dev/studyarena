@@ -59,7 +59,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-col items-center justify-center p-4 pt-12 h-full">
-      <div className="w-full max-w-md animate-fade-in text-center">
+      <div className="w-full px-4 animate-fade-in text-center">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <BookOpen size={40} className="text-primary" />
         </div>

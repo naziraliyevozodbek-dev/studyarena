@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
     let leaderboardMessage = `🏆 *Weekly Leaderboard Results!* 🏆\n\n`;
     topStudents.forEach((student: any) => {
-      let medal = student.rank === 1 ? '🥇' : student.rank === 2 ? '🥈' : '🥉';
+      const medal = student.rank === 1 ? '🥇' : student.rank === 2 ? '🥈' : '🥉';
       leaderboardMessage += `${medal} ${student.full_name} - ${student.total_xp} XP\n`;
     });
 

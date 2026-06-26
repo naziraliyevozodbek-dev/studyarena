@@ -10,12 +10,12 @@ export async function GET() {
       fileSizeLimit: 5242880 // 5MB
     });
 
-    if (error && error.message !== 'The resource already exists') {
+    if (error && (error instanceof Error ? error.message : String(error)) !== 'The resource already exists') {
       throw error;
     }
 
     return NextResponse.json({ success: true, message: 'Bucket created or already exists' });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }
