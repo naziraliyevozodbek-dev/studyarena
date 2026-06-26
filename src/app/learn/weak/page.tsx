@@ -43,13 +43,29 @@ export default function WeakWordsPage() {
     }
   };
 
+  const playAudioFallback = (text: string) => {
+    try {
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      audio.play().catch(() => {});
+    } catch (e) {}
+  };
+
   const playTTS = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'de-DE';
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert("Text-to-speech is not supported in this browser.");
+    if (!text) return;
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.9;
+        utterance.onerror = () => playAudioFallback(text);
+        window.speechSynthesis.speak(utterance);
+      } else {
+        playAudioFallback(text);
+      }
+    } catch (e) {
+      playAudioFallback(text);
     }
   };
 

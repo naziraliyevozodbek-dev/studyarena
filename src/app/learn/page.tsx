@@ -65,21 +65,29 @@ export default function LearnPage() {
     }
   };
 
+  const playAudioFallback = (text: string) => {
+    try {
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(url);
+      audio.play().catch(() => {});
+    } catch (e) {}
+  };
+
   const playTTS = (text: string) => {
     if (!text) return;
     try {
-      // Primary: Web Speech API
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'de-DE';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.9;
+        utterance.onerror = () => playAudioFallback(text);
+        window.speechSynthesis.speak(utterance);
+      } else {
+        playAudioFallback(text);
+      }
     } catch (e) {
-      // Fallback
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=de&q=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
-      audio.play().catch(err => {
-        console.error("Audio play failed:", err);
-      });
+      playAudioFallback(text);
     }
   };
 

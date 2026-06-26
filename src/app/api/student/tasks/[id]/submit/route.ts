@@ -32,6 +32,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           const arrayBuffer = await file.arrayBuffer();
           const buffer = Buffer.from(arrayBuffer);
 
+          // Ensure bucket exists
+          try {
+            await supabaseAdmin.storage.createBucket('homework-files', {
+              public: true,
+              allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+              fileSizeLimit: 5242880
+            });
+          } catch (e) {
+            // Ignore if it already exists
+          }
+
           const { data: uploadData, error: uploadError } = await supabaseAdmin
             .storage
             .from('homework-files')
