@@ -53,8 +53,8 @@ export default function MentorChallenges() {
         // Fetch challenges
         const { data: challData } = await supabase
           .from('challenges')
-          .select('id, course_id, title, description, xp_reward, deadline, courses(title)')
-          .order('deadline', { ascending: true, nullsFirst: false });
+          .select('id, course_id, title, description, xp_reward, created_at, courses(title)')
+          .order('created_at', { ascending: false });
           
         setChallenges(challData || []);
       }
@@ -76,8 +76,7 @@ export default function MentorChallenges() {
           course_id: selectedCourse,
           title,
           description,
-          xp_reward: parseInt(xpReward),
-          deadline: deadline || null
+          xp_reward: parseInt(xpReward)
         }])
         .select('*, courses(title)')
         .single();

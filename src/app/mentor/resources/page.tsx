@@ -53,7 +53,7 @@ export default function MentorResources() {
         // Fetch resources
         const { data: resData } = await supabase
           .from('resources')
-          .select('id, course_id, title, description, file_url, file_type, created_at, courses(title)')
+          .select('id, course_id, title, file_url, type, created_at, courses(title)')
           .order('created_at', { ascending: false });
           
         setResources(resData || []);
@@ -75,9 +75,8 @@ export default function MentorResources() {
         .insert([{
           course_id: selectedCourse,
           title,
-          description,
           file_url: fileUrl,
-          file_type: fileType
+          type: fileType
         }])
         .select('*, courses(title)')
         .single();
