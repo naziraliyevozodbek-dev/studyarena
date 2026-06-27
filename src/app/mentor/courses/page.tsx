@@ -31,20 +31,25 @@ export default function MentorCourses() {
   const { user, token } = useAuth();
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    if (token) {
+      fetchCourses();
+    }
+  }, [token]);
 
   const fetchCourses = async () => {
     setLoading(true);
-    // Fetch courses where mentor_id matches. (Handled by RLS anyway)
-    const { data, error } = await supabase
-      .from('courses')
-      .select('id, title, course_code');
-    
-    if (data) {
-      // In a real app we'd also fetch the student count.
-      setCourses(data);
-    } else if (error) {
+    try {
+      const res = await fetch('/api/courses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.courses) {
+        setCourses(data.courses);
+      } else if (data.error) {
+        console.error('Failed to fetch courses', data.error);
+      }
+    } catch (error) {
       console.error('Failed to fetch courses', error);
     }
     setLoading(false);

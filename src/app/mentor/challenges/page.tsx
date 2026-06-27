@@ -39,12 +39,13 @@ export default function MentorChallenges() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch my courses
-      const { data: myCourses } = await supabase
-        .from('courses')
-        .select('id, title');
+      const res = await fetch('/api/courses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const resData = await res.json();
+      const myCourses = resData.courses || [];
       
-      setCourses(myCourses || []);
+      setCourses(myCourses);
       
       if (myCourses && myCourses.length > 0) {
         if (!selectedCourse) setSelectedCourse(myCourses[0].id);
