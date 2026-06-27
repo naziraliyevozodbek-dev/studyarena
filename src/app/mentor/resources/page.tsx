@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from 'sonner';
 
@@ -164,48 +165,57 @@ export default function MentorResources() {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="New Resource">
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Course</label>
-                <select 
-                  value={selectedCourse} 
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                  className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none border border-border"
-                  required
-                >
-                  <option value="" disabled>Select course</option>
-                  {courses.map(c => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
+              <Select 
+                label="Course"
+                value={selectedCourse} 
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                required
+              >
+                <option value="" disabled>Select course</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Title</label>
-                <Input type="text" value={title} onChange={e => setTitle(e.target.value)} required placeholder="e.g. Grammar PDF" />
-              </div>
+              <Input 
+                label="Title"
+                type="text" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                required 
+                placeholder="e.g. Grammar PDF" 
+              />
 
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Description (Optional)</label>
-                <Input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Short note..." />
-              </div>
+              <Input 
+                label="Description (Optional)"
+                type="text" 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                placeholder="Short note..." 
+              />
 
               <div className="flex gap-3">
                 <div className="flex-[2]">
-                  <label className="text-sm font-bold text-text-secondary mb-1 block">Link / URL</label>
-                  <Input type="url" value={fileUrl} onChange={e => setFileUrl(e.target.value)} required placeholder="https://..." />
+                  <Input 
+                    label="Link / URL"
+                    type="url" 
+                    value={fileUrl} 
+                    onChange={e => setFileUrl(e.target.value)} 
+                    required 
+                    placeholder="https://..." 
+                  />
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-bold text-text-secondary mb-1 block">Type</label>
-                  <select 
+                  <Select 
+                    label="Type"
                     value={fileType} 
                     onChange={(e) => setFileType(e.target.value)}
-                    className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none border border-border"
                   >
                     <option value="pdf">PDF</option>
                     <option value="video">Video</option>
                     <option value="audio">Audio</option>
                     <option value="other">Other</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
 

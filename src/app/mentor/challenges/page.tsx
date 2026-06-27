@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from 'sonner';
 
@@ -166,39 +167,54 @@ export default function MentorChallenges() {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="New Challenge">
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Course</label>
-                <select 
-                  value={selectedCourse} 
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                  className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none border border-border"
-                  required
-                >
-                  <option value="" disabled>Select course</option>
-                  {courses.map(c => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
+              <Select 
+                label="Course"
+                value={selectedCourse} 
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                required
+              >
+                <option value="" disabled>Select course</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Title</label>
-                <Input type="text" value={title} onChange={e => setTitle(e.target.value)} required placeholder="e.g. Read 5 articles" />
-              </div>
+              <Input 
+                label="Title"
+                type="text" 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                required 
+                placeholder="e.g. Read 5 articles" 
+              />
 
-              <div>
-                <label className="text-sm font-bold text-text-secondary mb-1 block">Description</label>
-                <Input type="text" value={description} onChange={e => setDescription(e.target.value)} required placeholder="Rules..." />
-              </div>
+              <Input 
+                label="Description"
+                type="text" 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                required 
+                placeholder="Rules..." 
+              />
 
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="text-sm font-bold text-text-secondary mb-1 block">XP Reward</label>
-                  <Input type="number" value={xpReward} onChange={e => setXpReward(e.target.value)} required placeholder="100" />
+                  <Input 
+                    label="XP Reward"
+                    type="number" 
+                    value={xpReward} 
+                    onChange={e => setXpReward(e.target.value)} 
+                    required 
+                    placeholder="100" 
+                  />
                 </div>
                 <div className="flex-1">
-                  <label className="text-sm font-bold text-text-secondary mb-1 block">Deadline</label>
-                  <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
+                  <Input 
+                    label="Deadline"
+                    type="date" 
+                    value={deadline} 
+                    onChange={e => setDeadline(e.target.value)} 
+                  />
                 </div>
               </div>
 
