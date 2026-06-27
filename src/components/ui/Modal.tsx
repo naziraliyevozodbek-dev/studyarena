@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useHaptic } from '@/hooks/useHaptic';
 
@@ -14,6 +15,11 @@ interface ModalProps {
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const haptic = useHaptic();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on ESC
   useEffect(() => {
@@ -38,10 +44,12 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen, haptic]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="fixed inset-0 z-[9999] flex flex-col justify-end" style={{ WebkitTapHighlightColor: 'transparent' }}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -76,6 +84,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
