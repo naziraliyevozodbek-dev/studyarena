@@ -58,14 +58,14 @@ export default function ResourcesPage() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Header */}
-      <div className="flex items-center pt-4 px-4 mb-6">
+      <div className="flex items-center pt-4 mb-6">
         <button onClick={() => router.back()} className="mr-4 text-primary">
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-2xl font-bold text-text-main">Resources</h1>
       </div>
 
-      <div className="px-4">
+      <div className="w-full">
         {resources.length === 0 ? (
           <Card padding="lg" className="text-center border-dashed">
             <FileText size={32} className="mx-auto text-text-tertiary mb-4" />

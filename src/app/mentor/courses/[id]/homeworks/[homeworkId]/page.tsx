@@ -81,7 +81,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
 
   if (!homework) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+      <div className="flex flex-col items-center justify-center h-screen text-center">
         <h1 className="text-xl font-bold mb-2">Vazifa topilmadi</h1>
         <Button onClick={() => router.back()}>Orqaga qaytish</Button>
       </div>
@@ -93,7 +93,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
   return (
     <div className="animate-fade-in pb-32">
       {/* Header */}
-      <div className="flex items-center justify-between pt-4 px-4 mb-6">
+      <div className="flex items-center justify-between pt-4 mb-6">
         <button 
           onClick={() => router.push(`/mentor/courses/${resolvedParams.id}`)} 
           className="text-primary active:opacity-70 transition-opacity"
@@ -105,7 +105,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
         </button>
       </div>
 
-      <div className="px-4">
+      <div className="w-full">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-text-main leading-tight mb-2">{homework.title}</h1>
           <p className="text-sm font-medium text-text-secondary mb-4">{homework.courses?.title}</p>

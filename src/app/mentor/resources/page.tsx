@@ -119,7 +119,7 @@ export default function MentorResources() {
   return (
     <div className="animate-fade-in pb-24 relative">
       {/* Header */}
-      <div className="flex items-center justify-between pt-4 px-4 mb-6">
+      <div className="flex items-center justify-between pt-4 mb-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="text-primary">
             <ArrowLeft size={24} />
@@ -131,7 +131,7 @@ export default function MentorResources() {
         </Button>
       </div>
 
-      <div className="px-4">
+      <div className="w-full">
         {resources.length === 0 ? (
           <Card padding="lg" className="text-center border-dashed">
             <BookOpen size={32} className="mx-auto text-text-tertiary mb-4" />

@@ -236,7 +236,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
   if (!task) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+      <div className="flex flex-col items-center justify-center h-screen text-center">
         <h1 className="text-xl font-bold mb-2">Vazifa topilmadi</h1>
         <Button onClick={() => router.back()}>Orqaga qaytish</Button>
       </div>
@@ -262,7 +262,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   return (
     <div className="animate-fade-in pb-24 min-h-screen flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between pt-4 mb-6 px-4">
+      <div className="flex items-center justify-between pt-4 mb-6">
         <button 
           onClick={() => { haptic.impact('light'); router.back(); }} 
           className="text-primary active:opacity-70 transition-opacity"
@@ -274,7 +274,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col px-4">
+      <div className="flex-1 flex flex-col w-full">
         <div className="mb-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
           <div className="flex justify-between items-start mb-2">
             <h1 className="text-2xl font-bold text-text-main leading-tight">{task.title}</h1>
