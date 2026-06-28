@@ -13,9 +13,12 @@ const webAppUrl = process.env.NEXT_PUBLIC_SITE_URL ||
 
 // Setup commands
 bot.command('start', async (ctx) => {
+  const timestamp = Date.now();
+  const cacheBustedUrl = `${webAppUrl}?v=${timestamp}`;
+  
   const keyboard = new InlineKeyboard().webApp(
     '🚀 Open StudyArena',
-    webAppUrl
+    cacheBustedUrl
   );
 
   await ctx.reply(
