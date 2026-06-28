@@ -67,6 +67,7 @@ export default function MentorResources() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Creating resource...");
     if (!title || !fileUrl || !selectedCourse) return;
     setSaving(true);
     try {
