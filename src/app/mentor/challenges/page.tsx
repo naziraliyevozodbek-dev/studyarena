@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { toast } from 'sonner';
 
 export default function MentorChallenges() {
@@ -225,11 +226,10 @@ export default function MentorChallenges() {
                   />
                 </div>
                 <div className="flex-1">
-                  <Input 
+                  <DatePicker 
                     label="Deadline"
-                    type="date" 
                     value={deadline} 
-                    onChange={e => setDeadline(e.target.value)} 
+                    onChange={val => setDeadline(val)} 
                   />
                 </div>
               </div>

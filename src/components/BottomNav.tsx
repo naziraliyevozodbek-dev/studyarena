@@ -16,7 +16,6 @@ export default function BottomNav() {
     ? [
         { href: '/mentor', label: 'Dashboard', icon: Home },
         { href: '/mentor/courses', label: 'Courses', icon: BookOpen },
-        { href: '/mentor/homework', label: 'Homework', icon: CheckSquare },
         { href: '/profile', label: 'Profile', icon: User },
       ]
     : [

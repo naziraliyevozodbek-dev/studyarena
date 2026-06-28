@@ -45,25 +45,47 @@ export async function POST(req: Request) {
 
     const telegramUser = JSON.parse(userStr);
 
-    // Upsert user in Supabase
-    const { data: user, error } = await supabaseAdmin
+    // Check if user exists
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
-      .upsert(
-        {
-          telegram_id: telegramUser.id,
-          full_name: [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' '),
-          username: telegramUser.username,
-          avatar_url: telegramUser.photo_url,
-          // role defaults to 'student' in db schema
-        },
-        { onConflict: 'telegram_id' }
-      )
-      .select()
+      .select('*')
+      .eq('telegram_id', telegramUser.id)
       .single();
 
-    if (error || !user) {
-      console.error('Error upserting user:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    let user;
+
+    if (existingUser) {
+      // Update only avatar if they exist, preserve their name and role
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .update({ avatar_url: telegramUser.photo_url || '' })
+        .eq('id', existingUser.id)
+        .select()
+        .single();
+        
+      if (error || !data) {
+        console.error('Error updating user:', error);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+      user = data;
+    } else {
+      // Insert new user
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .insert({
+          telegram_id: telegramUser.id,
+          full_name: [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' ') || 'User',
+          username: telegramUser.username || '',
+          avatar_url: telegramUser.photo_url || '',
+        })
+        .select()
+        .single();
+        
+      if (error || !data) {
+        console.error('Error inserting user:', error);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+      user = data;
     }
 
     // Generate Supabase Custom JWT

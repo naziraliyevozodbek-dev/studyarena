@@ -145,25 +145,18 @@ export default function MentorCourses() {
     <div className="animate-fade-in relative h-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-h1 m-0">My Courses</h1>
-        <Button 
-          onClick={handleOpenModal}
-          variant="primary"
-          className="w-auto text-xs py-2 px-3 rounded-lg"
-        >
-          <Plus size={16} /> New
-        </Button>
       </div>
 
-      <div className="space-y-4">
+      <div>
         {loading ? (
           <div className="flex justify-center p-8"><Loader2 className="animate-spin text-text-tertiary" /></div>
         ) : courses.length === 0 ? (
           <p className="text-text-secondary text-sm text-center py-8">No courses yet. Create one!</p>
         ) : courses.map(course => (
-          <Card key={course.id} className="p-0 overflow-hidden m-0">
-            <Link href={`/mentor/courses/${course.id}`} className="p-5 block hover:bg-bg-secondary transition">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-text-main">{course.title}</h3>
+          <Card key={course.id} padding="none" className="overflow-hidden mb-3">
+            <Link href={`/mentor/courses/${course.id}`} className="p-4 block hover:bg-bg-secondary transition">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="font-bold text-text-main text-base">{course.title}</h3>
                 <ChevronRight size={18} className="text-text-tertiary" />
               </div>
               <div className="flex items-center gap-4 text-xs font-semibold text-text-secondary">
@@ -213,6 +206,14 @@ export default function MentorCourses() {
               </Button>
             </div>
       </Modal>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={handleOpenModal}
+        className="fixed bottom-20 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-40"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }

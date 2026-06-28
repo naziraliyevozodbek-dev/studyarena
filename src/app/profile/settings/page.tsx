@@ -7,6 +7,7 @@ import { ArrowLeft, Moon, Sun, Bell, Volume2, Globe, HelpCircle, User as UserIco
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -206,15 +207,17 @@ export default function SettingsPage() {
                 </div>
                 <span className="font-semibold text-sm">Til</span>
               </div>
-              <select 
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="bg-bg-secondary text-sm font-semibold rounded-lg px-2 py-1 outline-none border-none"
-              >
-                <option value="uz">O'zbekcha</option>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-              </select>
+              <div className="w-1/2">
+                <Select 
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="bg-bg-secondary text-sm font-semibold !py-2 !px-3"
+                >
+                  <option value="uz">O'zbekcha</option>
+                  <option value="en">English</option>
+                  <option value="ru">Русский</option>
+                </Select>
+              </div>
             </div>
           </Card>
         </section>
@@ -269,21 +272,25 @@ export default function SettingsPage() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <HelpCircle size={18} />
                 </div>
-                <span className="font-semibold text-sm">Yordam va Aloqa (@naz1raliyev_05)</span>
+                <span className="font-semibold text-sm">Yordam va Aloqa</span>
               </div>
               <ArrowLeft size={16} className="rotate-135 text-text-tertiary" />
             </a>
           </Card>
         </section>
+        
+        <div className="h-24"></div> {/* spacer for fixed button */}
 
-        <Button 
-          onClick={handleSaveSettings} 
-          disabled={loading}
-          fullWidth
-          className="mt-4 mb-8 py-4 text-lg"
-        >
-          {loading ? <Loader2 size={24} className="animate-spin" /> : 'Saqlash'}
-        </Button>
+        <div className="fixed bottom-[80px] left-0 right-0 px-4 z-40 flex justify-center">
+          <Button 
+            onClick={handleSaveSettings} 
+            disabled={loading}
+            fullWidth
+            className="py-4 text-lg shadow-lg bg-primary hover:bg-primary-active text-white rounded-2xl w-full max-w-md mx-auto"
+          >
+            {loading ? <Loader2 size={24} className="animate-spin" /> : 'Saqlash'}
+          </Button>
+        </div>
 
       </div>
     </div>
