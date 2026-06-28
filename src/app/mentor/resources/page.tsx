@@ -51,12 +51,12 @@ export default function MentorResources() {
         if (!selectedCourse) setSelectedCourse(myCourses[0].id);
         
         // Fetch resources
-        const { data: resData } = await supabase
-          .from('resources')
-          .select('id, course_id, title, description, file_url, file_type, created_at, courses(title)')
-          .order('created_at', { ascending: false });
+        const resResponse = await fetch('/api/mentor/resources', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const resData = await resResponse.json();
           
-        setResources(resData || []);
+        setResources(resData.resources || []);
       }
     } catch (error) {
       console.error(error);
@@ -71,21 +71,26 @@ export default function MentorResources() {
     if (!title || !fileUrl || !selectedCourse) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('resources')
-        .insert([{
+      const response = await fetch('/api/mentor/resources', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           course_id: selectedCourse,
           title,
           description,
           file_url: fileUrl,
           file_type: fileType
-        }])
-        .select('*, courses(title)')
-        .single();
-        
-      if (error) throw error;
+        })
+      });
       
-      setResources(prev => [data, ...prev]);
+      const responseData = await response.json();
+      
+      if (!response.ok) throw new Error(responseData.error || 'Failed to save resource');
+      
+      setResources(prev => [responseData.resource, ...prev]);
       setShowModal(false);
       setTitle('');
       setDescription('');
@@ -100,14 +105,24 @@ export default function MentorResources() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
+    if (!confirm('Haqiqatan ham ushbu resursni o`chirmoqchimisiz?')) return;
+    
     try {
-      const { error } = await supabase.from('resources').delete().eq('id', id);
-      if (error) throw error;
+      const response = await fetch(`/api/mentor/resources?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) throw new Error(responseData.error || 'Failed to delete resource');
+      
       setResources(prev => prev.filter(r => r.id !== id));
-      toast.success("Resource deleted!");
+      toast.success("Resurs o'chirildi");
     } catch (error: any) {
-      toast.error("Error: " + error.message);
+      toast.error("Xatolik: " + error.message);
     }
   };
 

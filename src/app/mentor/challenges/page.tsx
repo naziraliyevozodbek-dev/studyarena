@@ -51,12 +51,12 @@ export default function MentorChallenges() {
         if (!selectedCourse) setSelectedCourse(myCourses[0].id);
         
         // Fetch challenges
-        const { data: challData } = await supabase
-          .from('challenges')
-          .select('id, course_id, title, description, xp_reward, deadline, created_at, courses(title)')
-          .order('created_at', { ascending: false });
+        const challResponse = await fetch('/api/mentor/challenges', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const challData = await challResponse.json();
           
-        setChallenges(challData || []);
+        setChallenges(challData.challenges || []);
       }
     } catch (error) {
       console.error(error);
@@ -70,21 +70,26 @@ export default function MentorChallenges() {
     if (!title || !xpReward || !selectedCourse) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('challenges')
-        .insert([{
+      const response = await fetch('/api/mentor/challenges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           course_id: selectedCourse,
           title,
           description,
-          xp_reward: parseInt(xpReward),
+          xp_reward: parseInt(xpReward) || 0,
           deadline: deadline || null
-        }])
-        .select('*, courses(title)')
-        .single();
-        
-      if (error) throw error;
+        })
+      });
       
-      setChallenges(prev => [...prev, data]);
+      const responseData = await response.json();
+      
+      if (!response.ok) throw new Error(responseData.error || 'Failed to save challenge');
+      
+      setChallenges(prev => [responseData.challenge, ...prev]);
       setShowModal(false);
       setTitle('');
       setDescription('');
@@ -99,14 +104,24 @@ export default function MentorChallenges() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this challenge?")) return;
+    if (!confirm('Haqiqatan ham ushbu challengeni o`chirmoqchimisiz?')) return;
+    
     try {
-      const { error } = await supabase.from('challenges').delete().eq('id', id);
-      if (error) throw error;
+      const response = await fetch(`/api/mentor/challenges?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) throw new Error(responseData.error || 'Failed to delete challenge');
+      
       setChallenges(prev => prev.filter(c => c.id !== id));
-      toast.success("Challenge deleted");
+      toast.success("Challenge o'chirildi");
     } catch (error: any) {
-      toast.error("Error: " + error.message);
+      toast.error("Xatolik: " + error.message);
     }
   };
 
