@@ -112,7 +112,7 @@ export async function DELETE(req: Request) {
       .eq('id', id)
       .single();
 
-    if (!resource || resource.courses?.mentor_id !== decoded.sub) {
+    if (!resource || (resource.courses as any)?.mentor_id !== decoded.sub) {
       return NextResponse.json({ error: 'Unauthorized or not found' }, { status: 403 });
     }
 
