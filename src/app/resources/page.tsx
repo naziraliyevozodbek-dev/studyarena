@@ -8,29 +8,26 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 
 export default function ResourcesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const supabase = useSupabase();
   const router = useRouter();
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) fetchResources();
-  }, [user]);
+    if (user?.id && token) fetchResources();
+  }, [user, token]);
 
   const fetchResources = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('resources')
-        .select(`
-          id, title, description, file_url, file_type, created_at,
-          courses (title)
-        `)
-        .order('created_at', { ascending: false });
+      const res = await fetch('/api/student/resources', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
         
-      if (error) throw error;
-      setResources(data || []);
+      if (!res.ok) throw new Error(data.error);
+      setResources(data.resources || []);
     } catch (error) {
       console.error('Error fetching resources:', error);
     } finally {

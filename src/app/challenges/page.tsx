@@ -9,30 +9,26 @@ import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
 export default function ChallengesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const supabase = useSupabase();
   const router = useRouter();
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) fetchChallenges();
-  }, [user]);
+    if (user?.id && token) fetchChallenges();
+  }, [user, token]);
 
   const fetchChallenges = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('challenges')
-        .select(`
-          id, title, description, xp_reward, deadline,
-          courses (title),
-          challenge_submissions (status)
-        `)
-        .order('deadline', { ascending: true, nullsFirst: false });
+      const res = await fetch('/api/student/challenges', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
         
-      if (error) throw error;
-      setChallenges(data || []);
+      if (!res.ok) throw new Error(data.error);
+      setChallenges(data.challenges || []);
     } catch (error) {
       console.error('Error fetching challenges:', error);
     } finally {
