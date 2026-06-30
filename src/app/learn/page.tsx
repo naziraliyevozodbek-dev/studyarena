@@ -23,21 +23,37 @@ export default function LearnPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
 
   useEffect(() => {
-    const saved = localStorage.getItem('studyarena_saved_words');
-    if (saved) {
-      try {
-        setSavedWords(JSON.parse(saved));
-      } catch (e) {}
+    if (vocabularies.length > 0) {
+      const initialSaved: Record<string, boolean> = {};
+      vocabularies.forEach(v => {
+        if (v.is_starred) initialSaved[v.id] = true;
+      });
+      setSavedWords(prev => ({ ...prev, ...initialSaved }));
     }
-  }, []);
+  }, [vocabularies]);
 
-  const toggleSave = (e: React.MouseEvent, id: string) => {
+  const toggleSave = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setSavedWords(prev => {
-      const next = { ...prev, [id]: !prev[id] };
-      localStorage.setItem('studyarena_saved_words', JSON.stringify(next));
-      return next;
-    });
+    
+    const currentStatus = !!savedWords[id];
+    // Optimistic UI update
+    setSavedWords(prev => ({ ...prev, [id]: !currentStatus }));
+
+    try {
+      await fetch('/api/student/learn/star', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ vocabulary_id: id, is_starred: !currentStatus })
+      });
+    } catch (err) {
+      console.error(err);
+      // Revert if error
+      setSavedWords(prev => ({ ...prev, [id]: currentStatus }));
+      toast.error("Saqlashda xatolik yuz berdi");
+    }
   };
 
   useEffect(() => {
@@ -197,7 +213,7 @@ export default function LearnPage() {
   const currentVocab = filteredVocabs[currentIndex];
 
   return (
-    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-hidden">
+    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-y-auto pb-6">
       <audio id="tts-player" playsInline className="hidden" />
       {/* Header */}
       <div className="flex items-center justify-between pt-4 mb-4">
@@ -272,11 +288,11 @@ export default function LearnPage() {
             </div>
 
             {/* Flashcard Area */}
-            <div className="flex-1 flex flex-col justify-center min-h-0 mb-4 [perspective:1000px]">
-              <div className={`relative w-full h-full min-h-[300px] transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+            <div className="flex-1 flex flex-col justify-center mb-4 [perspective:1000px]">
+              <div className={`grid w-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
                 
                 {/* Front (German) */}
-                <Card className="absolute w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer overflow-hidden" onClick={() => !isFlipped && setIsFlipped(true)}>
+                <Card className="col-start-1 row-start-1 w-full min-h-[350px] [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
                   <div className="flex justify-end mb-2 flex-shrink-0">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                       <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
@@ -326,7 +342,7 @@ export default function LearnPage() {
                 </Card>
 
                 {/* Back (Translation) */}
-                <Card className="absolute w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl overflow-hidden">
+                <Card className="col-start-1 row-start-1 w-full min-h-[350px] [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
                   <div className="flex justify-end mb-2 flex-shrink-0">
                     <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                       <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />

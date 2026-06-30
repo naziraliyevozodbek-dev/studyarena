@@ -3,12 +3,13 @@
 import { use, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon, Camera } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
+import { ImageCropper } from '@/components/ImageCropper';
 
 const compressImage = async (file: File): Promise<File> => {
   if (!file.type.startsWith('image/')) return file;
@@ -80,6 +81,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   const [description, setDescription] = useState('');
   const [isCompressing, setIsCompressing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -134,8 +136,24 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleFiles(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files);
+      const images = newFiles.filter(f => f.type.startsWith('image/'));
+      const others = newFiles.filter(f => !f.type.startsWith('image/'));
+      
+      if (others.length > 0) handleFiles(others);
+      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
     }
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    handleFiles([croppedFile]);
+    setCropQueue(prev => prev.slice(1));
+  };
+  
+  const handleCropCancel = () => {
+    const file = cropQueue[0];
+    handleFiles([file]);
+    setCropQueue(prev => prev.slice(1));
   };
 
   // Drag and Drop handlers
@@ -153,7 +171,12 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(Array.from(e.dataTransfer.files));
+      const newFiles = Array.from(e.dataTransfer.files);
+      const images = newFiles.filter(f => f.type.startsWith('image/'));
+      const others = newFiles.filter(f => !f.type.startsWith('image/'));
+      
+      if (others.length > 0) handleFiles(others);
+      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
     }
   };
 
@@ -274,6 +297,14 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
         </button>
       </div>
 
+      {cropQueue.length > 0 && (
+        <ImageCropper 
+          imageFile={cropQueue[0]} 
+          onCropComplete={handleCropComplete} 
+          onCancel={handleCropCancel} 
+        />
+      )}
+
       <div className="flex-1 flex flex-col w-full">
         <div className="mb-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
           <div className="flex justify-between items-start mb-2">
@@ -374,14 +405,25 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 className="w-full bg-bg-secondary border border-border rounded-xl p-3 text-sm min-h-[80px] focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none"
               />
 
-              <input 
-                type="file" 
-                accept="image/*,application/pdf,audio/*"
-                multiple
-                className="hidden" 
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
+              <div className="flex gap-2">
+                <input 
+                  type="file" 
+                  accept="image/*,application/pdf,audio/*"
+                  multiple
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  id="file-upload"
+                />
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden" 
+                  onChange={handleFileChange}
+                  id="camera-upload"
+                />
+              </div>
 
               {files.length > 0 && (
                 <div className="flex flex-col gap-2">
@@ -402,28 +444,28 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 </div>
               )}
 
-              <div 
-                onClick={() => { haptic.impact('light'); fileInputRef.current?.click(); }}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`w-full py-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer
-                  ${isCompressing ? 'border-text-tertiary bg-bg-secondary cursor-not-allowed opacity-70' : 
-                    isDragging ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
-                  }`}
-              >
-                {isCompressing ? (
-                  <>
-                    <Loader2 size={24} className="text-text-tertiary animate-spin" />
-                    <span className="text-xs font-medium text-text-tertiary">Fayl tayyorlanmoqda...</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud size={28} className="text-primary mb-1" />
-                    <span className="text-sm font-medium text-primary">Fayl tanlash yoki tashlash</span>
-                    <span className="text-[10px] text-text-tertiary text-center px-4">Rasm, PDF yoki Audio formatida bo'lishi mumkin.</span>
-                  </>
-                )}
+              <div className="flex gap-2 w-full">
+                <div 
+                  onClick={() => { haptic.impact('light'); document.getElementById('file-upload')?.click(); }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`flex-1 py-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer
+                    ${isCompressing ? 'border-text-tertiary bg-bg-secondary cursor-not-allowed opacity-70' : 
+                      isDragging ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+                    }`}
+                >
+                  <UploadCloud size={24} className="text-primary mb-1" />
+                  <span className="text-xs font-medium text-primary text-center">Fayl/Galereya</span>
+                </div>
+                
+                <div 
+                  onClick={() => { haptic.impact('light'); document.getElementById('camera-upload')?.click(); }}
+                  className={`flex-1 py-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-primary/50 bg-primary/5 hover:bg-primary/10`}
+                >
+                  <Camera size={24} className="text-primary mb-1" />
+                  <span className="text-xs font-medium text-primary text-center">Kamera</span>
+                </div>
               </div>
 
               {submitting && (

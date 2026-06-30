@@ -13,17 +13,31 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const { token } = useAuth();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (token && user?.role !== 'mentor') {
+      fetch('/api/student/badges', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.badges) {
+          setUnlockedBadges(data.badges.map((b: any) => b.badge_type));
+        }
+      })
+      .catch(console.error);
+    }
+  }, [token, user]);
 
   if (!user) return null;
 
   const achievements = [
-    { icon: Flame, name: 'On Fire', desc: '3 Day Streak', active: user.streak >= 3 },
-    { icon: Zap, name: 'Fast Learner', desc: '100 Total XP', active: user.xp >= 100 },
-    { icon: Star, name: 'XP Master', desc: '1000 Total XP', active: user.xp >= 1000 },
+    { id: 'streak_3', icon: Flame, name: 'On Fire', desc: '3 kunlik Streak (davomiylik)' },
+    { id: 'xp_100', icon: Zap, name: 'Tez o\'rganuvchi', desc: '100 jami XP yig\'ish' },
+    { id: 'xp_1000', icon: Star, name: 'XP Master', desc: '1000 jami XP yig\'ish' },
   ];
 
   return (
@@ -83,28 +97,25 @@ export default function ProfilePage() {
           {/* Badges Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-lg font-bold text-text-main tracking-tight">Badges</h2>
-              <button className="text-sm font-semibold text-primary">See All</button>
+              <h2 className="text-lg font-bold text-text-main tracking-tight">Nishonlar</h2>
             </div>
             <div className="grid gap-3">
-              <Card padding="md" className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-tertiary">
-                  <Flame size={28} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-main text-base mb-1">On Fire</h3>
-                  <p className="text-sm text-text-secondary">3 Day Streak</p>
-                </div>
-              </Card>
-              <Card padding="md" className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center text-text-tertiary">
-                  <Zap size={28} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-main text-base mb-1">Fast Learner</h3>
-                  <p className="text-sm text-text-secondary">Completed 5 lessons</p>
-                </div>
-              </Card>
+              {achievements.map((achievement) => {
+                const isUnlocked = unlockedBadges.includes(achievement.id);
+                const Icon = achievement.icon;
+                
+                return (
+                  <Card key={achievement.id} padding="md" className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md' : 'opacity-60 grayscale'}`}>
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                      <Icon size={28} />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold text-base mb-1 ${isUnlocked ? 'text-primary' : 'text-text-main'}`}>{achievement.name}</h3>
+                      <p className="text-sm text-text-secondary">{achievement.desc}</p>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </>
