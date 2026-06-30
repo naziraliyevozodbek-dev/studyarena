@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { z } from 'zod';
 
 const JoinSchema = z.object({
-  course_code: z.string().length(6, "Course code must be exactly 6 characters")
+  course_code: z.string().min(6, "Course code must be at least 6 characters").max(15, "Course code must be at most 15 characters")
 });
 
 export async function POST(req: Request) {

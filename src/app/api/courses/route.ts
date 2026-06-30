@@ -37,7 +37,7 @@ import { z } from 'zod';
 const CourseSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   description: z.string().optional(),
-  course_code: z.string().length(6, "Course code must be exactly 6 characters")
+  course_code: z.string().min(6, "Course code must be at least 6 characters").max(15, "Course code must be at most 15 characters")
 });
 
 export async function POST(req: Request) {
