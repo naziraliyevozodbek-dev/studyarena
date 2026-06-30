@@ -229,12 +229,12 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
       {/* Zoom Modal */}
       {zoomImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
           onClick={() => setZoomImage(null)}
         >
-          <div className="relative max-w-full max-h-full">
+          <div className="relative w-full h-full flex items-center justify-center">
             <button 
-              className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="absolute top-6 right-6 text-white p-2 bg-black/50 hover:bg-black/80 rounded-full transition-colors z-[60] backdrop-blur-md"
               onClick={() => setZoomImage(null)}
             >
               <X size={24} />
@@ -242,7 +242,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
             <img 
               src={zoomImage} 
               alt="Zoomed homework" 
-              className="max-w-full max-h-[85vh] object-contain rounded-md"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>

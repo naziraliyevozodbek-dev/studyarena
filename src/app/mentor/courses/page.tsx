@@ -145,8 +145,11 @@ export default function MentorCourses() {
     <>
       <div className="animate-fade-in relative h-full pb-24">
         <div className="flex justify-between items-center mb-6">
-        <h1 className="text-h1 m-0">My Courses</h1>
-      </div>
+          <h1 className="text-h1 m-0">My Courses</h1>
+          <Button onClick={handleOpenModal} size="sm" className="gap-2">
+            <Plus size={16} /> New Course
+          </Button>
+        </div>
 
       <div>
         {loading ? (
@@ -209,13 +212,7 @@ export default function MentorCourses() {
       </Modal>
       </div>
 
-      {/* Floating Action Button */}
-      <button 
-        onClick={handleOpenModal}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-50"
-      >
-        <Plus size={24} />
-      </button>
+      {/* Removed FAB */}
     </>
   );
 }

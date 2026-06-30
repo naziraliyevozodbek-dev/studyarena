@@ -52,7 +52,29 @@ export async function GET(
 
     if (usersError) throw usersError;
 
-    return NextResponse.json({ students: users || [] });
+    // Get weekly XP for these students
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const dateStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    const { data: activityLogs } = await supabaseAdmin
+      .from('user_activity_logs')
+      .select('student_id, xp_earned')
+      .in('student_id', studentIds)
+      .gte('date', dateStr);
+
+    const studentsWithActivity = (users || []).map((u: any) => {
+      const weeklyXp = activityLogs
+        ?.filter((log: any) => log.student_id === u.id)
+        .reduce((sum: number, log: any) => sum + (log.xp_earned || 0), 0) || 0;
+      
+      return {
+        ...u,
+        weeklyXp
+      };
+    });
+
+    return NextResponse.json({ students: studentsWithActivity });
   } catch (err: unknown) {
     console.error('Students API error:', err);
     return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });

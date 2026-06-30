@@ -156,25 +156,42 @@ export default function MentorChallenges() {
             <Button onClick={() => setShowModal(true)}>Add Challenge</Button>
           </Card>
         ) : (
-          <div className="grid gap-3">
+          <div className="flex flex-col gap-4">
             {challenges.map(ch => (
-              <Card key={ch.id} padding="md" className="flex justify-between items-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-                  {ch.xp_reward} XP
-                </div>
-                <div className="pr-12">
-                  <h3 className="font-semibold text-text-main text-base mb-1">{ch.title}</h3>
-                  <div className="text-xs text-text-secondary flex gap-2">
-                    <span className="font-medium px-2 py-0.5 rounded bg-bg-secondary">{ch.courses?.title}</span>
+              <div key={ch.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm">
+                <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
+                  
+                  {/* Decorative Elements */}
+                  <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+                  
+                  <div className="flex justify-between items-start z-10 relative">
+                    <div className="flex-1 pr-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{ch.courses?.title}</span>
+                      </div>
+                      <h3 className="font-bold text-text-main text-lg leading-tight">{ch.title}</h3>
+                    </div>
+                    <div className="flex items-center justify-center shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black shadow-lg shadow-yellow-500/20">
+                      +{ch.xp_reward}
+                    </div>
                   </div>
-                </div>
-                <button 
-                  onClick={() => handleDelete(ch.id)}
-                  className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </Card>
+                  
+                  <div className="z-10 relative">
+                    <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/50 p-3 rounded-lg border border-border/50">
+                      {ch.description || "No description provided."}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end z-10 relative mt-1">
+                    <button 
+                      onClick={() => handleDelete(ch.id)}
+                      className="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 size={14} /> O'chirish
+                    </button>
+                  </div>
+                </Card>
+              </div>
             ))}
           </div>
         )}
@@ -195,21 +212,21 @@ export default function MentorChallenges() {
               </Select>
 
               <Input 
-                label="Title"
+                label="Challenge Title (Maqsadi)"
                 type="text" 
                 value={title} 
                 onChange={e => setTitle(e.target.value)} 
                 required 
-                placeholder="e.g. Read 5 articles" 
+                placeholder="Masalan: 100 ta yangi so'z yodlash" 
               />
 
               <Input 
-                label="Description"
+                label="Qanday bajarish kerak? (Qoidalar)"
                 type="text" 
                 value={description} 
                 onChange={e => setDescription(e.target.value)} 
                 required 
-                placeholder="Rules..." 
+                placeholder="Masalan: Har kuni 20 tadan so'z yodlab, testdan o'tish..." 
               />
 
               <div className="flex gap-3">

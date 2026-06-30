@@ -58,7 +58,7 @@ export async function GET(req: Request) {
       .eq('student_id', studentId)
       .order('date', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     // Chart Data (Last 7 days words practiced)
     const dates = [];

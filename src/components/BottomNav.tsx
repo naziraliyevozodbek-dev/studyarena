@@ -31,7 +31,14 @@ export default function BottomNav() {
       <nav className="flex justify-between items-center w-full px-2 h-[68px]">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+          let isActive = false;
+          if (item.href === '/') {
+            isActive = pathname === '/';
+          } else if (item.href === '/mentor') {
+            isActive = pathname === '/mentor' || pathname.startsWith('/mentor/challenges') || pathname.startsWith('/mentor/resources');
+          } else {
+            isActive = pathname.startsWith(item.href);
+          }
           
           return (
             <Link 

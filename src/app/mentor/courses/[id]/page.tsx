@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -36,6 +36,15 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkVocabText, setBulkVocabText] = useState('');
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  
+  // Edit Vocab State
+  const [editWordId, setEditWordId] = useState<string | null>(null);
+  const [editGerman, setEditGerman] = useState('');
+  const [editTranslation, setEditTranslation] = useState('');
+  const [editExampleG, setEditExampleG] = useState('');
+  const [editExampleU, setEditExampleU] = useState('');
+  const [isUpdatingVocab, setIsUpdatingVocab] = useState(false);
   
   // Homework State
   const [hwTitle, setHwTitle] = useState('');
@@ -145,6 +154,41 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       toast.error("Xatolik: " + error.message);
     } finally {
       setIsAddingVocab(false);
+    }
+  };
+  const handleUpdateVocab = async (id: string) => {
+    if (!editGerman.trim() || !editTranslation.trim()) return;
+    setIsUpdatingVocab(true);
+    try {
+      const res = await fetch(`/api/vocabularies?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          german_word: editGerman,
+          translation: editTranslation,
+          example_german: editExampleG,
+          example_uzbek: editExampleU,
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update vocabulary');
+      
+      setVocabularies(prev => prev.map(v => v.id === id ? {
+        ...v,
+        german_word: editGerman,
+        translation: editTranslation,
+        example_german: editExampleG,
+        example_uzbek: editExampleU,
+      } : v));
+      
+      setEditWordId(null);
+      toast.success("So'z yangilandi!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsUpdatingVocab(false);
     }
   };
 
@@ -315,23 +359,40 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             
             <Card padding="md" className="mb-8">
               <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
-                <Input
-                  list="categories"
-                  type="text"
-                  placeholder="Kategoriya (masalan: Kasblar, 1-dars)"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="mb-2"
-                />
-                <datalist id="categories">
-                  {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
-                </datalist>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Kategoriya (masalan: Kasblar, 1-dars)"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    onFocus={() => setShowCategoryDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 200)}
+                    className="mb-2"
+                  />
+                  {showCategoryDropdown && uniqueCategories.length > 0 && (
+                    <div className="absolute top-[calc(100%-8px)] left-0 w-full bg-bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto z-50">
+                      {uniqueCategories.map((c, i) => (
+                        <div 
+                          key={i} 
+                          className="px-4 py-2 hover:bg-bg-secondary cursor-pointer text-sm text-text-main transition-colors"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCategory(c as string);
+                            setShowCategoryDropdown(false);
+                          }}
+                        >
+                          {c as string}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 
                 {isBulkMode ? (
                   <>
-                    <p className="text-xs text-text-secondary">Pasting format: Excel/Word dan nusxalang (Tab) yoki <code>Word - Translation - German Example - Uzbek Example</code></p>
+                    <p className="text-xs text-text-secondary">Pasting format: Excel/Word dan nusxalang (Tab) yoki <code>nemischa - uzbekcha - nemischa misol (ixtiyoriy) - uzbekcha misol (ixtiyoriy)</code></p>
                     <textarea
-                      placeholder={`Apfel - Olma\nHaus - Uy\nAuto - Mashina`}
+                      placeholder={`Apfel - Olma - Ich esse einen Apfel - Men olma yeyapman\nHaus - Uy\nAuto - Mashina`}
                       value={bulkVocabText}
                       onChange={(e) => setBulkVocabText(e.target.value)}
                       className="w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 transition-all border border-border min-h-[150px]"
@@ -397,12 +458,76 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                         <div className="divide-y divide-border bg-bg-secondary/30">
                           {(words as any[]).map(v => (
                             <div key={v.id} className="flex flex-col py-2 px-4">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="font-semibold text-text-main">{v.german_word}</span>
-                                <span className="text-sm text-text-secondary">{v.translation}</span>
-                              </div>
-                              {v.example_german && (
-                                <span className="text-xs text-text-tertiary">📝 {v.example_german}</span>
+                              {editWordId === v.id ? (
+                                <div className="flex flex-col gap-2 py-2">
+                                  <div className="flex gap-2">
+                                    <Input 
+                                      value={editGerman} 
+                                      onChange={(e) => setEditGerman(e.target.value)} 
+                                      placeholder="German word"
+                                      className="flex-1"
+                                    />
+                                    <Input 
+                                      value={editTranslation} 
+                                      onChange={(e) => setEditTranslation(e.target.value)} 
+                                      placeholder="Translation"
+                                      className="flex-1"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Input 
+                                      value={editExampleG} 
+                                      onChange={(e) => setEditExampleG(e.target.value)} 
+                                      placeholder="German Example"
+                                      className="flex-1"
+                                    />
+                                    <Input 
+                                      value={editExampleU} 
+                                      onChange={(e) => setEditExampleU(e.target.value)} 
+                                      placeholder="Uzbek Example"
+                                      className="flex-1"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2 mt-1">
+                                    <button 
+                                      onClick={() => setEditWordId(null)}
+                                      className="p-1.5 bg-bg-secondary text-text-secondary rounded-lg hover:text-text-main transition-colors"
+                                    >
+                                      <X size={16} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleUpdateVocab(v.id)}
+                                      disabled={isUpdatingVocab}
+                                      className="p-1.5 bg-primary text-white rounded-lg hover:bg-primary-active transition-colors flex items-center justify-center"
+                                    >
+                                      {isUpdatingVocab ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="group flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-semibold text-text-main">{v.german_word}</span>
+                                      <span className="text-sm text-text-secondary">{v.translation}</span>
+                                    </div>
+                                    {v.example_german && (
+                                      <span className="text-xs text-text-tertiary block">📝 {v.example_german}</span>
+                                    )}
+                                  </div>
+                                  <button 
+                                    onClick={() => {
+                                      setEditWordId(v.id);
+                                      setEditGerman(v.german_word);
+                                      setEditTranslation(v.translation);
+                                      setEditExampleG(v.example_german || '');
+                                      setEditExampleU(v.example_uzbek || '');
+                                    }}
+                                    className="p-1.5 text-text-tertiary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                </div>
                               )}
                             </div>
                           ))}
@@ -501,13 +626,18 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                 <p className="text-sm text-text-secondary text-center py-6">No students enrolled yet.</p>
               ) : (
                 <div className="divide-y divide-border">
-                  {students.map(student => (
+                  {[...students].sort((a, b) => (b.weeklyXp || 0) - (a.weeklyXp || 0)).map((student, index) => (
                     <div 
                       key={student.id} 
                       className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer flex items-center justify-between"
                       onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/students/${student.id}`)}
                     >
                       <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center w-6">
+                          <span className={`font-bold text-lg ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-text-tertiary'}`}>
+                            #{index + 1}
+                          </span>
+                        </div>
                         <div className="w-10 h-10 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold">
                           {student.avatar_url ? (
                             <img src={student.avatar_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
@@ -519,6 +649,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                           <p className="font-semibold text-text-main text-sm">{student.full_name}</p>
                           <p className="text-xs text-text-secondary">View Analytics</p>
                         </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="font-bold text-primary text-sm">+{student.weeklyXp || 0} XP</span>
+                        <span className="text-xs text-text-secondary font-medium">Bu hafta</span>
                       </div>
                     </div>
                   ))}

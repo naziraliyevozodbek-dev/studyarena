@@ -72,7 +72,11 @@ export default function SettingsPage() {
         });
         
         if (!res.ok) throw new Error("Profilni saqlashda xatolik yuz berdi");
-        await refreshUser(); // refresh context
+        
+        // Force full app reload to completely refresh state & token from Telegram
+        toast.success("Sozlamalar saqlandi! Ilova qayta ishga tushmoqda...");
+        window.location.href = role === 'mentor' ? '/mentor' : '/';
+        return;
       }
 
       toast.success("Sozlamalar saqlandi!");
@@ -109,13 +113,20 @@ export default function SettingsPage() {
 
   return (
     <div className="animate-fade-in pb-24 text-text-main">
-      <div className="flex items-center justify-between pt-4 mb-6">
+      <div className="flex items-center justify-between pt-4 mb-6 sticky top-0 bg-bg-base z-50 py-4">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
           <ArrowLeft size={20} />
           <span>Orqaga</span>
         </button>
         <h1 className="text-xl font-bold">Sozlamalar</h1>
-        <div className="w-20"></div>
+        <Button 
+          onClick={handleSaveSettings} 
+          disabled={loading}
+          size="sm"
+          className="text-sm shadow-sm"
+        >
+          {loading ? <Loader2 size={16} className="animate-spin" /> : 'Saqlash'}
+        </Button>
       </div>
 
       <div className="w-full flex flex-col gap-6">
@@ -216,6 +227,11 @@ export default function SettingsPage() {
                   <option value="uz">O'zbekcha</option>
                   <option value="en">English</option>
                   <option value="ru">Русский</option>
+                  <option value="de">Deutsch</option>
+                  <option value="es">Español</option>
+                  <option value="fr">Français</option>
+                  <option value="tr">Türkçe</option>
+                  <option value="ko">한국어</option>
                 </Select>
               </div>
             </div>
@@ -279,19 +295,7 @@ export default function SettingsPage() {
           </Card>
         </section>
         
-        <div className="h-24"></div> {/* spacer for fixed button */}
-
-        <div className="fixed bottom-[80px] left-0 right-0 px-4 z-40 flex justify-center">
-          <Button 
-            onClick={handleSaveSettings} 
-            disabled={loading}
-            fullWidth
-            className="py-4 text-lg shadow-lg bg-primary hover:bg-primary-active text-white rounded-2xl w-full max-w-md mx-auto"
-          >
-            {loading ? <Loader2 size={24} className="animate-spin" /> : 'Saqlash'}
-          </Button>
-        </div>
-
+        <div className="h-10"></div>
       </div>
     </div>
   );

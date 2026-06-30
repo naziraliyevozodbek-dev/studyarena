@@ -75,6 +75,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ course }, { status: 201 });
   } catch (err: unknown) {
     console.error('Course creation error:', err);
+    if (err instanceof z.ZodError) {
+      const zodErr = err as any;
+      return NextResponse.json({ error: zodErr.errors?.[0]?.message || 'Validation error' }, { status: 400 });
+    }
     return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       .select('mistakes_count')
       .eq('student_id', studentId)
       .eq('vocabulary_id', vocabulary_id)
-      .single();
+      .maybeSingle();
 
     let newMistakesCount = existingProgress?.mistakes_count || 0;
     let finalStatus = status;
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       .select('words_practiced, xp_earned')
       .eq('student_id', studentId)
       .eq('date', today)
-      .single();
+      .maybeSingle();
 
     const wordsPracticed = (existingLog?.words_practiced || 0) + 1;
     const xpEarned = (existingLog?.xp_earned || 0) + (status === 'learned' ? 2 : 1); // 2 XP for learned, 1 for practice
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
           .neq('date', today)
           .order('date', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
           
         if (lastLog && lastLog.date === yesterdayStr) {
           newStreak += 1; // Practiced yesterday, increment
