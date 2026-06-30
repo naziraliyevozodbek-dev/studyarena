@@ -144,9 +144,6 @@ export default function MentorChallenges() {
           </button>
           <h1 className="text-2xl font-bold text-text-main">Challenges</h1>
         </div>
-        <Button variant="primary" onClick={() => setShowModal(true)} className="px-3 py-1.5 h-auto text-xs">
-          <Plus size={16} className="mr-1" /> New
-        </Button>
       </div>
 
       <div className="w-full">
@@ -239,6 +236,14 @@ export default function MentorChallenges() {
               </Button>
             </form>
       </Modal>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={() => setShowModal(true)}
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-40"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }

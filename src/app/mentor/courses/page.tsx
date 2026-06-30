@@ -210,7 +210,7 @@ export default function MentorCourses() {
       {/* Floating Action Button */}
       <button 
         onClick={handleOpenModal}
-        className="fixed bottom-20 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-40"
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-40"
       >
         <Plus size={24} />
       </button>
