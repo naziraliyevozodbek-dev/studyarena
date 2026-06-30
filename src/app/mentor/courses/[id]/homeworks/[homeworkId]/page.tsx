@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, Check, X, User } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, X, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -17,6 +17,8 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gradingId, setGradingId] = useState<string | null>(null);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -143,46 +145,61 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                       {new Date(submission.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <div className="ml-auto">
+                  <div className="ml-auto flex items-center gap-2">
                     {submission.status === 'graded' && <span className="text-xs font-bold text-success bg-success/10 px-2 py-1 rounded">Approved</span>}
                     {submission.status === 'rejected' && <span className="text-xs font-bold text-error bg-error/10 px-2 py-1 rounded">Rejected</span>}
                     {submission.status === 'submitted' && <span className="text-xs font-bold text-warning bg-warning/10 px-2 py-1 rounded">Pending</span>}
+                    
+                    {submission.status !== 'submitted' && (
+                      <button 
+                        onClick={() => setExpandedCards(prev => ({...prev, [submission.id]: !prev[submission.id]}))}
+                        className="p-1 rounded bg-bg-secondary hover:bg-bg-tertiary transition-colors"
+                      >
+                        {expandedCards[submission.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  {(() => {
-                    let parsedContent: any = null;
-                    try {
-                      parsedContent = JSON.parse(submission.content);
-                    } catch {
-                      parsedContent = { 
-                        files: submission.content.startsWith('http') ? [submission.content] : [], 
-                        description: submission.content.startsWith('http') ? '' : submission.content 
-                      };
-                    }
+                {(submission.status === 'submitted' || expandedCards[submission.id]) && (
+                  <div className="mb-4">
+                    {(() => {
+                      let parsedContent: any = null;
+                      try {
+                        parsedContent = JSON.parse(submission.content);
+                      } catch {
+                        parsedContent = { 
+                          files: submission.content.startsWith('http') ? [submission.content] : [], 
+                          description: submission.content.startsWith('http') ? '' : submission.content 
+                        };
+                      }
 
-                    return (
-                      <div className="flex flex-col gap-3">
-                        {parsedContent.description && (
-                          <p className="text-text-main text-sm bg-bg-secondary p-3 rounded-lg whitespace-pre-wrap border border-border">
-                            {parsedContent.description}
-                          </p>
-                        )}
-                        
-                        {parsedContent.files && parsedContent.files.length > 0 && (
-                          <div className={`grid gap-2 ${parsedContent.files.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                            {parsedContent.files.map((url: string, idx: number) => (
-                              <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center">
-                                <img src={url} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-contain" />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+                      return (
+                        <div className="flex flex-col gap-3 animate-fade-in">
+                          {parsedContent.description && (
+                            <p className="text-text-main text-sm bg-bg-secondary p-3 rounded-lg whitespace-pre-wrap border border-border">
+                              {parsedContent.description}
+                            </p>
+                          )}
+                          
+                          {parsedContent.files && parsedContent.files.length > 0 && (
+                            <div className={`grid gap-2 ${parsedContent.files.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                              {parsedContent.files.map((url: string, idx: number) => (
+                                <div 
+                                  key={idx} 
+                                  className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => setZoomImage(url)}
+                                >
+                                  <img src={url} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 {submission.status === 'submitted' && (
                   <div className="flex gap-3">
@@ -208,6 +225,28 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
+
+      {/* Zoom Modal */}
+      {zoomImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="relative max-w-full max-h-full">
+            <button 
+              className="absolute -top-12 right-0 text-white p-2 hover:bg-white/20 rounded-full transition-colors"
+              onClick={() => setZoomImage(null)}
+            >
+              <X size={24} />
+            </button>
+            <img 
+              src={zoomImage} 
+              alt="Zoomed homework" 
+              className="max-w-full max-h-[85vh] object-contain rounded-md"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

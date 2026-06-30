@@ -28,15 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Course not found or unauthorized' }, { status: 403 });
     }
 
-    // Get current max lesson_number
-    const { data: vocab } = await supabaseAdmin
-      .from('vocabularies')
-      .select('lesson_number')
-      .eq('course_id', courseId)
-      .order('lesson_number', { ascending: false })
-      .limit(1);
-    const providedLessonNumber = body.lesson_number ? parseInt(body.lesson_number, 10) : null;
-    const nextLessonNumber = providedLessonNumber || (vocab && vocab.length > 0 ? vocab[0].lesson_number + 1 : 1);
+    const providedCategory = body.category ? body.category.trim() : "Asosiy so'zlar";
 
     let result;
     if (body.words && Array.isArray(body.words)) {
@@ -45,7 +37,9 @@ export async function POST(req: Request) {
         course_id: courseId,
         german_word: w.german_word,
         translation: w.translation,
-        lesson_number: providedLessonNumber || (w.lesson_number ? parseInt(w.lesson_number, 10) : nextLessonNumber)
+        category: w.category ? w.category.trim() : providedCategory,
+        example_german: w.example_german,
+        example_uzbek: w.example_uzbek
       }));
 
       const { data, error } = await supabaseAdmin
@@ -62,12 +56,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
       }
 
-      // We only insert example fields if they are provided, to prevent errors if the DB migration wasn't fully run
       const insertObj: any = {
         course_id,
         german_word,
         translation,
-        lesson_number: nextLessonNumber
+        category: providedCategory
       };
       if (example_german) insertObj.example_german = example_german;
       if (example_uzbek) insertObj.example_uzbek = example_uzbek;

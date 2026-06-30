@@ -20,7 +20,7 @@ export default function LearnPage() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [savedWords, setSavedWords] = useState<Record<string, boolean>>({});
   
-  const [selectedLesson, setSelectedLesson] = useState<number | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
 
   useEffect(() => {
     const saved = localStorage.getItem('studyarena_saved_words');
@@ -100,17 +100,17 @@ export default function LearnPage() {
     }
   };
 
-  const availableLessons = useMemo(() => {
-    const lessons = new Set(vocabularies.map(v => v.lesson_number).filter(n => n != null));
-    return Array.from(lessons).sort((a, b) => a - b);
+  const availableCategories = useMemo(() => {
+    const categories = new Set(vocabularies.map(v => v.category || "Asosiy so'zlar"));
+    return Array.from(categories).sort();
   }, [vocabularies]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredVocabs = useMemo(() => {
     let result = vocabularies;
-    if (selectedLesson !== 'all') {
-      result = result.filter(v => v.lesson_number === selectedLesson);
+    if (selectedCategory !== 'all') {
+      result = result.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -120,14 +120,14 @@ export default function LearnPage() {
       );
     }
     return result;
-  }, [vocabularies, selectedLesson, searchQuery]);
+  }, [vocabularies, selectedCategory, searchQuery]);
 
   // Reset index when lesson changes
   useEffect(() => {
     setCurrentIndex(0);
     setIsFlipped(false);
     setSessionCompleted(false);
-  }, [selectedLesson]);
+  }, [selectedCategory]);
 
   const handleProgress = async (status: 'learned' | 'weak') => {
     if (!token || filteredVocabs.length === 0) return;
@@ -206,16 +206,16 @@ export default function LearnPage() {
           <span>Flashcardlar</span>
         </button>
         
-        {availableLessons.length > 0 && (
+        {availableCategories.length > 0 && (
           <div className="relative">
             <select 
-              value={selectedLesson} 
-              onChange={(e) => setSelectedLesson(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
               className="appearance-none bg-white dark:bg-bg-secondary border border-border text-primary font-semibold text-sm rounded-xl pl-4 pr-10 py-2 outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
             >
               <option value="all">Barchasi</option>
-              {availableLessons.map(l => (
-                <option key={l} value={l}>{l}-dars</option>
+              {availableCategories.map(c => (
+                <option key={c as string} value={c as string}>{c as string}</option>
               ))}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />

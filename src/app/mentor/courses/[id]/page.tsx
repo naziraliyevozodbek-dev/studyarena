@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -27,14 +27,15 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
   const [activeTab, setActiveTab] = useState<'vocab' | 'homework' | 'students'>('vocab');
   
   // Vocab State
+  const [category, setCategory] = useState('');
   const [germanWord, setGermanWord] = useState('');
   const [translation, setTranslation] = useState('');
   const [exampleGerman, setExampleGerman] = useState('');
   const [exampleUzbek, setExampleUzbek] = useState('');
-  const [lessonNumber, setLessonNumber] = useState('');
   const [isAddingVocab, setIsAddingVocab] = useState(false);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkVocabText, setBulkVocabText] = useState('');
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   
   // Homework State
   const [hwTitle, setHwTitle] = useState('');
@@ -88,17 +89,19 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       if (!bulkVocabText.trim()) return;
       const lines = bulkVocabText.split('\n').filter(line => line.trim() !== '');
       const words = lines.map(line => {
-        const parts = line.includes('-') ? line.split('-') : line.split(',');
+        const parts = line.includes('\t') ? line.split('\t') : (line.includes('-') ? line.split('-') : line.split(','));
         return {
           course_id: resolvedParams.id,
           german_word: parts[0]?.trim() || '',
           translation: parts[1]?.trim() || '',
-          lesson_number: lessonNumber ? parseInt(lessonNumber, 10) : undefined
+          example_german: parts[2]?.trim() || null,
+          example_uzbek: parts[3]?.trim() || null,
+          category: category.trim() || undefined
         };
       }).filter(w => w.german_word && w.translation);
       
       if (words.length === 0) {
-        toast.error("Noto'g'ri format! Iltimos, Word - Translation shaklida kiriting.");
+        toast.error("Noto'g'ri format! Excel'dan nusxalang yoki Word - Translation shaklida kiriting.");
         return;
       }
       bodyData = { words };
@@ -110,7 +113,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         translation: translation,
         example_german: exampleGerman || null,
         example_uzbek: exampleUzbek || null,
-        lesson_number: lessonNumber ? parseInt(lessonNumber, 10) : undefined
+        category: category.trim() || undefined
       };
     }
 
@@ -217,6 +220,15 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     );
   }
 
+  const uniqueCategories = Array.from(new Set(vocabularies.map(v => v.category || "Asosiy so'zlar")));
+  
+  const groupedVocabs = vocabularies.reduce((acc, v) => {
+    const cat = v.category || "Asosiy so'zlar";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(v);
+    return acc;
+  }, {} as Record<string, typeof vocabularies>);
+
   return (
     <div className="animate-fade-in pb-32">
       {/* Header */}
@@ -304,15 +316,20 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             <Card padding="md" className="mb-8">
               <form onSubmit={handleAddVocab} className="flex flex-col gap-3">
                 <Input
-                  type="number"
-                  placeholder="Dars raqami (masalan: 1, ixtiyoriy)"
-                  value={lessonNumber}
-                  onChange={(e) => setLessonNumber(e.target.value)}
+                  list="categories"
+                  type="text"
+                  placeholder="Kategoriya (masalan: Kasblar, 1-dars)"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
                   className="mb-2"
                 />
+                <datalist id="categories">
+                  {uniqueCategories.map((c, i) => <option key={i} value={c} />)}
+                </datalist>
+                
                 {isBulkMode ? (
                   <>
-                    <p className="text-xs text-text-secondary">Pasting format: <code>Word - Translation</code>. Har bir qatorda bittadan so'z yozing.</p>
+                    <p className="text-xs text-text-secondary">Pasting format: Excel/Word dan nusxalang (Tab) yoki <code>Word - Translation - German Example - Uzbek Example</code></p>
                     <textarea
                       placeholder={`Apfel - Olma\nHaus - Uy\nAuto - Mashina`}
                       value={bulkVocabText}
@@ -364,14 +381,32 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                 <p className="text-sm text-text-secondary text-center py-6">No vocabulary added yet.</p>
               ) : (
                 <div className="divide-y divide-border">
-                  {vocabularies.map(v => (
-                    <div key={v.id} className="flex flex-col py-3 px-4 bg-bg-card">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-semibold text-text-main">{v.german_word}</span>
-                        <span className="text-sm text-text-secondary">{v.translation}</span>
+                  {Object.entries(groupedVocabs).map(([cat, words]) => (
+                    <div key={cat} className="flex flex-col bg-bg-card">
+                      <div 
+                        className="flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-bg-secondary transition-colors"
+                        onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
+                      >
+                        <span className="font-bold text-text-main">{cat}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded-full">{(words as any[]).length} ta so'z</span>
+                            {openCategory === cat ? <ChevronUp size={16} className="text-text-secondary"/> : <ChevronDown size={16} className="text-text-secondary"/>}
+                        </div>
                       </div>
-                      {v.example_german && (
-                        <span className="text-xs text-text-tertiary">📝 {v.example_german}</span>
+                      {openCategory === cat && (
+                        <div className="divide-y divide-border bg-bg-secondary/30">
+                          {(words as any[]).map(v => (
+                            <div key={v.id} className="flex flex-col py-2 px-4">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-semibold text-text-main">{v.german_word}</span>
+                                <span className="text-sm text-text-secondary">{v.translation}</span>
+                              </div>
+                              {v.example_german && (
+                                <span className="text-xs text-text-tertiary">📝 {v.example_german}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}
