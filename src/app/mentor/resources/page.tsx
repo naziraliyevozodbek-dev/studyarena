@@ -135,7 +135,8 @@ export default function MentorResources() {
   }
 
   return (
-    <div className="animate-fade-in pb-24 relative">
+    <>
+      <div className="animate-fade-in pb-24 relative">
       {/* Header */}
       <div className="flex items-center justify-between pt-4 mb-6">
         <div className="flex items-center gap-4">
@@ -238,14 +239,15 @@ export default function MentorResources() {
               </Button>
             </form>
       </Modal>
+      </div>
 
       {/* Floating Action Button */}
       <button 
         onClick={() => setShowModal(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-40"
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-active transition-transform active:scale-95 z-50"
       >
         <Plus size={24} />
       </button>
-    </div>
+    </>
   );
 }
