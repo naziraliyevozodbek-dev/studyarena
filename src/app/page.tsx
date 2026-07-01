@@ -281,15 +281,14 @@ export default function Home() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex justify-end flex-col animate-fade-in bg-black/40">
-          <div className="bg-bg-base w-full h-[80vh] rounded-t-3xl shadow-2xl animate-slide-up flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <h2 className="text-lg font-bold text-text-main">Bildirishnomalar</h2>
-              <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        <div className="fixed inset-0 z-50 bg-bg-base flex flex-col animate-fade-in">
+          <div className="flex items-center justify-between p-5 border-b border-border bg-bg-card">
+            <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
+            <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
                   <Bell size={48} className="mb-4 opacity-20" />
@@ -360,13 +359,9 @@ export default function Home() {
               <span className="text-text-tertiary text-xs font-medium mb-1">XP</span>
               <span className="text-xl font-semibold text-primary">{user.xp || 0}</span>
             </Card>
-            <Card padding="md" className="flex flex-col items-center justify-center text-center relative overflow-hidden">
-              <span className="text-text-tertiary text-xs font-medium mb-1 z-10">Level</span>
-              <span className="text-xl font-semibold text-text-main z-10">{user.level || 1}</span>
-              {/* Progress Bar background */}
-              <div className="absolute bottom-0 left-0 h-1 bg-black/5 w-full">
-                <div className="h-full bg-primary" style={{ width: `${(user.xp || 0) % 100}%` }}></div>
-              </div>
+            <Card padding="md" className="flex flex-col items-center justify-center text-center">
+              <span className="text-text-tertiary text-xs font-medium mb-1">Level</span>
+              <span className="text-xl font-semibold text-text-main">{user.level || 1}</span>
             </Card>
             <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/10 dark:to-orange-500/5 border-orange-200 dark:border-orange-500/20">
               <span className="text-orange-600/80 dark:text-orange-500 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>

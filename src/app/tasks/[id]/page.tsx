@@ -407,7 +407,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
               <input 
                 type="file" 
-                accept="image/*,application/pdf,audio/*"
+                accept="image/*"
                 multiple
                 className="hidden" 
                 ref={fileInputRef}
@@ -452,8 +452,8 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 ) : (
                   <>
                     <UploadCloud size={28} className="text-primary mb-1" />
-                    <span className="text-sm font-medium text-primary">Fayl biriktirish (📎)</span>
-                    <span className="text-[10px] text-text-tertiary text-center px-4">Rasmga olish, Galereyadan tanlash yoki Hujjat yuklash</span>
+                    <span className="text-sm font-medium text-primary">Rasm biriktirish (📸)</span>
+                    <span className="text-[10px] text-text-tertiary text-center px-4">Kameradan rasmga olish yoki Galereyadan tanlash</span>
                   </>
                 )}
               </div>

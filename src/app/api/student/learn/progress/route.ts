@@ -119,7 +119,8 @@ export async function POST(req: Request) {
         }
       }
 
-      const finalLevel = Math.floor(newXp / 100) + 1;
+      // User requested 50,000 XP per level
+      const finalLevel = Math.floor(newXp / 50000) + 1;
       await supabaseAdmin
         .from('users')
         .update({ 
