@@ -292,7 +292,7 @@ export default function Home() {
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
                   <Bell size={48} className="mb-4 opacity-20" />
-                  <p>Hozircha bildirishnomalar yo'q</p>
+                  <p>Hozircha bildirishnomalar yo&apos;q</p>
                 </div>
               ) : (
                 notifications.map(notification => (
@@ -312,7 +312,6 @@ export default function Home() {
               )}
             </div>
           </div>
-        </div>
       )}
 
       {fetchingCourses ? (
