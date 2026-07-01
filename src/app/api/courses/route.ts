@@ -37,7 +37,8 @@ import { z } from 'zod';
 const CourseSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   description: z.string().optional(),
-  course_code: z.string().min(6, "Course code must be at least 6 characters").max(15, "Course code must be at most 15 characters")
+  course_code: z.string().min(6, "Course code must be at least 6 characters").max(15, "Course code must be at most 15 characters"),
+  image_url: z.string().optional()
 });
 
 export async function POST(req: Request) {
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
         title,
         description: description || null,
         course_code,
+        image_url: validatedData.image_url || null,
         mentor_id: decoded.sub
       })
       .select()

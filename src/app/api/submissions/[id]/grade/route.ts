@@ -11,7 +11,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
     const submissionId = (await params).id;
-    const { status, score } = await req.json();
+    const { status, score, feedback } = await req.json();
 
     if (!['graded', 'rejected'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .from('homework_submissions')
       .update({
         status,
+        feedback: feedback || null,
         score: score !== undefined ? score : submission.homeworks.xp_reward
       })
       .eq('id', submissionId);
@@ -60,7 +61,54 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           .from('users')
           .update({ xp: newXp, level: newLevel })
           .eq('id', submission.student_id);
+
+        await supabaseAdmin.from('notifications').insert({
+          user_id: submission.student_id,
+          title: "Vazifa Qabul Qilindi!",
+          message: `Tabriklaymiz! Mentor vazifangizni qabul qildi va sizga +${awardedScore} XP berildi.`,
+          type: "success"
+        });
+
+        // Check for badges
+        const badgesToAward = [];
+        if (newXp >= 100) badgesToAward.push('xp_100');
+        if (newXp >= 1000) badgesToAward.push('xp_1000');
+
+        if (badgesToAward.length > 0) {
+          const { data: existingBadges } = await supabaseAdmin
+            .from('user_badges')
+            .select('badge_type')
+            .eq('student_id', submission.student_id)
+            .in('badge_type', badgesToAward);
+            
+          const existingSet = new Set((existingBadges || []).map(b => b.badge_type));
+          const newBadges = badgesToAward.filter(b => !existingSet.has(b));
+          
+          if (newBadges.length > 0) {
+            const inserts = newBadges.map(b => ({
+              student_id: submission.student_id,
+              badge_type: b
+            }));
+            await supabaseAdmin.from('user_badges').insert(inserts);
+
+            for (const b of newBadges) {
+              await supabaseAdmin.from('notifications').insert({
+                user_id: submission.student_id,
+                title: "Yangi Badge (Yutuq)!",
+                message: `Tabriklaymiz! Siz "${b === 'xp_100' ? 'Tez o\'rganuvchi' : 'XP Master'}" nishonini qo'lga kiritdingiz!`,
+                type: "success"
+              });
+            }
+          }
+        }
       }
+    } else if (status === 'rejected') {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: submission.student_id,
+        title: "Vazifa Qaytarildi",
+        message: `Mentor vazifangizni qabul qilmadi. ${feedback ? `Izoh: "${feedback}"` : "Iltimos qaytadan urinib ko'ring."}`,
+        type: "warning"
+      });
     }
 
     return NextResponse.json({ success: true });

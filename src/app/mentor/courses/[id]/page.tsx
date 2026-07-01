@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, BookOpen, FileText, Trash2, Users, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Users, BookOpen, CheckCircle, XCircle, Plus, FileText, Image as ImageIcon, Camera, MoreVertical, Edit2, Trash2, ChevronRight, BarChart2, CheckSquare, Target, Flame, TrendingUp, ChevronDown, ChevronUp, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -325,7 +325,8 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       </div>
 
       <div>
-        <div className="mb-6">
+        <div className={`-mx-4 -mt-4 mb-6 h-32 ${course?.image_url || 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}></div>
+        <div className="mb-6 -mt-8 relative z-10 bg-bg-base/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-border">
           <h1 className="text-2xl font-bold text-text-main mb-1">{course?.title}</h1>
           <p className="text-sm font-medium text-text-secondary flex items-center gap-2">
             Course Code: <span className="font-mono bg-bg-secondary px-2 py-0.5 rounded text-text-main">{course?.course_code}</span>
@@ -350,6 +351,47 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             <div className="text-xs text-text-secondary font-medium">Students</div>
           </Card>
         </div>
+
+        {/* Analytics Overview (Top 5 Students by XP) */}
+        {students.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text-main mb-3 flex items-center gap-2">
+              <TrendingUp size={20} className="text-primary" /> Top Performers (Weekly XP)
+            </h2>
+            <Card padding="md">
+              <div className="h-40 flex items-end justify-between gap-2 pt-4">
+                {[...students]
+                  .sort((a, b) => (b.weeklyXp || 0) - (a.weeklyXp || 0))
+                  .slice(0, 5)
+                  .map((student, i) => {
+                    const maxXP = Math.max(...students.map(s => s.weeklyXp || 0), 100);
+                    const heightPercentage = student.weeklyXp > 0 ? Math.max((student.weeklyXp / maxXP) * 100, 10) : 0;
+                    return (
+                      <div key={i} className="flex flex-col items-center flex-1 gap-2 group cursor-pointer" onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/students/${student.id}`)}>
+                        <div className="relative w-full flex justify-center h-full items-end">
+                          <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-text-main text-white text-[10px] py-1 px-2 rounded whitespace-nowrap transition-opacity pointer-events-none z-10">
+                            {student.weeklyXp || 0} XP
+                          </div>
+                          <div 
+                            className={`w-full max-w-[32px] rounded-t-md transition-all duration-500 ${heightPercentage > 0 ? 'bg-primary' : 'bg-bg-secondary'}`}
+                            style={{ height: `${heightPercentage}%` }}
+                          />
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold text-[10px] overflow-hidden">
+                          {student.avatar_url ? (
+                            <img src={student.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            student.full_name?.charAt(0) || '?'
+                          )}
+                        </div>
+                        <span className="text-[10px] text-text-tertiary truncate w-full text-center">{student.full_name?.split(' ')[0]}</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Tab Selection */}
         <div className="flex bg-bg-secondary rounded-lg p-1 mb-6">

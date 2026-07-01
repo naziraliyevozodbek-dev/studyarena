@@ -120,7 +120,7 @@ export default function WeakWordsPage() {
   const currentVocab = vocabularies[currentIndex];
 
   return (
-    <div className="animate-fade-in flex-1 flex flex-col w-full">
+    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-y-auto pb-6">
       <audio id="tts-player" playsInline className="hidden" />
       <div className="flex items-center justify-between pt-4 mb-4">
         <button onClick={() => router.push('/')} className="text-primary active:opacity-70 transition-opacity">

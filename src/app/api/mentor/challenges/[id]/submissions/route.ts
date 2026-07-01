@@ -55,7 +55,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const challengeId = (await params).id;
     const body = await req.json();
-    const { submissionId, status } = body; // 'graded' or 'rejected'
+    const { submissionId, status, feedback } = body; // 'graded' or 'rejected'
 
     if (!submissionId || !status) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -64,7 +64,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     // 1. Update status
     const { data: submission, error: updateError } = await supabaseAdmin
       .from('challenge_submissions')
-      .update({ status })
+      .update({ status, feedback: feedback || null })
       .eq('id', submissionId)
       .eq('challenge_id', challengeId)
       .select()
@@ -93,13 +93,46 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           message: `Tabriklaymiz! Mentor challenge natijangizni qabul qildi va sizga +${reward} XP berildi.`,
           type: "success"
         });
+
+        // Check for badges
+        const badgesToAward = [];
+        if (newXp >= 100) badgesToAward.push('xp_100');
+        if (newXp >= 1000) badgesToAward.push('xp_1000');
+
+        if (badgesToAward.length > 0) {
+          const { data: existingBadges } = await supabaseAdmin
+            .from('user_badges')
+            .select('badge_type')
+            .eq('student_id', submission.student_id)
+            .in('badge_type', badgesToAward);
+            
+          const existingSet = new Set((existingBadges || []).map(b => b.badge_type));
+          const newBadges = badgesToAward.filter(b => !existingSet.has(b));
+          
+          if (newBadges.length > 0) {
+            const inserts = newBadges.map(b => ({
+              student_id: submission.student_id,
+              badge_type: b
+            }));
+            await supabaseAdmin.from('user_badges').insert(inserts);
+
+            for (const b of newBadges) {
+              await supabaseAdmin.from('notifications').insert({
+                user_id: submission.student_id,
+                title: "Yangi Badge (Yutuq)!",
+                message: `Tabriklaymiz! Siz "${b === 'xp_100' ? 'Tez o\'rganuvchi' : 'XP Master'}" nishonini qo'lga kiritdingiz!`,
+                type: "success"
+              });
+            }
+          }
+        }
       }
     } else if (status === 'rejected') {
         // Notification for rejection
         await supabaseAdmin.from('notifications').insert({
           user_id: submission.student_id,
           title: "Challenge Qaytarildi",
-          message: `Mentor challenge natijangizni qabul qilmadi. Iltimos qaytadan urinib ko'ring.`,
+          message: `Mentor challenge natijangizni qabul qilmadi. ${feedback ? `Izoh: "${feedback}"` : "Iltimos qaytadan urinib ko'ring."}`,
           type: "warning"
         });
     }

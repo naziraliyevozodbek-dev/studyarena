@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
             ))}
             
             {leaderboard.length === 0 && (
-              <div className="p-8 text-center text-text-secondary font-medium">
+              <div className="py-8 px-4 text-center text-text-secondary font-medium">
                 No users on the leaderboard yet.
               </div>
             )}

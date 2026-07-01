@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from 'sonner';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
+import confetti from 'canvas-confetti';
 
 export default function LearnPage() {
   const { user, token } = useAuth();
@@ -187,6 +188,11 @@ export default function LearnPage() {
         setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
       } else {
         setSessionCompleted(true);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
       }
       
       if (status === 'learned') playSuccess();
@@ -276,15 +282,20 @@ export default function LearnPage() {
             <Button onClick={() => router.push('/')}>Orqaga qaytish</Button>
           </Card>
         ) : sessionCompleted ? (
-          <Card padding="lg" className="text-center mt-10 border-success">
-            <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check size={32} />
+          <Card padding="lg" className="text-center mt-10 border-success shadow-lg shadow-success/10 animate-fade-in">
+            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4 relative">
+              <div className="absolute inset-0 bg-success/20 rounded-full animate-ping opacity-75"></div>
+              <Check size={40} strokeWidth={3} />
             </div>
-            <h2 className="text-xl font-bold text-text-main mb-2">Ajoyib!</h2>
-            <p className="text-text-secondary text-sm mb-6">
+            <h2 className="text-2xl font-bold text-text-main mb-2">Ajoyib!</h2>
+            <p className="text-text-secondary text-sm mb-4">
               Siz ushbu darsdagi barcha so'zlarni ko'rib chiqdingiz!
             </p>
-            <Button onClick={() => router.push('/')} fullWidth>Bosh sahifa</Button>
+            <div className="bg-orange-50 dark:bg-orange-500/10 text-orange-500 py-2 px-4 rounded-xl inline-flex items-center gap-2 font-bold mb-6 border border-orange-200 dark:border-orange-500/20">
+              <Star size={18} className="fill-orange-500" />
+              +{filteredVocabs.length * 2} XP ishladingiz!
+            </div>
+            <Button onClick={() => router.push('/')} fullWidth className="h-12 text-base">Bosh sahifa</Button>
           </Card>
         ) : (
           <>
@@ -376,10 +387,10 @@ export default function LearnPage() {
                   </div>
                   
                   <div className="flex-1 flex flex-col gap-4 mt-4">
-                    <div className="bg-[#EAF6ED] dark:bg-[#1C2C22] rounded-2xl p-4 border border-[#C3E6CB] dark:border-[#234A2E]">
+                    <div className="bg-success/10 rounded-2xl p-4 border border-success/20">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xl">🇺🇿</span>
-                        <span className="text-xs font-bold text-[#2E7D32] dark:text-success">Tarjima</span>
+                        <span className="text-xs font-bold text-success">Tarjima</span>
                       </div>
                       <p className="text-xl font-bold text-text-main ml-8">
                         {currentVocab?.translation}
@@ -387,10 +398,10 @@ export default function LearnPage() {
                     </div>
 
                     {currentVocab?.example_uzbek && (
-                      <div className="bg-[#F4F0FF] dark:bg-[#2A243D] rounded-2xl p-4 border border-[#E0D4FF] dark:border-[#3E345C]">
-                        <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare size={16} className="text-[#6200EE] dark:text-[#B388FF]" />
-                          <span className="text-xs font-bold text-[#6200EE] dark:text-[#B388FF]">Misol gapning tarjimasi</span>
+                      <div className="bg-primary/10 rounded-2xl p-4 border border-primary/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare size={16} className="text-primary" />
+                          <span className="text-xs font-bold text-primary">Misol gapning tarjimasi</span>
                         </div>
                         <p className="text-sm font-semibold text-text-main ml-6">
                           {currentVocab?.example_uzbek}
@@ -413,14 +424,14 @@ export default function LearnPage() {
 
                   <div className="mt-auto w-full flex gap-3">
                     <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FFF0F0] dark:bg-[#FFEAED]/10 text-error rounded-2xl font-bold hover:bg-[#FFE5E5] dark:hover:bg-[#FFEAED]/20 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-error/10 text-error rounded-2xl font-bold hover:bg-error/20 transition-colors"
                       onClick={() => handleProgress('weak')}
                       disabled={savingProgress}
                     >
                       {savingProgress ? <Loader2 size={20} className="animate-spin" /> : <><X size={20} /> Bilmayman</>}
                     </button>
                     <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#EAF6ED] dark:bg-[#E8F8ED]/10 text-success rounded-2xl font-bold hover:bg-[#D4EED8] dark:hover:bg-[#E8F8ED]/20 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-success/10 text-success rounded-2xl font-bold hover:bg-success/20 transition-colors"
                       onClick={() => handleProgress('learned')}
                       disabled={savingProgress}
                     >

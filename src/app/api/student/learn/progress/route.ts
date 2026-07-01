@@ -127,6 +127,41 @@ export async function POST(req: Request) {
           level: finalLevel
         })
         .eq('id', studentId);
+
+      // Check for badges
+      const badgesToAward = [];
+      if (newStreak >= 3) badgesToAward.push('streak_3');
+      if (newXp >= 100) badgesToAward.push('xp_100');
+      if (newXp >= 1000) badgesToAward.push('xp_1000');
+
+      if (badgesToAward.length > 0) {
+        const { data: existingBadges } = await supabaseAdmin
+          .from('user_badges')
+          .select('badge_type')
+          .eq('student_id', studentId)
+          .in('badge_type', badgesToAward);
+          
+        const existingSet = new Set((existingBadges || []).map(b => b.badge_type));
+        const newBadges = badgesToAward.filter(b => !existingSet.has(b));
+        
+        if (newBadges.length > 0) {
+          const inserts = newBadges.map(b => ({
+            student_id: studentId,
+            badge_type: b
+          }));
+          await supabaseAdmin.from('user_badges').insert(inserts);
+
+          // Notify student
+          for (const b of newBadges) {
+            await supabaseAdmin.from('notifications').insert({
+              user_id: studentId,
+              title: "Yangi Badge (Yutuq)!",
+              message: `Tabriklaymiz! Siz "${b === 'streak_3' ? 'On Fire' : b === 'xp_100' ? 'Tez o\'rganuvchi' : 'XP Master'}" nishonini qo'lga kiritdingiz!`,
+              type: "success"
+            });
+          }
+        }
+      }
     }
 
     return NextResponse.json({ success: true });

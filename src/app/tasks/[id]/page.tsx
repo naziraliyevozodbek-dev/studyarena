@@ -123,7 +123,14 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
           return f; // Keep PDF, audio as is
         })
       );
-      setFiles(prev => [...prev, ...processedFiles]);
+      setFiles(prev => {
+        const nextState = [...prev, ...processedFiles];
+        // Automatically open cropper for the first new image added
+        if (processedFiles[0] && processedFiles[0].type.startsWith('image/')) {
+          setCropQueue([{ file: processedFiles[0], index: prev.length }]);
+        }
+        return nextState;
+      });
       haptic.impact('light');
     } catch (err) {
       console.error("File processing failed:", err);
@@ -427,13 +434,6 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 onChange={handleFileChange}
                 id="camera-upload"
               />
-              <input 
-                type="file" 
-                multiple
-                className="hidden" 
-                onChange={handleFileChange}
-                id="file-upload"
-              />
 
               {files.length > 0 && (
                 <div className="flex flex-col gap-2 mb-2">
@@ -467,38 +467,12 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
               )}
 
               <div className="grid grid-cols-2 gap-2">
-                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('camera-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors">
-                   <Camera size={18} /> Kamera
+                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('camera-upload')?.click(); }} className="flex flex-col items-center justify-center gap-2 py-6 bg-primary/10 text-primary border border-primary/20 rounded-2xl font-bold hover:bg-primary/20 transition-colors">
+                   <Camera size={28} /> <span>Kamera orqali</span>
                  </button>
-                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('gallery-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors">
-                   <ImageIcon size={18} /> Galereya
+                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('gallery-upload')?.click(); }} className="flex flex-col items-center justify-center gap-2 py-6 bg-bg-secondary text-text-main border border-border rounded-2xl font-bold hover:bg-border transition-colors">
+                   <ImageIcon size={28} /> <span>Galereyadan</span>
                  </button>
-              </div>
-              <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('file-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors w-full">
-                 <Paperclip size={18} /> Boshqa fayllar
-              </button>
-
-              <div 
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`w-full py-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer
-                  ${isCompressing ? 'border-text-tertiary bg-bg-secondary cursor-not-allowed opacity-70' : 
-                    isDragging ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
-                  }`}
-              >
-                {isCompressing ? (
-                  <>
-                    <Loader2 size={24} className="text-text-tertiary animate-spin" />
-                    <span className="text-xs font-medium text-text-tertiary">Fayl ishlanyapti...</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud size={28} className="text-primary mb-1" />
-                    <span className="text-sm font-semibold text-text-main">Fayllarni shu yerga tashlang</span>
-                    <span className="text-xs font-medium text-text-tertiary">Maksimal hajm: 20MB</span>
-                  </>
-                )}
               </div>
 
               {submitting && (

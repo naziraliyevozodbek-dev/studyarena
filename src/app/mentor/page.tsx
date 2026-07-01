@@ -19,6 +19,7 @@ export default function MentorDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [newImage, setNewImage] = useState<string>('bg-gradient-to-br from-blue-500 to-cyan-500');
   const [showNewCourse, setShowNewCourse] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -60,7 +61,7 @@ export default function MentorDashboard() {
     if (showNotifications && unreadCount > 0 && token) {
       // Mark as read
       fetch('/api/student/notifications', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       }).then(() => {
         setUnreadCount(0);
@@ -118,7 +119,8 @@ export default function MentorDashboard() {
         },
         body: JSON.stringify({
           title: newTitle,
-          course_code: courseCode
+          course_code: courseCode,
+          image_url: newImage
         })
       });
 
@@ -279,6 +281,22 @@ export default function MentorDashboard() {
               required
               disabled={isCreating}
             />
+            <div className="flex gap-2 my-2">
+              {[
+                'bg-gradient-to-br from-blue-500 to-cyan-500',
+                'bg-gradient-to-br from-purple-500 to-pink-500',
+                'bg-gradient-to-br from-orange-500 to-red-500',
+                'bg-gradient-to-br from-green-500 to-emerald-500',
+                'bg-gradient-to-br from-gray-700 to-gray-900'
+              ].map((theme) => (
+                <button
+                  key={theme}
+                  type="button"
+                  onClick={() => setNewImage(theme)}
+                  className={`w-8 h-8 rounded-full ${theme} ${newImage === theme ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-bg-base' : 'opacity-50 hover:opacity-100'} transition-all`}
+                />
+              ))}
+            </div>
             {errorMsg && (
               <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
                 {errorMsg}
@@ -314,20 +332,23 @@ export default function MentorDashboard() {
         <div className="grid gap-3">
           {courses.map(course => (
             <Link href={`/mentor/courses/${course.id}`} key={course.id}>
-              <Card interactive padding="md" className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-text-main text-base mb-1">{course.title}</h3>
-                  <div className="flex items-center gap-3 text-xs text-text-secondary">
-                    <span className="flex items-center gap-1">
-                      <Users size={12} />
-                      {course._count?.members || 0}
-                    </span>
+              <Card interactive padding="none" className="overflow-hidden flex flex-col">
+                <div className={`h-24 w-full ${course.image_url || 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}></div>
+                <div className="p-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-text-main text-base mb-1">{course.title}</h3>
+                    <div className="flex items-center gap-3 text-xs text-text-secondary">
+                      <span className="flex items-center gap-1">
+                        <Users size={12} />
+                        {course._count?.members || 0}
+                      </span>
                     <span className="text-text-main font-mono bg-bg-secondary px-2 py-0.5 rounded">
                       Code: {course.course_code}
                     </span>
                   </div>
+                  </div>
+                  <ChevronRight size={20} className="text-text-tertiary" />
                 </div>
-                <ChevronRight size={20} className="text-text-tertiary" />
               </Card>
             </Link>
           ))}

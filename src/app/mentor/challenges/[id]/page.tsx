@@ -17,6 +17,8 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [gradingId, setGradingId] = useState<string | null>(null);
+  const [showRejectInput, setShowRejectInput] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,9 +49,7 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
     }
   };
 
-  const handleGrade = async (submissionId: string, status: 'graded' | 'rejected') => {
-    if (!confirm(status === 'graded' ? "Ushbu natijani qabul qilasizmi?" : "Ushbu natijani rad etasizmi?")) return;
-    
+  const handleGrade = async (submissionId: string, status: 'graded' | 'rejected', feedback?: string) => {
     setGradingId(submissionId);
     try {
       const res = await fetch(`/api/mentor/challenges/${resolvedParams.id}/submissions`, {
@@ -58,13 +58,17 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ submissionId, status })
+        body: JSON.stringify({ submissionId, status, feedback })
       });
       
       if (!res.ok) throw new Error('Baholashda xatolik yuz berdi');
       
-      toast.success(status === 'graded' ? "Muvaffaqiyatli qabul qilindi" : "Rad etildi");
-      fetchData();
+      setSubmissions(prev => prev.map(s => 
+        s.id === submissionId ? { ...s, status } : s
+      ));
+      setShowRejectInput(null);
+      setRejectReason('');
+      toast.success(`Javob ${status === 'graded' ? 'qabul qilindi' : 'qaytarildi'}!`);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -172,22 +176,52 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
                   )}
 
                   {submission.status === 'submitted' && (
-                    <div className="flex gap-2 mt-2">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1 text-error border-error/50 hover:bg-error hover:text-white"
-                        onClick={() => handleGrade(submission.id, 'rejected')}
-                        disabled={gradingId !== null}
-                      >
-                        {gradingId === submission.id ? <Loader2 size={16} className="animate-spin" /> : <><X size={18} className="mr-2" /> Rad etish</>}
-                      </Button>
-                      <Button 
-                        className="flex-1 bg-success hover:bg-success-hover text-white"
-                        onClick={() => handleGrade(submission.id, 'graded')}
-                        disabled={gradingId !== null}
-                      >
-                        {gradingId === submission.id ? <Loader2 size={16} className="animate-spin" /> : <><Check size={18} className="mr-2" /> Qabul qilish</>}
-                      </Button>
+                    <div className="flex flex-col gap-3 mt-2">
+                      {showRejectInput === submission.id ? (
+                        <div className="animate-fade-in flex flex-col gap-2">
+                          <textarea 
+                            className="w-full bg-bg-secondary border border-border rounded-xl p-3 text-sm text-text-main outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="Nima uchun rad etildi? (majburiy emas)"
+                            rows={2}
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                          />
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => setShowRejectInput(null)}
+                            >
+                              Bekor qilish
+                            </Button>
+                            <Button 
+                              className="flex-1 bg-error hover:bg-error/90 text-white"
+                              onClick={() => handleGrade(submission.id, 'rejected', rejectReason)}
+                              disabled={gradingId !== null}
+                            >
+                              {gradingId === submission.id ? <Loader2 size={16} className="animate-spin" /> : 'Tasdiqlash'}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            className="flex-1 text-error border-error/50 hover:bg-error hover:text-white"
+                            onClick={() => setShowRejectInput(submission.id)}
+                            disabled={gradingId !== null}
+                          >
+                            <X size={18} className="mr-2" /> Rad etish
+                          </Button>
+                          <Button 
+                            className="flex-1 bg-success hover:bg-success-hover text-white"
+                            onClick={() => handleGrade(submission.id, 'graded')}
+                            disabled={gradingId !== null}
+                          >
+                            {gradingId === submission.id ? <Loader2 size={16} className="animate-spin" /> : <><Check size={18} className="mr-2" /> Qabul qilish</>}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card>
