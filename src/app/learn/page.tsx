@@ -25,6 +25,14 @@ export default function LearnPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('category');
+      if (cat) setSelectedCategory(cat);
+    }
+  }, []);
+
+  useEffect(() => {
     if (vocabularies.length > 0) {
       const initialSaved: Record<string, boolean> = {};
       vocabularies.forEach(v => {

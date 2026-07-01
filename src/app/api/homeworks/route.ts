@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     // Verify mentor owns the course
     const { data: course, error: courseError } = await supabaseAdmin
       .from('courses')
-      .select('mentor_id')
+      .select('mentor_id, title')
       .eq('id', course_id)
       .single();
 
@@ -46,6 +46,23 @@ export async function POST(req: Request) {
       .single();
 
     if (insertError) throw insertError;
+
+    // Notify enrolled students
+    const { data: enrollments } = await supabaseAdmin
+      .from('enrollments')
+      .select('student_id')
+      .eq('course_id', course_id);
+
+    if (enrollments && enrollments.length > 0) {
+      const notifications = enrollments.map(e => ({
+        student_id: e.student_id,
+        title: "Yangi vazifa!",
+        message: `"${course.title}" kursida yangi vazifa qo'shildi: ${title}`,
+        type: "homework",
+        related_id: homework.id
+      }));
+      await supabaseAdmin.from('notifications').insert(notifications);
+    }
 
     return NextResponse.json({ homework }, { status: 201 });
   } catch (err: unknown) {

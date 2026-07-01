@@ -108,11 +108,9 @@ export async function POST(req: Request) {
           const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
           
           if (diffDays === 1) {
-            newStreak += 1;
-          } else if (diffDays === 2) {
-            newStreak += 1; 
-          } else if (diffDays > 2) {
-            newStreak = 1;
+            newStreak += 1; // Ketma-ket kirgan, oshadi
+          } else if (diffDays >= 2) {
+            newStreak += 1; // Kirmagan kunlar muzlaydi, streak yo'qolmaydi, davom etadi
           }
         } else {
           newStreak = 1;
@@ -120,7 +118,7 @@ export async function POST(req: Request) {
       }
 
       // User requested 50,000 XP per level
-      const finalLevel = Math.floor(newXp / 50000) + 1;
+      const finalLevel = Math.floor(newXp / 10000) + 1;
       await supabaseAdmin
         .from('users')
         .update({ 

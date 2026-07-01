@@ -54,9 +54,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         .single();
 
       if (student) {
+        const newXp = (student.xp || 0) + awardedScore;
+        const newLevel = Math.floor(newXp / 10000) + 1;
         await supabaseAdmin
           .from('users')
-          .update({ xp: (student.xp || 0) + awardedScore })
+          .update({ xp: newXp, level: newLevel })
           .eq('id', submission.student_id);
       }
     }

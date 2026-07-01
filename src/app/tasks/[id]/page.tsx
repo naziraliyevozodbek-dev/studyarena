@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon, Camera } from 'lucide-react';
+import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon, Camera, Image as ImageIcon, Crop as CropIcon, Paperclip } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -80,8 +80,8 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
   const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState('');
   const [isCompressing, setIsCompressing] = useState(false);
+  const [cropQueue, setCropQueue] = useState<{file: File, index: number}[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [cropQueue, setCropQueue] = useState<File[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -136,23 +136,32 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      const images = newFiles.filter(f => f.type.startsWith('image/'));
-      const others = newFiles.filter(f => !f.type.startsWith('image/'));
-      
-      if (others.length > 0) handleFiles(others);
-      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
+      handleFiles(Array.from(e.target.files));
     }
   };
 
-  const handleCropComplete = (croppedFile: File) => {
-    handleFiles([croppedFile]);
-    setCropQueue(prev => prev.slice(1));
+  const initiateCrop = (index: number) => {
+    const file = files[index];
+    if (file && file.type.startsWith('image/')) {
+      setCropQueue([{ file, index }]);
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    const currentCrop = cropQueue[0];
+    setIsCompressing(true);
+    try {
+      const processed = await compressImage(croppedFile);
+      setFiles(prev => prev.map((f, i) => i === currentCrop.index ? processed : f));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCompressing(false);
+      setCropQueue(prev => prev.slice(1));
+    }
   };
   
   const handleCropCancel = () => {
-    const file = cropQueue[0];
-    handleFiles([file]);
     setCropQueue(prev => prev.slice(1));
   };
 
@@ -172,11 +181,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const newFiles = Array.from(e.dataTransfer.files);
-      const images = newFiles.filter(f => f.type.startsWith('image/'));
-      const others = newFiles.filter(f => !f.type.startsWith('image/'));
-      
-      if (others.length > 0) handleFiles(others);
-      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
+      if (newFiles.length > 0) handleFiles(newFiles);
     }
   };
 
@@ -299,7 +304,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
 
       {cropQueue.length > 0 && (
         <ImageCropper 
-          imageFile={cropQueue[0]} 
+          imageFile={cropQueue[0].file} 
           onCropComplete={handleCropComplete} 
           onCancel={handleCropCancel} 
         />
@@ -410,32 +415,70 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 accept="image/*"
                 multiple
                 className="hidden" 
+                onChange={handleFileChange}
                 ref={fileInputRef}
+                id="gallery-upload"
+              />
+              <input 
+                type="file" 
+                accept="image/*"
+                capture="environment"
+                className="hidden" 
+                onChange={handleFileChange}
+                id="camera-upload"
+              />
+              <input 
+                type="file" 
+                multiple
+                className="hidden" 
                 onChange={handleFileChange}
                 id="file-upload"
               />
 
               {files.length > 0 && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mb-2">
                   {files.map((f, idx) => (
                     <div key={idx} className="w-full p-3 rounded-xl border border-border bg-bg-secondary flex items-center justify-between">
                       <div className="flex items-center gap-3 overflow-hidden">
                         {getFileIcon(f.type)}
                         <span className="text-xs font-medium text-text-main truncate">{f.name}</span>
                       </div>
-                      <button 
-                        onClick={() => removeFile(idx)}
-                        className="text-text-tertiary hover:text-error p-1 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {f.type.startsWith('image/') && (
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); initiateCrop(idx); }}
+                            className="text-primary hover:text-primary/80 p-1.5 transition-colors bg-primary/10 rounded-lg flex items-center gap-1 text-[10px] font-bold mr-1"
+                          >
+                            <CropIcon size={14} /> Kesish
+                          </button>
+                        )}
+                        <button 
+                          type="button"
+                          onClick={() => removeFile(idx)}
+                          className="text-text-tertiary hover:text-error p-1.5 transition-colors bg-bg-base rounded-lg"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
+              <div className="grid grid-cols-2 gap-2">
+                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('camera-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors">
+                   <Camera size={18} /> Kamera
+                 </button>
+                 <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('gallery-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors">
+                   <ImageIcon size={18} /> Galereya
+                 </button>
+              </div>
+              <button type="button" onClick={() => { haptic.impact('light'); document.getElementById('file-upload')?.click(); }} className="flex items-center justify-center gap-2 py-3 bg-bg-secondary border border-border rounded-xl text-sm font-bold text-text-main hover:bg-border transition-colors w-full">
+                 <Paperclip size={18} /> Boshqa fayllar
+              </button>
+
               <div 
-                onClick={() => { haptic.impact('light'); document.getElementById('file-upload')?.click(); }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -447,13 +490,13 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                 {isCompressing ? (
                   <>
                     <Loader2 size={24} className="text-text-tertiary animate-spin" />
-                    <span className="text-xs font-medium text-text-tertiary">Fayl tayyorlanmoqda...</span>
+                    <span className="text-xs font-medium text-text-tertiary">Fayl ishlanyapti...</span>
                   </>
                 ) : (
                   <>
                     <UploadCloud size={28} className="text-primary mb-1" />
-                    <span className="text-sm font-medium text-primary">Rasm biriktirish (📸)</span>
-                    <span className="text-[10px] text-text-tertiary text-center px-4">Kameradan rasmga olish yoki Galereyadan tanlash</span>
+                    <span className="text-sm font-semibold text-text-main">Fayllarni shu yerga tashlang</span>
+                    <span className="text-xs font-medium text-text-tertiary">Maksimal hajm: 20MB</span>
                   </>
                 )}
               </div>

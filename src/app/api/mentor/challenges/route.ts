@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     // Then fetch challenges for these courses
     const { data: challenges, error } = await supabaseAdmin
       .from('challenges')
-      .select('id, course_id, title, description, xp_reward, deadline, created_at, courses(title)')
+      .select('id, course_id, title, description, xp_reward, deadline, created_at, type, quiz_data, courses(title)')
       .in('course_id', courseIds)
       .order('created_at', { ascending: false });
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
     const body = await req.json();
-    const { course_id, title, description, xp_reward, deadline } = body;
+    const { course_id, title, description, xp_reward, deadline, type, quiz_data } = body;
     
     // Verify mentor owns the course
     const { data: course } = await supabaseAdmin
@@ -73,7 +73,9 @@ export async function POST(req: Request) {
         title,
         description: description || null,
         xp_reward: parseInt(xp_reward) || 0,
-        deadline: deadline || null
+        deadline: deadline || null,
+        type: type || 'upload',
+        quiz_data: quiz_data || null
       }])
       .select('*, courses(title)')
       .single();

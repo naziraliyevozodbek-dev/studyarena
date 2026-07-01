@@ -95,6 +95,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (submitError) throw submitError;
 
+    // Notify mentor
+    const { data: homework } = await supabaseAdmin
+      .from('homeworks')
+      .select('course_id, title')
+      .eq('id', homeworkId)
+      .single();
+
+    if (homework) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('mentor_id, title')
+        .eq('id', homework.course_id)
+        .single();
+
+      if (course) {
+         // Also fetch user details for a better message
+         const { data: user } = await supabaseAdmin.from('users').select('full_name').eq('id', decoded.sub).single();
+         const studentName = user?.full_name || 'O\'quvchi';
+
+         await supabaseAdmin.from('notifications').insert({
+            student_id: course.mentor_id,
+            title: "Vazifa topshirildi",
+            message: `${studentName} "${course.title}" dagi "${homework.title}" vazifasini yubordi.`,
+            type: "homework",
+            related_id: homeworkId
+         });
+      }
+    }
+
     return NextResponse.json({ submission }, { status: 200 });
   } catch (err: unknown) {
     console.error('Submission error:', err);

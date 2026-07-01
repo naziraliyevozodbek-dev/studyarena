@@ -82,7 +82,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       
       if (user) {
         const newXp = (user.xp || 0) + reward;
-        const newLevel = Math.floor(newXp / 50000) + 1;
+        const newLevel = Math.floor(newXp / 10000) + 1;
         
         await supabaseAdmin.from('users').update({ xp: newXp, level: newLevel }).eq('id', submission.student_id);
 

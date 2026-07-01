@@ -19,7 +19,11 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ badges: badges || [] });
+    // TODO: Remove this fake badge after user tests the UI
+    const fakeBadge = { badge_type: 'streak_3', earned_at: new Date().toISOString() };
+    const allBadges = badges ? [...badges, fakeBadge] : [fakeBadge];
+
+    return NextResponse.json({ badges: allBadges });
   } catch (err: unknown) {
     console.error('Badges fetch error:', err);
     return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });

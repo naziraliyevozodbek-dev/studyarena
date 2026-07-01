@@ -87,40 +87,43 @@ export function ImageCropper({ imageFile, onCropComplete, onCancel }: ImageCropp
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white dark:bg-bg-card p-4 flex flex-col max-h-screen overflow-hidden relative">
-        <button onClick={onCancel} className="absolute top-2 right-2 p-2 bg-black/10 rounded-full z-10">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-white/10 text-white">
+        <h3 className="font-bold">Rasmni qirqish</h3>
+        <button onClick={onCancel} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
           <X size={20} />
         </button>
-        <h3 className="font-bold text-center mb-4">Rasmni qirqish</h3>
-        
-        <div className="flex-1 overflow-auto flex items-center justify-center min-h-[300px] bg-black/5 rounded-xl">
-          {!!imgSrc && (
-            <ReactCrop
-              crop={crop}
-              onChange={(_, percentCrop) => setCrop(percentCrop)}
-              onComplete={(c) => setCompletedCrop(c)}
-            >
-              <img
-                ref={imgRef}
-                alt="Crop me"
-                src={imgSrc}
-                style={{ maxHeight: '60vh', objectFit: 'contain' }}
-                onLoad={onImageLoad}
-              />
-            </ReactCrop>
-          )}
-        </div>
-        
-        <div className="flex gap-3 mt-4 flex-shrink-0">
-          <Button variant="outline" className="flex-1" onClick={() => onCropComplete(imageFile)}>
-            Qirqmasdan yuklash
-          </Button>
-          <Button className="flex-1" onClick={generateCroppedImage}>
-            Qirqishni tasdiqlash
-          </Button>
-        </div>
-      </Card>
+      </div>
+      
+      {/* Cropper Area */}
+      <div className="flex-1 overflow-auto flex items-center justify-center p-2">
+        {!!imgSrc && (
+          <ReactCrop
+            crop={crop}
+            onChange={(_, percentCrop) => setCrop(percentCrop)}
+            onComplete={(c) => setCompletedCrop(c)}
+          >
+            <img
+              ref={imgRef}
+              alt="Crop me"
+              src={imgSrc}
+              style={{ maxHeight: 'calc(100vh - 160px)', objectFit: 'contain' }}
+              onLoad={onImageLoad}
+            />
+          </ReactCrop>
+        )}
+      </div>
+      
+      {/* Footer Actions */}
+      <div className="p-4 flex gap-3 flex-shrink-0 border-t border-white/10">
+        <Button variant="outline" className="flex-1 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white" onClick={onCancel}>
+          Bekor qilish
+        </Button>
+        <Button className="flex-1" onClick={generateCroppedImage}>
+          Qirqish
+        </Button>
+      </div>
     </div>
   );
 }

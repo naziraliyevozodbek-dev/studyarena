@@ -117,7 +117,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="bg-bg-card shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] rounded-t-2xl w-full h-[100px] flex flex-col items-center justify-end pb-4 pt-6 mt-2 relative border border-border border-b-0">
                     <span className="text-[13px] font-bold text-text-main truncate w-[90%] text-center">{top3[1]?.name?.split(' ')[0] || '-'}</span>
-                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[1]?.xp ? `${top3[1].xp} pts` : '-'}</span>
+                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[1]?.xp ? `${top3[1].xp} XP` : '-'}</span>
                   </div>
                 </div>
 
@@ -132,7 +132,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="bg-bg-card shadow-[0_-15px_25px_-5px_rgba(0,0,0,0.08)] rounded-t-2xl w-full h-[120px] flex flex-col items-center justify-end pb-4 pt-6 mt-2 relative border border-border border-b-0">
                     <span className="text-[14px] font-bold text-text-main truncate w-[90%] text-center">{top3[0]?.name?.split(' ')[0] || '-'}</span>
-                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[0]?.xp ? `${top3[0].xp} pts` : '-'}</span>
+                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[0]?.xp ? `${top3[0].xp} XP` : '-'}</span>
                   </div>
                 </div>
 
@@ -146,7 +146,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="bg-bg-card shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] rounded-t-2xl w-full h-[85px] flex flex-col items-center justify-end pb-3 pt-6 mt-2 relative border border-border border-b-0">
                     <span className="text-[13px] font-bold text-text-main truncate w-[90%] text-center">{top3[2]?.name?.split(' ')[0] || '-'}</span>
-                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[2]?.xp ? `${top3[2].xp} pts` : '-'}</span>
+                    <span className="text-[11px] font-semibold text-primary mt-0.5">{top3[2]?.xp ? `${top3[2].xp} XP` : '-'}</span>
                   </div>
                 </div>
                 
@@ -178,7 +178,7 @@ export default function LeaderboardPage() {
                 </div>
                 
                 <div className="font-semibold text-[13px] text-primary">
-                  {student.xp} pts
+                  {student.xp} XP
                 </div>
               </div>
             ))}

@@ -120,7 +120,7 @@ export default function WeakWordsPage() {
   const currentVocab = vocabularies[currentIndex];
 
   return (
-    <div className="animate-fade-in flex-1 flex flex-col min-h-screen w-full overflow-y-auto">
+    <div className="animate-fade-in flex-1 flex flex-col w-full">
       <audio id="tts-player" playsInline className="hidden" />
       <div className="flex items-center justify-between pt-4 mb-4">
         <button onClick={() => router.push('/')} className="text-primary active:opacity-70 transition-opacity">
@@ -133,7 +133,7 @@ export default function WeakWordsPage() {
         <div className="w-20"></div>
       </div>
 
-      <div className="flex-1 flex flex-col w-full px-4 pb-24">
+      <div className="flex-1 flex flex-col w-full">
         {vocabularies.length === 0 ? (
           <Card padding="lg" className="text-center mt-10 border-dashed border-success">
             <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
@@ -171,7 +171,7 @@ export default function WeakWordsPage() {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col min-h-[400px] [perspective:1000px] mb-8">
+            <div className="flex-1 flex flex-col min-h-[400px] [perspective:1000px] mb-4">
               <div className={`relative w-full h-full min-h-[400px] transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
                 <Card className="absolute w-full h-full min-h-[400px] [backface-visibility:hidden] flex flex-col p-6 border-2 border-error shadow-md bg-error/5 rounded-3xl">
                   <div className="absolute top-4 right-4">

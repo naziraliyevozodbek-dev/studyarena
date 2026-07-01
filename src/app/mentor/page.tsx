@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Bell, X } from 'lucide-react';
 
 export default function MentorDashboard() {
   const { user, token } = useAuth();
@@ -20,9 +21,53 @@ export default function MentorDashboard() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showNewCourse, setShowNewCourse] = useState(false);
 
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   useEffect(() => {
-    if (user?.id) fetchCourses();
+    if (user?.id) {
+      fetchCourses();
+      fetchNotifications();
+
+      const notifInterval = setInterval(() => {
+        fetchNotifications();
+      }, 10000);
+
+      return () => {
+        clearInterval(notifInterval);
+      };
+    }
   }, [user]);
+
+  const fetchNotifications = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch('/api/student/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount((data.notifications || []).filter((n: any) => !n.is_read).length);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (showNotifications && unreadCount > 0 && token) {
+      // Mark as read
+      fetch('/api/student/notifications', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(() => {
+        setUnreadCount(0);
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      });
+    }
+  }, [showNotifications, unreadCount, token]);
 
   const fetchCourses = async () => {
     try {
@@ -112,14 +157,70 @@ export default function MentorDashboard() {
   return (
     <div className="animate-fade-in pb-24">
       {/* Header */}
-      <div className="mb-6 pt-4 flex justify-between items-center mb-6 px-1">
-        <h1 className="text-2xl font-bold text-text-main m-0">Dashboard</h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-6 pt-4 flex justify-between items-center px-1">
+        <div>
+          <h1 className="text-2xl font-bold text-text-main m-0">Dashboard</h1>
+          <p className="text-text-secondary text-sm font-medium mt-1">Salom, Mentor!</p>
+        </div>
+        <div className="flex items-center gap-3">
           <button className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-xl flex items-center gap-2" onClick={() => setShowNewCourse(true)}>
             <Plus size={18} /> Yangi
           </button>
+          
+          <button 
+            onClick={() => setShowNotifications(true)}
+            className="w-10 h-10 bg-bg-secondary text-text-main rounded-full flex items-center justify-center relative hover:bg-border transition-colors"
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-bg-base"></span>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Notifications Modal */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)}></div>
+          
+          {/* Centered Modal */}
+          <div className="relative w-full max-w-md bg-bg-base rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-slide-up z-10">
+            
+            <div className="flex items-center justify-between px-5 pb-3 pt-5 border-b border-border">
+              <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 text-text-tertiary">
+                  <Bell size={48} className="mb-4 opacity-20" />
+                  <p>Hozircha bildirishnomalar yo&apos;q</p>
+                </div>
+              ) : (
+                notifications.map(notification => (
+                  <Card key={notification.id} padding="md" className={`flex gap-3 items-start ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}>
+                    <div className="mt-1 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Bell size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-text-main mb-1">{notification.title}</h4>
+                      <p className="text-xs text-text-secondary leading-relaxed">{notification.message}</p>
+                      <span className="text-[10px] text-text-tertiary mt-2 block">
+                        {new Date(notification.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         {/* Analytics Grid */}

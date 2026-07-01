@@ -30,6 +30,8 @@ export default function MentorChallenges() {
   const [xpReward, setXpReward] = useState('100');
   const [deadline, setDeadline] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
+  const [challengeType, setChallengeType] = useState('upload');
+  const [quizQuestions, setQuizQuestions] = useState<{question: string, options: string[], answer: number}[]>([{ question: '', options: ['', '', '', ''], answer: 0 }]);
 
   useEffect(() => {
     if (user?.id && token) {
@@ -82,7 +84,9 @@ export default function MentorChallenges() {
           title,
           description,
           xp_reward: parseInt(xpReward) || 0,
-          deadline: deadline || null
+          deadline: deadline || null,
+          type: challengeType,
+          quiz_data: challengeType === 'quiz' ? quizQuestions : null
         })
       });
       
@@ -96,6 +100,8 @@ export default function MentorChallenges() {
       setDescription('');
       setXpReward('100');
       setDeadline('');
+      setChallengeType('upload');
+      setQuizQuestions([{ question: '', options: ['', '', '', ''], answer: 0 }]);
       toast.success("Challenge created successfully");
     } catch (error: any) {
       toast.error("Error: " + error.message);
@@ -168,6 +174,7 @@ export default function MentorChallenges() {
                     <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{ch.courses?.title}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-base text-text-secondary uppercase border border-border">{ch.type === 'quiz' ? 'Test' : 'Vazifa'}</span>
                       </div>
                       <h3 className="font-bold text-text-main text-lg leading-tight">{ch.title}</h3>
                     </div>
@@ -225,9 +232,82 @@ export default function MentorChallenges() {
                 type="text" 
                 value={description} 
                 onChange={e => setDescription(e.target.value)} 
-                required 
+                required={challengeType !== 'quiz'} 
                 placeholder="Masalan: Har kuni 20 tadan so'z yodlab, testdan o'tish..." 
               />
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-bold text-text-main">Vazifa turi</label>
+                <div className="flex gap-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setChallengeType('upload')}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold border ${challengeType === 'upload' ? 'bg-primary/10 border-primary text-primary' : 'bg-bg-secondary border-border text-text-secondary'}`}
+                  >
+                    Fayl yuklash
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setChallengeType('quiz')}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold border ${challengeType === 'quiz' ? 'bg-primary/10 border-primary text-primary' : 'bg-bg-secondary border-border text-text-secondary'}`}
+                  >
+                    Test (Quiz)
+                  </button>
+                </div>
+              </div>
+
+              {challengeType === 'quiz' && (
+                <div className="flex flex-col gap-4 border border-border rounded-xl p-4 bg-bg-secondary">
+                  <h4 className="font-bold text-sm text-text-main">Test savollari</h4>
+                  {quizQuestions.map((q, qIndex) => (
+                    <div key={qIndex} className="p-3 bg-bg-base border border-border rounded-lg relative">
+                      <button type="button" className="absolute top-2 right-2 text-error" onClick={() => setQuizQuestions(prev => prev.filter((_, i) => i !== qIndex))}>
+                        <Trash2 size={16} />
+                      </button>
+                      <Input
+                        label={`Savol ${qIndex + 1}`}
+                        value={q.question}
+                        onChange={(e) => {
+                          const newQ = [...quizQuestions];
+                          newQ[qIndex].question = e.target.value;
+                          setQuizQuestions(newQ);
+                        }}
+                        required
+                      />
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        {q.options.map((opt, oIndex) => (
+                          <div key={oIndex} className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name={`answer-${qIndex}`} 
+                              checked={q.answer === oIndex}
+                              onChange={() => {
+                                const newQ = [...quizQuestions];
+                                newQ[qIndex].answer = oIndex;
+                                setQuizQuestions(newQ);
+                              }}
+                              className="w-4 h-4 text-primary accent-primary"
+                            />
+                            <Input
+                              placeholder={`Variant ${oIndex + 1}`}
+                              value={opt}
+                              onChange={(e) => {
+                                const newQ = [...quizQuestions];
+                                newQ[qIndex].options[oIndex] = e.target.value;
+                                setQuizQuestions(newQ);
+                              }}
+                              required
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" onClick={() => setQuizQuestions([...quizQuestions, { question: '', options: ['', '', '', ''], answer: 0 }])}>
+                    + Yana savol qo'shish
+                  </Button>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <div className="flex-1">

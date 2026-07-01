@@ -42,6 +42,11 @@ export default function Home() {
       fetchActivity();
       fetchNotifications();
 
+      // Poll notifications every 10 seconds for pseudo-realtime
+      const notifInterval = setInterval(() => {
+        fetchNotifications();
+      }, 10000);
+
       if (!localStorage.getItem('studyarena_onboarded')) {
         // If they have no enrolled courses and not onboarded yet
         // Wait for fetchEnrolledCourses to finish? 
@@ -67,9 +72,10 @@ export default function Home() {
 
       return () => {
         supabase.removeChannel(channel);
+        clearInterval(notifInterval);
       };
     }
-  }, [user]);
+  }, [user, token]);
 
   const fetchEnrolledCourses = async () => {
     if (!user || !token) return;
@@ -281,10 +287,16 @@ export default function Home() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 bg-bg-base flex flex-col animate-fade-in">
-          <div className="flex items-center justify-between p-5 border-b border-border bg-bg-card">
-            <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
-            <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)}></div>
+          
+          {/* Centered Modal */}
+          <div className="relative w-full max-w-md bg-bg-base rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-slide-up z-10">
+            
+            <div className="flex items-center justify-between px-5 pb-3 pt-5 border-b border-border">
+              <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
               <X size={20} />
             </button>
           </div>
@@ -312,6 +324,7 @@ export default function Home() {
               )}
             </div>
           </div>
+        </div>
       )}
 
       {fetchingCourses ? (
@@ -353,14 +366,19 @@ export default function Home() {
       ) : (
         <div>
           {/* iOS Style Metric Cards Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <Card padding="md" className="flex flex-col items-center justify-center text-center">
-              <span className="text-text-tertiary text-xs font-medium mb-1">XP</span>
-              <span className="text-xl font-semibold text-primary">{user.xp || 0}</span>
-            </Card>
-            <Card padding="md" className="flex flex-col items-center justify-center text-center">
-              <span className="text-text-tertiary text-xs font-medium mb-1">Level</span>
-              <span className="text-xl font-semibold text-text-main">{user.level || 1}</span>
+          <div className="grid grid-cols-3 gap-3 mb-2">
+            <Card padding="md" className="flex flex-col items-center justify-center text-center col-span-2">
+              <div className="flex justify-between w-full items-center mb-2 px-1">
+                <span className="text-text-tertiary text-xs font-bold uppercase tracking-wider">Level {user.level || 1}</span>
+                <span className="text-primary text-sm font-bold">{user.xp || 0} XP</span>
+              </div>
+              <div className="w-full bg-bg-secondary rounded-full h-2.5 overflow-hidden">
+                <div 
+                  className="bg-primary h-full rounded-full transition-all" 
+                  style={{ width: `${Math.min(100, ((user.xp || 0) % 10000) / 10000 * 100)}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-text-tertiary mt-2 font-medium">Keyingi levelga: {10000 - ((user.xp || 0) % 10000)} XP</span>
             </Card>
             <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/10 dark:to-orange-500/5 border-orange-200 dark:border-orange-500/20">
               <span className="text-orange-600/80 dark:text-orange-500 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>
@@ -375,8 +393,8 @@ export default function Home() {
                 {activityDays.map((day, idx) => (
                   <div key={idx} className="flex flex-col items-center gap-2">
                     <span className="text-[10px] uppercase font-bold text-text-tertiary tracking-wider">{day.day}</span>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${day.active ? 'bg-success text-white shadow-sm' : 'bg-bg-secondary text-text-tertiary'}`}>
-                      {day.active ? '✓' : '✗'}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${day.active ? 'bg-success text-white shadow-sm' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'}`}>
+                      {day.active ? '✓' : '❄️'}
                     </div>
                   </div>
                 ))}
@@ -391,8 +409,8 @@ export default function Home() {
                  <div className="w-10 h-10 rounded-full bg-primary-light text-primary flex items-center justify-center mb-3">
                    <BookOpen size={20} />
                  </div>
-                 <h3 className="font-semibold text-text-main mb-1">Vocabulary</h3>
-                 <p className="text-xs text-text-secondary">{recentVocab.length} words to practice</p>
+                 <h3 className="font-semibold text-text-main mb-1">Lug'at</h3>
+                 <p className="text-xs text-text-secondary">{recentVocab.length} ta yangi so'z</p>
                </Card>
              </Link>
              <Link href="/tasks">
@@ -400,8 +418,8 @@ export default function Home() {
                  <div className="w-10 h-10 rounded-full bg-success-light text-success flex items-center justify-center mb-3">
                    <CheckSquare size={20} />
                  </div>
-                 <h3 className="font-semibold text-text-main mb-1">Homework</h3>
-                 <p className="text-xs text-text-secondary">{pendingTasksCount} pending tasks</p>
+                 <h3 className="font-semibold text-text-main mb-1">Vazifalar</h3>
+                 <p className="text-xs text-text-secondary">{pendingTasksCount} ta vazifa</p>
                </Card>
              </Link>
              <Link href="/challenges">
@@ -409,17 +427,17 @@ export default function Home() {
                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/10 text-orange-500 flex items-center justify-center mb-3">
                    <Target size={20} />
                  </div>
-                 <h3 className="font-semibold text-text-main mb-1">Challenges</h3>
-                 <p className="text-xs text-text-secondary">Earn extra XP</p>
+                 <h3 className="font-semibold text-text-main mb-1">Test va Challenge</h3>
+                 <p className="text-xs text-text-secondary">XP ishlash</p>
                </Card>
              </Link>
-             <Link href="/resources">
+             <Link href="/learn?category=starred">
                <Card interactive padding="md">
-                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
-                   <BookOpen size={20} />
+                 <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-500/10 text-yellow-500 flex items-center justify-center mb-3">
+                   <Flame size={20} />
                  </div>
-                 <h3 className="font-semibold text-text-main mb-1">Resources</h3>
-                 <p className="text-xs text-text-secondary">Files & Links</p>
+                 <h3 className="font-semibold text-text-main mb-1">Saqlangan so'zlar</h3>
+                 <p className="text-xs text-text-secondary">Yod olinganlar</p>
                </Card>
              </Link>
           </div>
