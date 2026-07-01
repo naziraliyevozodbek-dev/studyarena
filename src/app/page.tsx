@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, CheckCircle2 } from 'lucide-react';
+import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, Book } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -190,6 +190,10 @@ export default function Home() {
     markNotificationsAsRead();
   };
 
+  const handleCloseNotifications = () => {
+    setShowNotifications(false);
+  };
+
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !courseCode.trim() || !token) return;
@@ -285,19 +289,20 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Notifications Fullscreen */}
+      {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-[100] bg-bg-base flex flex-col animate-slide-up">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-base sticky top-0 z-10">
-            <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
-            <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
-              <X size={20} />
-            </button>
-          </div>
-          
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pb-24">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base">
+          {/* True Fullscreen Modal */}
+          <div className="relative w-full h-full flex flex-col z-10">
+            
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20">
+              <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
+              <button onClick={handleCloseNotifications} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
                   <Bell size={48} className="mb-4 opacity-20" />
@@ -319,6 +324,7 @@ export default function Home() {
                   </Card>
                 ))
               )}
+            </div>
           </div>
         </div>
       )}
@@ -427,6 +433,15 @@ export default function Home() {
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Saqlangan so'zlar</h3>
                  <p className="text-xs text-text-secondary">Yod olinganlar</p>
+               </Card>
+             </Link>
+             <Link href="/resources">
+               <Card interactive padding="md">
+                 <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/10 text-cyan-500 flex items-center justify-center mb-3">
+                   <Book size={20} />
+                 </div>
+                 <h3 className="font-semibold text-text-main mb-1">Resurslar</h3>
+                 <p className="text-xs text-text-secondary">Darsliklar va qoidalar</p>
                </Card>
              </Link>
           </div>

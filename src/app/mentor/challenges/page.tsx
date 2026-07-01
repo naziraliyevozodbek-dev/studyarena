@@ -104,7 +104,8 @@ export default function MentorChallenges() {
       setQuizQuestions([{ question: '', options: ['', '', '', ''], answer: 0 }]);
       toast.success("Challenge created successfully");
     } catch (error: any) {
-      toast.error("Error: " + error.message);
+      const msg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
+      toast.error("Error: " + msg);
     } finally {
       setSaving(false);
     }

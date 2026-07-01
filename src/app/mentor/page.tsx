@@ -19,7 +19,6 @@ export default function MentorDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [newImage, setNewImage] = useState<string>('bg-gradient-to-br from-blue-500 to-cyan-500');
   const [showNewCourse, setShowNewCourse] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -108,7 +107,7 @@ export default function MentorDashboard() {
     }
 
     setIsCreating(true);
-    const courseCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const courseCode = Math.random().toString(36).substring(2, 8).toUpperCase().padEnd(6, 'X');
 
     try {
       const res = await fetch('/api/courses', {
@@ -119,8 +118,7 @@ export default function MentorDashboard() {
         },
         body: JSON.stringify({
           title: newTitle,
-          course_code: courseCode,
-          image_url: newImage
+          course_code: courseCode
         })
       });
 
@@ -183,23 +181,20 @@ export default function MentorDashboard() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)}></div>
-          
-          {/* Centered Modal */}
-          <div className="relative w-full max-w-md bg-bg-base rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-slide-up z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base">
+          {/* True Fullscreen Modal */}
+          <div className="relative w-full h-full flex flex-col z-10">
             
-            <div className="flex items-center justify-between px-5 pb-3 pt-5 border-b border-border">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20">
               <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
               <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
                 <X size={20} />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pb-safe">
               {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-text-tertiary">
+                <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
                   <Bell size={48} className="mb-4 opacity-20" />
                   <p>Hozircha bildirishnomalar yo&apos;q</p>
                 </div>
@@ -281,22 +276,6 @@ export default function MentorDashboard() {
               required
               disabled={isCreating}
             />
-            <div className="flex gap-2 my-2">
-              {[
-                'bg-gradient-to-br from-blue-500 to-cyan-500',
-                'bg-gradient-to-br from-purple-500 to-pink-500',
-                'bg-gradient-to-br from-orange-500 to-red-500',
-                'bg-gradient-to-br from-green-500 to-emerald-500',
-                'bg-gradient-to-br from-gray-700 to-gray-900'
-              ].map((theme) => (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => setNewImage(theme)}
-                  className={`w-8 h-8 rounded-full ${theme} ${newImage === theme ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-bg-base' : 'opacity-50 hover:opacity-100'} transition-all`}
-                />
-              ))}
-            </div>
             {errorMsg && (
               <div className="p-3 bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200">
                 {errorMsg}
@@ -333,7 +312,6 @@ export default function MentorDashboard() {
           {courses.map(course => (
             <Link href={`/mentor/courses/${course.id}`} key={course.id}>
               <Card interactive padding="none" className="overflow-hidden flex flex-col">
-                <div className={`h-24 w-full ${course.image_url || 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}></div>
                 <div className="p-4 flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-text-main text-base mb-1">{course.title}</h3>

@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, Users, BookOpen, CheckCircle, XCircle, Plus, FileTe
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
@@ -51,6 +52,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
   const [hwDescription, setHwDescription] = useState('');
   const [hwXp, setHwXp] = useState('50');
   const [hwDeadline, setHwDeadline] = useState('');
+  const [showHomeworkModal, setShowHomeworkModal] = useState(false);
   const [isAddingHw, setIsAddingHw] = useState(false);
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -157,70 +159,6 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     }
   };
 
-  const handleRenameCategory = async (oldCategory: string) => {
-    const newCategoryName = window.prompt("Yangi kategoriya nomini kiriting:", oldCategory);
-    if (!newCategoryName || newCategoryName.trim() === '' || newCategoryName === oldCategory) return;
-    
-    try {
-      const res = await fetch(`/api/mentor/vocabularies/rename-category`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          courseId: resolvedParams.id,
-          oldCategory: oldCategory,
-          newCategory: newCategoryName.trim()
-        })
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Nomini o'zgartirib bo'lmadi");
-      }
-      toast.success("Kategoriya nomi o'zgartirildi!");
-      fetchCourseData();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleUpdateVocab = async (id: string) => {
-    if (!editGerman.trim() || !editTranslation.trim()) return;
-    setIsUpdatingVocab(true);
-    try {
-      const res = await fetch(`/api/vocabularies?id=${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          german_word: editGerman,
-          translation: editTranslation,
-          example_german: editExampleG,
-          example_uzbek: editExampleU,
-        })
-      });
-      if (!res.ok) throw new Error('Failed to update vocabulary');
-      
-      setVocabularies(prev => prev.map(v => v.id === id ? {
-        ...v,
-        german_word: editGerman,
-        translation: editTranslation,
-        example_german: editExampleG,
-        example_uzbek: editExampleU,
-      } : v));
-      
-      setEditWordId(null);
-      toast.success("So'z yangilandi!");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsUpdatingVocab(false);
-    }
-  };
-
   const handleAddHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hwTitle.trim() || !hwXp) return;
@@ -249,8 +187,9 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       
       setHwTitle('');
       setHwDescription('');
-      setHwXp('50');
       setHwDeadline('');
+      setHwXp('50');
+      setShowHomeworkModal(false);
       fetchCourseData();
       toast.success("Homework yaratildi!");
     } catch (error: any) {
@@ -325,8 +264,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       </div>
 
       <div>
-        <div className={`-mx-4 -mt-4 mb-6 h-32 ${course?.image_url || 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}></div>
-        <div className="mb-6 -mt-8 relative z-10 bg-bg-base/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-border">
+        <div className="mb-6 mt-4 relative z-10 bg-bg-base/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-border">
           <h1 className="text-2xl font-bold text-text-main mb-1">{course?.title}</h1>
           <p className="text-sm font-medium text-text-secondary flex items-center gap-2">
             Course Code: <span className="font-mono bg-bg-secondary px-2 py-0.5 rounded text-text-main">{course?.course_code}</span>
@@ -351,47 +289,6 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             <div className="text-xs text-text-secondary font-medium">Students</div>
           </Card>
         </div>
-
-        {/* Analytics Overview (Top 5 Students by XP) */}
-        {students.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-text-main mb-3 flex items-center gap-2">
-              <TrendingUp size={20} className="text-primary" /> Top Performers (Weekly XP)
-            </h2>
-            <Card padding="md">
-              <div className="h-40 flex items-end justify-between gap-2 pt-4">
-                {[...students]
-                  .sort((a, b) => (b.weeklyXp || 0) - (a.weeklyXp || 0))
-                  .slice(0, 5)
-                  .map((student, i) => {
-                    const maxXP = Math.max(...students.map(s => s.weeklyXp || 0), 100);
-                    const heightPercentage = student.weeklyXp > 0 ? Math.max((student.weeklyXp / maxXP) * 100, 10) : 0;
-                    return (
-                      <div key={i} className="flex flex-col items-center flex-1 gap-2 group cursor-pointer" onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/students/${student.id}`)}>
-                        <div className="relative w-full flex justify-center h-full items-end">
-                          <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-text-main text-white text-[10px] py-1 px-2 rounded whitespace-nowrap transition-opacity pointer-events-none z-10">
-                            {student.weeklyXp || 0} XP
-                          </div>
-                          <div 
-                            className={`w-full max-w-[32px] rounded-t-md transition-all duration-500 ${heightPercentage > 0 ? 'bg-primary' : 'bg-bg-secondary'}`}
-                            style={{ height: `${heightPercentage}%` }}
-                          />
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold text-[10px] overflow-hidden">
-                          {student.avatar_url ? (
-                            <img src={student.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            student.full_name?.charAt(0) || '?'
-                          )}
-                        </div>
-                        <span className="text-[10px] text-text-tertiary truncate w-full text-center">{student.full_name?.split(' ')[0]}</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </Card>
-          </div>
-        )}
 
         {/* Tab Selection */}
         <div className="flex bg-bg-secondary rounded-lg p-1 mb-6">
@@ -621,27 +518,28 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
 
         {/* Homeworks Tab Content */}
         {activeTab === 'homework' && (
-          <div className="animate-fade-in">
-            <h2 className="text-lg font-semibold text-text-main mb-3">Create Homework</h2>
-            <Card padding="md" className="mb-8">
-              <form onSubmit={handleAddHomework} className="flex flex-col gap-3">
+          <div className="animate-fade-in pb-24">
+            <Modal isOpen={showHomeworkModal} onClose={() => setShowHomeworkModal(false)} title="New Homework">
+              <form onSubmit={handleAddHomework} className="flex flex-col gap-4">
                 <Input
+                  label="Title"
                   type="text"
-                  placeholder="Title (e.g. Lektion 1 Arbeitsbuch)"
+                  placeholder="e.g. Lektion 1 Arbeitsbuch"
                   value={hwTitle}
                   onChange={(e) => setHwTitle(e.target.value)}
                   required
                 />
                 <Input
+                  label="Description (Optional)"
                   type="text"
-                  placeholder="Description (Optional)"
+                  placeholder="Extra instructions"
                   value={hwDescription}
                   onChange={(e) => setHwDescription(e.target.value)}
                 />
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="text-xs text-text-secondary mb-1 block">XP Reward</label>
                     <Input
+                      label="XP Reward"
                       type="number"
                       placeholder="50"
                       value={hwXp}
@@ -650,21 +548,24 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs text-text-secondary mb-1 block">Deadline (Optional)</label>
                     <Input
+                      label="Deadline (Optional)"
                       type="date"
+                      className="[color-scheme:light] dark:[color-scheme:dark]"
                       value={hwDeadline}
                       onChange={(e) => setHwDeadline(e.target.value)}
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={isAddingHw} fullWidth className="mt-1">
+                <Button type="submit" disabled={isAddingHw} fullWidth className="mt-2">
                   {isAddingHw ? <Loader2 className="animate-spin" size={20} /> : 'Publish Homework'}
                 </Button>
               </form>
-            </Card>
+            </Modal>
 
-            <h2 className="text-lg font-semibold text-text-main mb-3">Homework List</h2>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-lg font-semibold text-text-main">Homework List</h2>
+            </div>
             <Card padding="none">
               {homeworks.length === 0 ? (
                 <p className="text-sm text-text-secondary text-center py-6">No homeworks created yet.</p>
@@ -692,6 +593,17 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                 </div>
               )}
             </Card>
+
+            {/* Floating Action Button */}
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+              <Button 
+                onClick={() => setShowHomeworkModal(true)}
+                className="rounded-full shadow-xl shadow-primary/20 px-6 py-3"
+              >
+                <Plus size={20} className="mr-2" />
+                Yangi
+              </Button>
+            </div>
           </div>
         )}
 

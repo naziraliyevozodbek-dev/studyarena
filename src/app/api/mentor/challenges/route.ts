@@ -81,12 +81,14 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
+      const errorMsg = error instanceof Error ? error.message : (error.message || JSON.stringify(error));
+      return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ challenge }, { status: 201 });
   } catch (err: unknown) {
-    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
+    const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
 
