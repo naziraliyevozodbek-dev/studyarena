@@ -156,6 +156,35 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       setIsAddingVocab(false);
     }
   };
+
+  const handleRenameCategory = async (oldCategory: string) => {
+    const newCategoryName = window.prompt("Yangi kategoriya nomini kiriting:", oldCategory);
+    if (!newCategoryName || newCategoryName.trim() === '' || newCategoryName === oldCategory) return;
+    
+    try {
+      const res = await fetch(`/api/mentor/vocabularies/rename-category`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: resolvedParams.id,
+          oldCategory: oldCategory,
+          newCategory: newCategoryName.trim()
+        })
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Nomini o'zgartirib bo'lmadi");
+      }
+      toast.success("Kategoriya nomi o'zgartirildi!");
+      fetchCourseData();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   const handleUpdateVocab = async (id: string) => {
     if (!editGerman.trim() || !editTranslation.trim()) return;
     setIsUpdatingVocab(true);
@@ -370,11 +399,11 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                     className="mb-2"
                   />
                   {showCategoryDropdown && uniqueCategories.length > 0 && (
-                    <div className="absolute top-[calc(100%-8px)] left-0 w-full bg-bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto z-50">
+                    <div className="absolute top-[calc(100%-8px)] left-0 w-full bg-bg-secondary/95 backdrop-blur-md border border-border rounded-xl shadow-2xl max-h-40 overflow-y-auto z-50">
                       {uniqueCategories.map((c, i) => (
                         <div 
                           key={i} 
-                          className="px-4 py-2 hover:bg-bg-secondary cursor-pointer text-sm text-text-main transition-colors"
+                          className="px-4 py-3 hover:bg-primary/10 cursor-pointer text-sm font-medium text-text-main transition-colors border-b border-border/50 last:border-0"
                           onMouseDown={(e) => {
                             e.preventDefault();
                             setCategory(c as string);
@@ -451,6 +480,13 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                         <span className="font-bold text-text-main">{cat}</span>
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-text-secondary bg-bg-secondary px-2 py-0.5 rounded-full">{(words as any[]).length} ta so'z</span>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleRenameCategory(cat); }}
+                              className="p-1.5 text-text-tertiary hover:text-primary transition-colors"
+                              title="Nomini o'zgartirish"
+                            >
+                              <Pencil size={14} />
+                            </button>
                             {openCategory === cat ? <ChevronUp size={16} className="text-text-secondary"/> : <ChevronDown size={16} className="text-text-secondary"/>}
                         </div>
                       </div>

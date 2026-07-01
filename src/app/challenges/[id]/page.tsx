@@ -1,0 +1,486 @@
+'use client';
+
+import { use, useEffect, useState, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { toast } from 'sonner';
+import { useHaptic } from '@/hooks/useHaptic';
+import { useSoundSystem } from '@/hooks/useSoundSystem';
+import { ImageCropper } from '@/components/ImageCropper';
+
+const compressImage = async (file: File): Promise<File> => {
+  if (!file.type.startsWith('image/')) return file;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 1280;
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); 
+            }
+          },
+          'image/jpeg',
+          0.75 
+        );
+      };
+      img.onerror = () => resolve(file); 
+    };
+    reader.onerror = () => resolve(file); 
+  });
+};
+
+export default function ChallengeDetail({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+
+  const { user, token } = useAuth();
+  const router = useRouter();
+  const haptic = useHaptic();
+  const sound = useSoundSystem();
+  
+  const [challenge, setChallenge] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const [files, setFiles] = useState<File[]>([]);
+  const [description, setDescription] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchChallenge();
+  }, [user, router, resolvedParams.id]);
+
+  const fetchChallenge = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch(`/api/student/challenges`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      const currentChallenge = data.challenges?.find((c: any) => c.id === resolvedParams.id);
+      setChallenge(currentChallenge);
+    } catch (error) {
+      console.error('Error fetching challenge:', error);
+      toast.error("Challengeni yuklashda xatolik yuz berdi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFiles = async (newFiles: File[]) => {
+    setIsCompressing(true);
+    try {
+      const processedFiles = await Promise.all(
+        newFiles.map(async f => {
+          if (f.type.startsWith('image/')) {
+            return await compressImage(f);
+          }
+          return f;
+        })
+      );
+      setFiles(prev => [...prev, ...processedFiles]);
+      haptic.impact('light');
+    } catch (err) {
+      console.error("File processing failed:", err);
+      toast.error("Fayllarni ishlashda xatolik");
+    } finally {
+      setIsCompressing(false);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const images = newFiles.filter(f => f.type.startsWith('image/'));
+      const others = newFiles.filter(f => !f.type.startsWith('image/'));
+      
+      if (others.length > 0) handleFiles(others);
+      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
+    }
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    handleFiles([croppedFile]);
+    setCropQueue(prev => prev.slice(1));
+  };
+  
+  const handleCropCancel = () => {
+    const file = cropQueue[0];
+    handleFiles([file]);
+    setCropQueue(prev => prev.slice(1));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      const images = newFiles.filter(f => f.type.startsWith('image/'));
+      const others = newFiles.filter(f => !f.type.startsWith('image/'));
+      
+      if (others.length > 0) handleFiles(others);
+      if (images.length > 0) setCropQueue(prev => [...prev, ...images]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    haptic.impact('light');
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <FileImage size={20} className="text-blue-500" />;
+    if (type.startsWith('audio/')) return <Headphones size={20} className="text-purple-500" />;
+    if (type === 'application/pdf') return <FileText size={20} className="text-red-500" />;
+    return <FileIcon size={20} className="text-gray-500" />;
+  };
+
+  const handleSubmit = () => {
+    if (files.length === 0 && !description.trim()) {
+      toast.error("Iltimos, natijangizni yuklang yoki matn kiriting!");
+      haptic.notification('error');
+      sound.playError();
+      return;
+    }
+
+    haptic.impact('medium');
+    sound.playClick();
+    setSubmitting(true);
+    setUploadProgress(0);
+    
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    formData.append('description', description);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api/student/challenges/${resolvedParams.id}/submit`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percentComplete);
+      }
+    };
+    
+    xhr.onload = () => {
+      setSubmitting(false);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        toast.success("Natija muvaffaqiyatli yuborildi!");
+        haptic.notification('success');
+        sound.playSuccess();
+        fetchChallenge();
+      } else {
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          toast.error(errorData.error || "Xatolik yuz berdi");
+        } catch {
+          toast.error("Yuborishda noma'lum xatolik");
+        }
+        haptic.notification('error');
+        sound.playError();
+      }
+    };
+    
+    xhr.onerror = () => {
+      setSubmitting(false);
+      toast.error("Tarmoq xatosi yuz berdi");
+      haptic.notification('error');
+      sound.playError();
+    };
+    
+    xhr.send(formData);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-16 h-16 border-4 border-bg-secondary border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!challenge) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-center">
+        <h1 className="text-xl font-bold mb-2">Challenge topilmadi</h1>
+        <Button onClick={() => router.back()}>Orqaga qaytish</Button>
+      </div>
+    );
+  }
+
+  // Handle submissions from the single array from Supabase
+  const challengeSubmission = challenge.challenge_submissions?.[0];
+  const isSubmitted = !!challengeSubmission && challengeSubmission.status !== 'rejected';
+  const isRejected = challengeSubmission?.status === 'rejected';
+  const isGraded = challengeSubmission?.status === 'graded';
+
+  let parsedSubmission: any = null;
+  if (challengeSubmission?.content) {
+    try {
+      parsedSubmission = JSON.parse(challengeSubmission.content);
+    } catch {
+      parsedSubmission = { 
+        files: challengeSubmission.content.startsWith('http') ? [challengeSubmission.content] : [], 
+        description: challengeSubmission.content.startsWith('http') ? '' : challengeSubmission.content 
+      };
+    }
+  }
+
+  return (
+    <div className="animate-fade-in pb-24 min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between pt-4 mb-6">
+        <button 
+          onClick={() => { haptic.impact('light'); router.back(); }} 
+          className="text-primary active:opacity-70 transition-opacity"
+        >
+          <div className="flex items-center gap-1">
+            <ArrowLeft size={22} />
+            <span className="text-lg">Orqaga</span>
+          </div>
+        </button>
+      </div>
+
+      {cropQueue.length > 0 && (
+        <ImageCropper 
+          imageFile={cropQueue[0]} 
+          onCropComplete={handleCropComplete} 
+          onCancel={handleCropCancel} 
+        />
+      )}
+
+      <div className="flex-1 flex flex-col w-full">
+        <div className="mb-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="flex justify-between items-start mb-2">
+            <h1 className="text-2xl font-bold text-text-main leading-tight">{challenge.title}</h1>
+            <span className="text-sm font-bold text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full whitespace-nowrap">
+              +{challenge.xp_reward} XP
+            </span>
+          </div>
+          <p className="text-sm font-medium text-text-secondary mb-4">{challenge.courses?.title}</p>
+          
+          {challenge.description && (
+            <Card padding="md" className="mb-6 bg-bg-secondary border-none">
+              <h3 className="font-semibold text-text-main mb-2">Qanday bajarish kerak?</h3>
+              <p className="text-text-main text-sm whitespace-pre-wrap">{challenge.description}</p>
+            </Card>
+          )}
+          
+          {challenge.deadline && (
+            <p className="text-xs text-text-tertiary mb-6">
+              Muddat: <span className="font-semibold">{new Date(challenge.deadline).toLocaleDateString()}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Status Area */}
+        {isSubmitted ? (
+          <Card padding="lg" className="mt-auto text-center border-dashed border-success animate-slide-up" style={{animationDelay: '0.2s'}}>
+            {isGraded ? (
+              <CheckCircle size={48} className="mx-auto text-success mb-4" />
+            ) : (
+              <Loader2 size={48} className="mx-auto text-warning mb-4" />
+            )}
+            <h2 className="text-xl font-bold text-text-main mb-2">
+              {isGraded ? 'Ajoyib! Qabul qilindi' : 'Tekshirilmoqda'}
+            </h2>
+            <p className="text-text-secondary text-sm mb-6">
+              {isGraded 
+                ? `Mentor challenge'ni tasdiqladi va siz +${challenge.xp_reward} XP oldingiz!` 
+                : "Sizning natijangiz mentorga yuborildi. Tekshirilishini kuting."}
+            </p>
+            
+            {parsedSubmission && (
+              <div className="mt-4 text-left">
+                {parsedSubmission.description && (
+                  <p className="text-sm bg-bg-secondary p-3 rounded-xl whitespace-pre-wrap mb-4 border border-border">
+                    {parsedSubmission.description}
+                  </p>
+                )}
+                {parsedSubmission.files && parsedSubmission.files.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {parsedSubmission.files.map((url: string, idx: number) => {
+                      const isPdf = url.includes('.pdf');
+                      const isAudio = url.includes('.mp3') || url.includes('.wav') || url.includes('.m4a');
+                      
+                      if (isPdf) {
+                        return (
+                          <a href={url} target="_blank" key={idx} className="rounded-lg border border-border bg-bg-secondary aspect-square flex flex-col items-center justify-center p-2 text-center text-red-500">
+                            <FileText size={32} className="mb-2" />
+                            <span className="text-[10px] font-medium break-all">Hujjat</span>
+                          </a>
+                        );
+                      }
+                      if (isAudio) {
+                        return (
+                          <a href={url} target="_blank" key={idx} className="rounded-lg border border-border bg-bg-secondary aspect-square flex flex-col items-center justify-center p-2 text-center text-purple-500">
+                            <Headphones size={32} className="mb-2" />
+                            <span className="text-[10px] font-medium break-all">Ovozli xabar</span>
+                          </a>
+                        );
+                      }
+                      return (
+                        <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-secondary aspect-square flex items-center justify-center">
+                          <img src={url} alt={`Submission ${idx+1}`} className="w-full h-full object-cover" />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        ) : (
+          <div className="mt-auto animate-slide-up" style={{animationDelay: '0.2s'}}>
+            {isRejected && (
+              <Card padding="md" className="mb-6 bg-error/10 border-error border-dashed text-center">
+                <XCircle size={32} className="mx-auto text-error mb-2" />
+                <h3 className="font-bold text-error mb-1">Qayta ishlash kerak</h3>
+                <p className="text-xs text-error/80">Mentor natijani qabul qilmadi. Iltimos, xatolarni to'g'rilab qaytadan yuklang.</p>
+              </Card>
+            )}
+
+            <Card padding="md" className="border-dashed flex flex-col gap-4">
+              <h3 className="font-semibold text-text-main text-center">Natijani yuborish</h3>
+              
+              <textarea
+                placeholder="Qo'shimcha izoh yoki matn (ixtiyoriy)..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="w-full bg-bg-secondary border border-border rounded-xl p-3 text-sm min-h-[80px] focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none"
+              />
+
+              <input 
+                type="file" 
+                accept="image/*"
+                multiple
+                className="hidden" 
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                id="file-upload"
+              />
+
+              {files.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="w-full p-3 rounded-xl border border-border bg-bg-secondary flex items-center justify-between">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {getFileIcon(f.type)}
+                        <span className="text-xs font-medium text-text-main truncate">{f.name}</span>
+                      </div>
+                      <button 
+                        onClick={() => removeFile(idx)}
+                        className="text-text-tertiary hover:text-error p-1 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div 
+                onClick={() => { haptic.impact('light'); document.getElementById('file-upload')?.click(); }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`w-full py-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer
+                  ${isCompressing ? 'border-text-tertiary bg-bg-secondary cursor-not-allowed opacity-70' : 
+                    isDragging ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+                  }`}
+              >
+                {isCompressing ? (
+                  <>
+                    <Loader2 size={24} className="text-text-tertiary animate-spin" />
+                    <span className="text-xs font-medium text-text-tertiary">Rasm tayyorlanmoqda...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={28} className="text-primary mb-1" />
+                    <span className="text-sm font-medium text-primary">Rasm biriktirish (📸)</span>
+                    <span className="text-[10px] text-text-tertiary text-center px-4">Kameradan rasmga olish yoki Galereyadan tanlash</span>
+                  </>
+                )}
+              </div>
+
+              {submitting && (
+                <div className="w-full bg-bg-secondary rounded-full h-2 mt-2 overflow-hidden">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+
+              <Button 
+                onClick={handleSubmit} 
+                disabled={(files.length === 0 && !description.trim()) || submitting} 
+                fullWidth 
+                className="mt-2"
+              >
+                {submitting ? `Yuklanmoqda... ${uploadProgress}%` : 'Yuborish'}
+              </Button>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

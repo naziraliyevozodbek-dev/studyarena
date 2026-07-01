@@ -229,20 +229,21 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
       {/* Zoom Modal */}
       {zoomImage && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-sm m-0 p-0"
           onClick={() => setZoomImage(null)}
         >
-          <div className="relative w-full h-full flex items-center justify-center">
+          <div className="relative w-screen h-screen flex items-center justify-center m-0 p-0">
             <button 
-              className="absolute top-6 right-6 text-white p-2 bg-black/50 hover:bg-black/80 rounded-full transition-colors z-[60] backdrop-blur-md"
-              onClick={() => setZoomImage(null)}
+              className="absolute top-4 right-4 text-white p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[10000] backdrop-blur-md shadow-lg"
+              onClick={(e) => { e.stopPropagation(); setZoomImage(null); }}
             >
               <X size={24} />
             </button>
             <img 
               src={zoomImage} 
               alt="Zoomed homework" 
-              className="w-full h-full object-contain"
+              className="max-w-full max-h-full object-contain pointer-events-auto select-none"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>

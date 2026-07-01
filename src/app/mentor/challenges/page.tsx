@@ -158,7 +158,7 @@ export default function MentorChallenges() {
         ) : (
           <div className="flex flex-col gap-4">
             {challenges.map(ch => (
-              <div key={ch.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm">
+              <div key={ch.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm cursor-pointer" onClick={() => router.push(`/mentor/challenges/${ch.id}`)}>
                 <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
                   
                   {/* Decorative Elements */}
@@ -184,7 +184,7 @@ export default function MentorChallenges() {
 
                   <div className="flex justify-end z-10 relative mt-1">
                     <button 
-                      onClick={() => handleDelete(ch.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(ch.id); }}
                       className="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                     >
                       <Trash2 size={14} /> O'chirish
