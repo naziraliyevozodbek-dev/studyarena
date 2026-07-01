@@ -159,6 +159,70 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     }
   };
 
+  const handleRenameCategory = async (oldCategory: string) => {
+    const newCategoryName = window.prompt("Yangi kategoriya nomini kiriting:", oldCategory);
+    if (!newCategoryName || newCategoryName.trim() === '' || newCategoryName === oldCategory) return;
+    
+    try {
+      const res = await fetch(`/api/mentor/vocabularies/rename-category`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: resolvedParams.id,
+          oldCategory: oldCategory,
+          newCategory: newCategoryName.trim()
+        })
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Nomini o'zgartirib bo'lmadi");
+      }
+      toast.success("Kategoriya nomi o'zgartirildi!");
+      fetchCourseData();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleUpdateVocab = async (id: string) => {
+    if (!editGerman.trim() || !editTranslation.trim()) return;
+    setIsUpdatingVocab(true);
+    try {
+      const res = await fetch(`/api/vocabularies?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          german_word: editGerman,
+          translation: editTranslation,
+          example_german: editExampleG,
+          example_uzbek: editExampleU,
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update vocabulary');
+      
+      setVocabularies(prev => prev.map(v => v.id === id ? {
+        ...v,
+        german_word: editGerman,
+        translation: editTranslation,
+        example_german: editExampleG,
+        example_uzbek: editExampleU,
+      } : v));
+      
+      setEditWordId(null);
+      toast.success("So'z yangilandi!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsUpdatingVocab(false);
+    }
+  };
+
   const handleAddHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hwTitle.trim() || !hwXp) return;

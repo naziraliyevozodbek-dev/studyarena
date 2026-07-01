@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      const errorMsg = error instanceof Error ? error.message : (error.message || JSON.stringify(error));
+      const errorMsg = (error as any).message || JSON.stringify(error);
       return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 
