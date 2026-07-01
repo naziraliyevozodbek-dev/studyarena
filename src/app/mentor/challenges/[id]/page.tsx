@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Check, X, FileText, Headphones } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -166,7 +167,7 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
                             }
                             return (
                               <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-card aspect-square relative cursor-pointer" onClick={() => setZoomImage(url)}>
-                                <img src={url} alt={`Fayl ${idx+1}`} className="w-full h-full object-cover" />
+                                <Image src={url} width={300} height={200} alt={`Fayl ${idx+1}`} className="w-full h-full object-cover" />
                               </div>
                             )
                           })}
@@ -243,10 +244,12 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
             >
               <X size={24} />
             </button>
-            <img 
+            <Image 
               src={zoomImage} 
-              alt="Zoomed image" 
-              className="max-w-full max-h-full object-contain pointer-events-auto select-none"
+              width={800} 
+              height={600} 
+              alt="To'liq o'lcham" 
+              className="w-full h-auto object-contain max-h-[80vh] rounded-lg" 
               onClick={(e) => e.stopPropagation()}
             />
           </div>

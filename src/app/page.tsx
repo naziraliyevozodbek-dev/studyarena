@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, Book } from 'lucide-react';
@@ -264,7 +265,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full overflow-hidden border border-border">
             {user.avatar_url ? (
-               <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              <Image src={user.avatar_url} width={64} height={64} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
                <div className="w-full h-full bg-bg-secondary text-text-secondary flex items-center justify-center font-bold text-lg">
                  {user.full_name.charAt(0)}

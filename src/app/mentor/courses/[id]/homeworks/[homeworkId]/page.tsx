@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Check, X, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -138,7 +139,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                 <div className="flex items-center gap-3 mb-4 border-b border-border pb-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-bg-secondary flex items-center justify-center border border-border">
                     {submission.users?.avatar_url ? (
-                      <img src={submission.users.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      <Image src={submission.users.avatar_url} width={40} height={40} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <User size={20} className="text-text-tertiary" />
                     )}
@@ -194,7 +195,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                                   className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
                                   onClick={() => setZoomImage(url)}
                                 >
-                                  <img src={url} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-cover" />
+                                  <Image src={url} width={800} height={400} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-cover" />
                                 </div>
                               ))}
                             </div>
@@ -273,10 +274,12 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
             >
               <X size={24} />
             </button>
-            <img 
+            <Image 
               src={zoomImage} 
-              alt="Zoomed homework" 
-              className="max-w-full max-h-full object-contain pointer-events-auto select-none"
+              width={1000} 
+              height={800} 
+              alt="To'liq o'lcham" 
+              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
           </div>

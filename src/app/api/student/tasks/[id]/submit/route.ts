@@ -26,6 +26,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (file instanceof File) {
+          if (file.size > 20 * 1024 * 1024) {
+            return NextResponse.json({ error: `File ${file.name} is too large. Max 20MB allowed.` }, { status: 400 });
+          }
+          
+          const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'audio/mpeg', 'audio/wav', 'audio/x-m4a', 'audio/mp4', 'video/mp4'];
+          if (!allowedTypes.includes(file.type)) {
+            return NextResponse.json({ error: `File type ${file.type} not allowed.` }, { status: 400 });
+          }
+
           const fileExt = file.name.split('.').pop();
           const fileName = `${homeworkId}_${decoded.sub}_${Date.now()}_${i}.${fileExt}`;
           

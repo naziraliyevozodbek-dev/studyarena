@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, UploadCloud, FileImage, FileText, Headphones, CheckCircle, XCircle, Trash2, File as FileIcon, Camera, Image as ImageIcon, Crop as CropIcon, Paperclip } from 'lucide-react';
@@ -17,7 +18,7 @@ const compressImage = async (file: File): Promise<File> => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
-      const img = new Image();
+      const img = new window.Image();
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -388,7 +389,7 @@ export default function TaskDetail({ params }: { params: Promise<{ id: string }>
                       }
                       return (
                         <div key={idx} className="rounded-lg overflow-hidden border border-border bg-bg-secondary aspect-square flex items-center justify-center">
-                          <img src={url} alt={`Submission ${idx+1}`} className="w-full h-full object-cover" />
+                          <Image src={url} width={300} height={200} alt={`Submission ${idx+1}`} className="w-full h-full object-cover" />
                         </div>
                       )
                     })}

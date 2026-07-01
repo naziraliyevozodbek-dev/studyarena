@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Crown, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 type LeaderboardEntry = {
   rank: number;
@@ -58,7 +59,7 @@ export default function LeaderboardPage() {
     return (
       <div className={`${sizeClass} rounded-full bg-bg-secondary border-4 border-bg-base flex items-center justify-center font-bold text-text-main shadow-sm overflow-hidden relative`}>
         {entry.avatar ? (
-          <img src={entry.avatar} className="w-full h-full object-cover" alt={entry.name} />
+          <Image src={entry.avatar} width={96} height={96} className="w-full h-full object-cover" alt={entry.name} />
         ) : (
           <span>{entry.name?.charAt(0) || '?'}</span>
         )}
@@ -168,7 +169,7 @@ export default function LeaderboardPage() {
                 </div>
                 
                 <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center mr-3 text-text-secondary font-bold text-sm overflow-hidden border border-border shadow-sm">
-                  {student.avatar ? <img src={student.avatar} className="w-full h-full object-cover" /> : student.name?.charAt(0) || '?'}
+                  {student.avatar ? <Image src={student.avatar} width={40} height={40} alt="Avatar" className="w-full h-full object-cover" /> : student.name?.charAt(0) || '?'}
                 </div>
                 
                 <div className="flex-1">

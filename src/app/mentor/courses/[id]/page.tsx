@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 import { toast } from 'sonner';
 
 export default function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
@@ -694,7 +695,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                         </div>
                         <div className="w-10 h-10 rounded-full bg-bg-secondary text-text-main flex items-center justify-center font-bold">
                           {student.avatar_url ? (
-                            <img src={student.avatar_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                            <Image src={student.avatar_url} width={32} height={32} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                           ) : (
                             student.full_name?.charAt(0) || '?'
                           )}

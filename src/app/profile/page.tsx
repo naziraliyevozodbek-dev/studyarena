@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -70,7 +71,7 @@ export default function ProfilePage() {
       <Card className="flex flex-col items-center mb-8">
         <div className="w-24 h-24 rounded-full bg-bg-secondary mb-4 overflow-hidden shadow-inner border-4 border-bg-base">
           {user.avatar_url ? (
-            <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            <Image src={user.avatar_url} width={96} height={96} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-primary flex items-center justify-center text-white text-3xl font-black">
               {user.full_name?.charAt(0) || '?'}
