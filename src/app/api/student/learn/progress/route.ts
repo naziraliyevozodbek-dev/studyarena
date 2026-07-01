@@ -85,36 +85,47 @@ export async function POST(req: Request) {
       
     if (user) {
       let newStreak = user.streak || 0;
+      let newXp = (user.xp || 0) + (status === 'learned' ? 2 : 1);
       
       // If this is the first activity today, update streak
       if (!existingLog) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        const { data: lastLog } = await supabaseAdmin
+        const { data: lastActivityLog } = await supabaseAdmin
           .from('user_activity_logs')
-          .select('date')
+          .select('created_at')
           .eq('student_id', studentId)
           .neq('date', today)
-          .order('date', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+        
+        if (lastActivityLog) {
+          const lastDate = new Date(lastActivityLog.created_at);
+          const todayDate = new Date();
+          lastDate.setUTCHours(0,0,0,0);
+          todayDate.setUTCHours(0,0,0,0);
           
-        if (lastLog && lastLog.date === yesterdayStr) {
-          newStreak += 1; // Practiced yesterday, increment
-        } else if (!lastLog) {
-          newStreak = 1; // First time ever
+          const diffTime = todayDate.getTime() - lastDate.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            newStreak += 1;
+          } else if (diffDays === 2) {
+            newStreak += 1; 
+          } else if (diffDays > 2) {
+            newStreak = 1;
+          }
         } else {
-          newStreak = 1; // Missed yesterday, reset to 1
+          newStreak = 1;
         }
       }
 
+      const finalLevel = Math.floor(newXp / 100) + 1;
       await supabaseAdmin
         .from('users')
         .update({ 
-          xp: (user.xp || 0) + (status === 'learned' ? 2 : 1),
-          streak: newStreak
+          xp: newXp,
+          streak: newStreak,
+          level: finalLevel
         })
         .eq('id', studentId);
     }

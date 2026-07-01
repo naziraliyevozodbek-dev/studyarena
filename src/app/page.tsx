@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle } from 'lucide-react';
+import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -24,6 +24,9 @@ export default function Home() {
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
   const [weakWords, setWeakWords] = useState<any[]>([]);
   const [activityDays, setActivityDays] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Redirect Mentors
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function Home() {
       fetchEnrolledCourses();
       fetchWeakWords();
       fetchActivity();
+      fetchNotifications();
 
       if (!localStorage.getItem('studyarena_onboarded')) {
         // If they have no enrolled courses and not onboarded yet
@@ -148,6 +152,38 @@ export default function Home() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      if (!token) return;
+      const res = await fetch('/api/student/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setNotifications(data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markNotificationsAsRead = async () => {
+    if (unreadCount === 0 || !token) return;
+    try {
+      await fetch('/api/student/notifications', {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(true);
+    markNotificationsAsRead();
+  };
+
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !courseCode.trim() || !token) return;
@@ -230,7 +266,55 @@ export default function Home() {
             <p className="text-sm font-medium text-text-tertiary">Student</p>
           </div>
         </div>
+        
+        {/* Notification Bell */}
+        <button 
+          onClick={handleOpenNotifications}
+          className="relative p-2 rounded-full bg-bg-card border border-border text-text-secondary hover:text-text-main transition-colors shadow-sm"
+        >
+          <Bell size={20} />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-bg-base" />
+          )}
+        </button>
       </div>
+
+      {/* Notifications Modal */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex justify-end flex-col animate-fade-in bg-black/40">
+          <div className="bg-bg-base w-full h-[80vh] rounded-t-3xl shadow-2xl animate-slide-up flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-lg font-bold text-text-main">Bildirishnomalar</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
+                  <Bell size={48} className="mb-4 opacity-20" />
+                  <p>Hozircha bildirishnomalar yo'q</p>
+                </div>
+              ) : (
+                notifications.map(notification => (
+                  <Card key={notification.id} padding="md" className={`flex gap-3 items-start ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}>
+                    <div className="mt-1 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Bell size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-text-main mb-1">{notification.title}</h4>
+                      <p className="text-xs text-text-secondary leading-relaxed">{notification.message}</p>
+                      <span className="text-[10px] text-text-tertiary mt-2 block">
+                        {new Date(notification.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {fetchingCourses ? (
         <div className="flex flex-col gap-4 py-4">
@@ -276,9 +360,13 @@ export default function Home() {
               <span className="text-text-tertiary text-xs font-medium mb-1">XP</span>
               <span className="text-xl font-semibold text-primary">{user.xp || 0}</span>
             </Card>
-            <Card padding="md" className="flex flex-col items-center justify-center text-center">
-              <span className="text-text-tertiary text-xs font-medium mb-1">Level</span>
-              <span className="text-xl font-semibold text-text-main">1</span>
+            <Card padding="md" className="flex flex-col items-center justify-center text-center relative overflow-hidden">
+              <span className="text-text-tertiary text-xs font-medium mb-1 z-10">Level</span>
+              <span className="text-xl font-semibold text-text-main z-10">{user.level || 1}</span>
+              {/* Progress Bar background */}
+              <div className="absolute bottom-0 left-0 h-1 bg-black/5 w-full">
+                <div className="h-full bg-primary" style={{ width: `${(user.xp || 0) % 100}%` }}></div>
+              </div>
             </Card>
             <Card padding="md" className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/10 dark:to-orange-500/5 border-orange-200 dark:border-orange-500/20">
               <span className="text-orange-600/80 dark:text-orange-500 text-xs font-medium mb-1 flex items-center gap-1"><Flame size={12}/> Streak</span>

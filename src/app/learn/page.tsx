@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from 'sonner';
+import { useSoundSystem } from '@/hooks/useSoundSystem';
 
 export default function LearnPage() {
   const { user, token } = useAuth();
@@ -19,6 +20,7 @@ export default function LearnPage() {
   const [savingProgress, setSavingProgress] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [savedWords, setSavedWords] = useState<Record<string, boolean>>({});
+  const { playSuccess, playError } = useSoundSystem();
   
   const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
 
@@ -125,7 +127,9 @@ export default function LearnPage() {
 
   const filteredVocabs = useMemo(() => {
     let result = vocabularies;
-    if (selectedCategory !== 'all') {
+    if (selectedCategory === 'starred') {
+      result = result.filter(v => savedWords[v.id]);
+    } else if (selectedCategory !== 'all') {
       result = result.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory);
     }
     if (searchQuery.trim()) {
@@ -136,7 +140,7 @@ export default function LearnPage() {
       );
     }
     return result;
-  }, [vocabularies, selectedCategory, searchQuery]);
+  }, [vocabularies, selectedCategory, searchQuery, savedWords]);
 
   // Reset index when lesson changes
   useEffect(() => {
@@ -176,6 +180,10 @@ export default function LearnPage() {
       } else {
         setSessionCompleted(true);
       }
+      
+      if (status === 'learned') playSuccess();
+      else playError();
+      
     } catch (error) {
       console.error('Error saving progress:', error);
     } finally {
@@ -230,6 +238,7 @@ export default function LearnPage() {
               className="appearance-none bg-white dark:bg-bg-secondary border border-border text-primary font-semibold text-sm rounded-xl pl-4 pr-10 py-2 outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
             >
               <option value="all">Barchasi</option>
+              <option value="starred">⭐ Saqlanganlar</option>
               {availableCategories.map(c => (
                 <option key={c as string} value={c as string}>{c as string}</option>
               ))}

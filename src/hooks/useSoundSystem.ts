@@ -24,6 +24,11 @@ export function useSoundSystem() {
   }, []);
 
   const playTone = useCallback((frequency: number, type: OscillatorType, duration: number, volume: number = 0.1) => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('studyarena_settings') || '{}');
+      if (settings.sound === false) return;
+    } catch(e) {}
+
     if (!audioCtxRef.current) return;
     
     const ctx = audioCtxRef.current;
