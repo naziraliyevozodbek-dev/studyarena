@@ -102,39 +102,6 @@ export default function MentorCourses() {
     setCreating(false);
   };
 
-  const handleDeleteCourse = async (courseId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!token) {
-      toast.error("Xatolik: Token yo'q!");
-      return;
-    }
-
-    if (!confirm("Haqiqatan ham bu kursni o'chirmokchimisiz?")) return;
-    
-    try {
-      const res = await fetch(`/api/courses?id=${courseId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        setCourses(prev => prev.filter(c => c.id !== courseId));
-        toast.success("Kurs o'chirildi");
-      } else {
-        console.error(data.error);
-        toast.error("O'chirishda xatolik: " + data.error);
-      }
-    } catch (err: unknown) {
-      toast.error("Tarmoq xatosi: " + (err instanceof Error ? err.message : String(err)));
-    }
-  };
-
   const copyCode = (code: string, e?: React.MouseEvent) => {
     e?.preventDefault();
     navigator.clipboard.writeText(code);
@@ -169,12 +136,6 @@ export default function MentorCourses() {
                   className="flex items-center gap-1.5 bg-bg-secondary px-2 py-1 rounded hover:bg-border transition"
                 >
                   <Copy size={12} /> {course.course_code}
-                </button>
-                <button
-                  onClick={(e) => handleDeleteCourse(course.id, e)}
-                  className="flex items-center gap-1.5 bg-red-500/10 text-red-500 px-2 py-1 rounded hover:bg-red-500/20 transition ml-auto"
-                >
-                  <Trash2 size={12} /> Delete
                 </button>
               </div>
             </Link>

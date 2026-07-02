@@ -174,7 +174,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <Button variant="outline" className="w-full border-none bg-red-50 text-red-500 hover:bg-red-100" onClick={() => window.location.reload()}>
+      <Button variant="outline" className="w-full border-none bg-error/10 text-error hover:bg-error hover:text-white transition-colors" onClick={() => window.location.reload()}>
         <LogOut size={20} /> Sign Out
       </Button>
       {/* Badge Modal */}

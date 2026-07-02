@@ -39,6 +39,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
   const [bulkVocabText, setBulkVocabText] = useState('');
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [renameCategoryState, setRenameCategoryState] = useState<{isOpen: boolean, oldName: string, newName: string}>({isOpen: false, oldName: '', newName: ''});
   
   // Edit Vocab State
   const [editWordId, setEditWordId] = useState<string | null>(null);
@@ -160,9 +161,16 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     }
   };
 
-  const handleRenameCategory = async (oldCategory: string) => {
-    const newCategoryName = window.prompt("Yangi kategoriya nomini kiriting:", oldCategory);
-    if (!newCategoryName || newCategoryName.trim() === '' || newCategoryName === oldCategory) return;
+  const handleRenameCategory = (oldCategory: string) => {
+    setRenameCategoryState({ isOpen: true, oldName: oldCategory, newName: oldCategory });
+  };
+
+  const submitRenameCategory = async () => {
+    const { oldName, newName } = renameCategoryState;
+    if (!newName || newName.trim() === '' || newName === oldName) {
+      setRenameCategoryState({ isOpen: false, oldName: '', newName: '' });
+      return;
+    }
     
     try {
       const res = await fetch(`/api/mentor/vocabularies/rename-category`, {
@@ -173,8 +181,8 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         },
         body: JSON.stringify({
           courseId: resolvedParams.id,
-          oldCategory: oldCategory,
-          newCategory: newCategoryName.trim()
+          oldCategory: oldName,
+          newCategory: newName.trim()
         })
       });
       if (!res.ok) {
@@ -183,6 +191,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
       }
       toast.success("Kategoriya nomi o'zgartirildi!");
       fetchCourseData();
+      setRenameCategoryState({ isOpen: false, oldName: '', newName: '' });
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -322,7 +331,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
         <button
           onClick={handleDeleteCourse}
           disabled={isDeleting}
-          className="text-red-500 active:opacity-70 transition-opacity p-2 bg-red-50 rounded-full"
+          className="text-error active:opacity-70 transition-opacity p-2 bg-error/10 rounded-full hover:bg-error hover:text-white"
         >
           {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
         </button>
@@ -716,6 +725,29 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
             </Card>
           </div>
         )}
+
+        <Modal isOpen={renameCategoryState.isOpen} onClose={() => setRenameCategoryState({isOpen: false, oldName: '', newName: ''})} title="Kategoriya nomini o'zgartirish">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-text-secondary mb-1 block">Yangi nom</label>
+              <Input
+                value={renameCategoryState.newName}
+                onChange={(e) => setRenameCategoryState(prev => ({...prev, newName: e.target.value}))}
+                placeholder="Yangi nomni kiriting"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setRenameCategoryState({isOpen: false, oldName: '', newName: ''})}>
+                Bekor qilish
+              </Button>
+              <Button onClick={submitRenameCategory}>
+                Saqlash
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
       </div>
     </div>
   );

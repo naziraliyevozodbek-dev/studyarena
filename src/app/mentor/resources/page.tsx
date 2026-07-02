@@ -158,8 +158,7 @@ export default function MentorResources() {
         ) : (
           <div className="flex flex-col gap-4">
             {resources.map(res => (
-              <div key={res.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm">
-                <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
+              <Card key={res.id} padding="md" className="relative shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3 overflow-hidden">
                   
                   <div className="flex justify-between items-start z-10 relative">
                     <div className="flex-1 pr-4">
@@ -188,14 +187,13 @@ export default function MentorResources() {
                   <div className="absolute top-4 right-4 z-10">
                     <button 
                       onClick={() => handleDelete(res.id)}
-                      className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                      className="w-9 h-9 rounded-full bg-error/10 text-error flex items-center justify-center hover:bg-error hover:text-white transition-colors shadow-sm"
                       title="O'chirish"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
-                </Card>
-              </div>
+              </Card>
             ))}
           </div>
         )}
