@@ -47,12 +47,9 @@ export async function GET(req: Request) {
       progress_status: progressMap.get(v.id)?.status || 'learning'
     })) || [];
 
-    // Optionally filter out 'learned' if you don't want them to appear at all
-    // But since UI handles sessionCompleted, we can return all or filter here. 
-    // Usually better to return non-learned.
-    const activeVocabs = enrichedVocabularies.filter(v => v.progress_status !== 'learned');
-
-    return NextResponse.json({ vocabularies: activeVocabs.length > 0 ? activeVocabs : enrichedVocabularies });
+    // Return all enriched vocabularies. The frontend will handle filtering
+    // unlearned words for the flashcard session and use the full list for category stats.
+    return NextResponse.json({ vocabularies: enrichedVocabularies });
   } catch (err: unknown) {
     return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }

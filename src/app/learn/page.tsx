@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, X, Check, Volume2, Star, ChevronDown, MessageSquare, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Check, Volume2, Star, BookOpen, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -16,6 +16,8 @@ export default function LearnPage() {
   const router = useRouter();
   const [vocabularies, setVocabularies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Flashcard State
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
@@ -23,15 +25,8 @@ export default function LearnPage() {
   const [savedWords, setSavedWords] = useState<Record<string, boolean>>({});
   const { playSuccess, playError } = useSoundSystem();
   
-  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const cat = params.get('category');
-      if (cat) setSelectedCategory(cat);
-    }
-  }, []);
+  // UX Mode State
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     if (vocabularies.length > 0) {
@@ -47,7 +42,6 @@ export default function LearnPage() {
     e.stopPropagation();
     
     const currentStatus = !!savedWords[id];
-    // Optimistic UI update
     setSavedWords(prev => ({ ...prev, [id]: !currentStatus }));
 
     try {
@@ -61,7 +55,6 @@ export default function LearnPage() {
       });
     } catch (err) {
       console.error(err);
-      // Revert if error
       setSavedWords(prev => ({ ...prev, [id]: currentStatus }));
       toast.error("Saqlashda xatolik yuz berdi");
     }
@@ -108,13 +101,12 @@ export default function LearnPage() {
     try {
       const player = document.getElementById('tts-player') as HTMLAudioElement;
       if (player) {
-        // Use our proxy API to bypass mobile user-agent blocks by Google
         player.src = `/api/tts?text=${encodeURIComponent(text)}`;
         const playPromise = player.play();
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
             console.error("Audio playback failed", err);
-            toast.error("Ovozni eshitish uchun telefoningiz 'Silent' (ovozsiz) rejimda emasligiga ishonch hosil qiling.");
+            toast.error("Ovozni eshitish uchun telefoningiz 'Silent' rejimda emasligiga ishonch hosil qiling.");
             fallbackTTS(text);
           });
         }
@@ -127,36 +119,34 @@ export default function LearnPage() {
     }
   };
 
-  const availableCategories = useMemo(() => {
-    const categories = new Set(vocabularies.map(v => v.category || "Asosiy so'zlar"));
-    return Array.from(categories).sort();
+  // CATEGORY DATA LOGIC
+  const categoriesData = useMemo(() => {
+    const cats: Record<string, { total: number; learned: number }> = {};
+    vocabularies.forEach(v => {
+      const c = v.category || "Asosiy so'zlar";
+      if (!cats[c]) cats[c] = { total: 0, learned: 0 };
+      cats[c].total++;
+      if (v.progress_status === 'learned') cats[c].learned++;
+    });
+    return Object.entries(cats).map(([name, stats]) => ({ name, ...stats })).sort((a, b) => a.name.localeCompare(b.name));
   }, [vocabularies]);
 
-  const [searchQuery, setSearchQuery] = useState('');
-
+  // FLASHCARDS LOGIC FOR SELECTED CATEGORY
   const filteredVocabs = useMemo(() => {
-    let result = vocabularies;
-    if (selectedCategory === 'starred') {
-      result = result.filter(v => savedWords[v.id]);
-    } else if (selectedCategory !== 'all') {
-      result = result.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(v => 
-        (v.german_word && v.german_word.toLowerCase().includes(q)) || 
-        (v.translation && v.translation.toLowerCase().includes(q))
-      );
-    }
-    return result;
-  }, [vocabularies, selectedCategory, searchQuery, savedWords]);
+    if (!selectedCategory) return [];
+    return vocabularies.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory && v.progress_status !== 'learned');
+  }, [vocabularies, selectedCategory]);
 
-  // Reset index when lesson changes
-  useEffect(() => {
+  const enterCategory = (catName: string) => {
+    setSelectedCategory(catName);
     setCurrentIndex(0);
     setIsFlipped(false);
     setSessionCompleted(false);
-  }, [selectedCategory]);
+  };
+
+  const exitCategory = () => {
+    setSelectedCategory(null);
+  };
 
   const handleProgress = async (status: 'learned' | 'weak') => {
     if (!token || filteredVocabs.length === 0) return;
@@ -177,12 +167,10 @@ export default function LearnPage() {
         })
       });
 
-      // Update original vocabularies to remove the learned one so it doesn't reappear
       if (status === 'learned') {
-        setVocabularies(prev => prev.filter(v => v.id !== currentVocab.id));
+        setVocabularies(prev => prev.map(v => v.id === currentVocab.id ? { ...v, progress_status: 'learned' } : v));
       }
 
-      // Move to next card
       if (currentIndex < filteredVocabs.length - 1) {
         setIsFlipped(false);
         setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
@@ -205,28 +193,77 @@ export default function LearnPage() {
     }
   };
 
-  const handleNext = () => {
-    if (currentIndex < filteredVocabs.length - 1) {
-      setIsFlipped(false);
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 150);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setIsFlipped(false);
-      setTimeout(() => setCurrentIndex(prev => prev - 1), 150);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col pt-10">
-        <Skeleton className="w-full h-full min-h-[300px] rounded-3xl" />
-        <div className="flex justify-between items-center mt-auto pb-28">
-          <Skeleton className="w-14 h-14 rounded-2xl" />
-          <Skeleton className="w-20 h-6" />
-          <Skeleton className="w-14 h-14 rounded-2xl" />
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
+  if (!selectedCategory) {
+    return (
+      <div className="animate-fade-in pb-24">
+        <div className="flex items-center pt-4 mb-6">
+          <button onClick={() => router.push('/')} className="mr-4 text-primary">
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-2xl font-bold text-text-main">Vocabulary Categories</h1>
+        </div>
+
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+          {categoriesData.length === 0 ? (
+            <Card padding="lg" className="text-center border-dashed col-span-1 md:col-span-2">
+              <BookOpen size={32} className="mx-auto text-text-tertiary mb-4" />
+              <h2 className="text-lg font-semibold text-text-main mb-1">No Vocabularies</h2>
+              <p className="text-sm text-text-secondary">Your mentors haven't uploaded any vocabularies yet.</p>
+            </Card>
+          ) : (
+            categoriesData.map(cat => {
+              const progressPercentage = Math.round((cat.learned / cat.total) * 100);
+              const isCompleted = cat.learned === cat.total;
+              
+              return (
+                <div 
+                  key={cat.name} 
+                  onClick={() => enterCategory(cat.name)}
+                  className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Layers size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-text-main text-lg leading-tight">{cat.name}</h3>
+                        <p className="text-xs text-text-secondary font-medium">{cat.total} ta so'z</p>
+                      </div>
+                    </div>
+                    {isCompleted && (
+                      <div className="w-8 h-8 rounded-full bg-success/10 text-success flex items-center justify-center">
+                        <Check size={16} strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs font-bold mb-1.5">
+                      <span className="text-text-secondary">Progress</span>
+                      <span className={isCompleted ? "text-success" : "text-primary"}>
+                        {cat.learned} / {cat.total} ({progressPercentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden shadow-inner">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-success' : 'bg-primary'}`}
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     );
@@ -235,234 +272,142 @@ export default function LearnPage() {
   const currentVocab = filteredVocabs[currentIndex];
 
   return (
-    <div className="animate-fade-in flex-1 flex flex-col h-full w-full overflow-y-auto pb-6">
+    <div className="fixed inset-0 z-50 bg-bg-base flex flex-col p-4 pb-safe-8 animate-in slide-in-from-bottom-5">
       <audio id="tts-player" playsInline className="hidden" />
-      {/* Header */}
-      <div className="flex items-center justify-between pt-4 mb-4">
-        <button onClick={() => router.push('/')} className="flex items-center gap-2 text-primary font-semibold hover:opacity-80">
-          <ArrowLeft size={20} />
-          <span>Flashcardlar</span>
+      
+      <div className="flex items-center justify-between pt-safe pb-4 shrink-0">
+        <button onClick={exitCategory} className="w-10 h-10 rounded-full bg-bg-secondary/50 text-text-main flex items-center justify-center hover:bg-bg-secondary transition-colors">
+          <X size={24} />
         </button>
-        
-        {availableCategories.length > 0 && (
-          <div className="relative">
-            <select 
-              value={selectedCategory} 
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="appearance-none bg-white dark:bg-bg-secondary border border-border text-primary font-semibold text-sm rounded-xl pl-4 pr-10 py-2 outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
-            >
-              <option value="all">Barchasi</option>
-              <option value="starred">⭐ Saqlanganlar</option>
-              {availableCategories.map(c => (
-                <option key={c as string} value={c as string}>{c as string}</option>
-              ))}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4 flex-shrink-0">
-        <input 
-          type="text" 
-          placeholder="So'z qidirish..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white dark:bg-bg-secondary border border-border text-text-main text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col w-full min-h-0">
-        {filteredVocabs.length === 0 ? (
-          <Card padding="lg" className="text-center mt-10 border-dashed">
-            <h2 className="text-xl font-bold text-text-main mb-2">So'zlar yo'q!</h2>
-            <p className="text-text-secondary text-sm mb-6">
-              Bu bo'limda yodlash uchun yangi so'zlar topilmadi.
+        <div className="text-center">
+          <h2 className="font-bold text-text-main text-lg truncate max-w-[200px]">{selectedCategory}</h2>
+          {!sessionCompleted && filteredVocabs.length > 0 && (
+            <p className="text-xs font-bold text-text-secondary bg-bg-secondary/50 px-2 py-0.5 rounded-full inline-block mt-1 border border-border">
+              {currentIndex + 1} / {filteredVocabs.length}
             </p>
-            <Button onClick={() => router.push('/')}>Orqaga qaytish</Button>
+          )}
+        </div>
+        <div className="w-10 h-10"></div>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 [perspective:1000px] pb-6">
+        {filteredVocabs.length === 0 ? (
+          <Card padding="lg" className="text-center w-full max-w-sm border-dashed">
+            <h2 className="text-xl font-bold text-text-main mb-2">Barchasi o'rganilgan!</h2>
+            <p className="text-text-secondary text-sm mb-6">
+              Siz bu kategoriyadagi barcha so'zlarni yodlabsiz.
+            </p>
+            <Button onClick={exitCategory} fullWidth>Orqaga qaytish</Button>
           </Card>
         ) : sessionCompleted ? (
-          <Card padding="lg" className="text-center mt-10 border-success shadow-lg shadow-success/10 animate-fade-in">
+          <Card padding="lg" className="text-center w-full max-w-sm border-success shadow-lg shadow-success/10 animate-in zoom-in-95">
             <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4 relative">
               <div className="absolute inset-0 bg-success/20 rounded-full animate-ping opacity-75"></div>
               <Check size={40} strokeWidth={3} />
             </div>
             <h2 className="text-2xl font-bold text-text-main mb-2">Ajoyib!</h2>
-            <p className="text-text-secondary text-sm mb-4">
-              Siz ushbu darsdagi barcha so'zlarni ko'rib chiqdingiz!
+            <p className="text-text-secondary text-sm mb-6">
+              Siz ushbu bo'limdagi barcha so'zlarni ko'rib chiqdingiz!
             </p>
-            <div className="bg-orange-50 dark:bg-orange-500/10 text-orange-500 py-2 px-4 rounded-xl inline-flex items-center gap-2 font-bold mb-6 border border-orange-200 dark:border-orange-500/20">
-              <Star size={18} className="fill-orange-500" />
-              +{filteredVocabs.length * 2} XP ishladingiz!
-            </div>
-            <Button onClick={() => router.push('/')} fullWidth className="h-12 text-base">Bosh sahifa</Button>
+            <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <>
-            {/* Progress Bar */}
-            <div className="mb-4 flex-shrink-0">
-              <div className="flex items-center gap-4 text-sm font-bold text-text-secondary mb-2">
-                <span className="bg-white dark:bg-bg-secondary px-3 py-1 rounded-full shadow-sm">
-                  {currentIndex + 1} / {filteredVocabs.length}
-                </span>
-                <div className="flex-1 bg-bg-secondary rounded-full h-2.5 overflow-hidden shadow-inner">
-                  <div 
-                    className="bg-primary h-full rounded-full transition-all duration-300"
-                    style={{ width: `${((currentIndex + 1) / filteredVocabs.length) * 100}%` }}
-                  />
-                </div>
-                <span>{Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%</span>
+          <div className={`grid w-full h-full max-w-md max-h-[600px] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+            
+            {/* Front Card */}
+            <div 
+              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] cursor-pointer hover:shadow-[0_8px_40px_rgb(0,0,0,0.12)] transition-shadow" 
+              onClick={() => !isFlipped && setIsFlipped(true)}
+            >
+              <div className="flex justify-end mb-4 shrink-0">
+                <button 
+                  onClick={(e) => toggleSave(e, currentVocab?.id)} 
+                  className="p-3 bg-bg-secondary/30 rounded-full hover:bg-bg-secondary transition-colors"
+                >
+                  <Star size={24} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary"} />
+                </button>
               </div>
-            </div>
-
-            {/* Flashcard Area */}
-            <div className="flex-1 flex flex-col justify-center mb-4 [perspective:1000px]">
-              <div className={`grid w-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+              
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <span className="text-5xl mb-6">🇩🇪</span>
+                <h2 className="text-4xl sm:text-5xl font-black text-text-main mb-10 break-words w-full px-4">
+                  {currentVocab?.german_word}
+                </h2>
                 
-                {/* Front (German) */}
-                <Card className="col-start-1 row-start-1 w-full min-h-[350px] [backface-visibility:hidden] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl cursor-pointer" onClick={() => !isFlipped && setIsFlipped(true)}>
-                  <div className="flex justify-end mb-2 flex-shrink-0">
-                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
-                    </button>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 flex-shrink-0">
-                      Nemischa
-                    </span>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-text-main mb-6 break-words w-full">
-                      {currentVocab?.german_word}
-                    </h2>
-                    
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
-                      className="flex items-center gap-4 active:scale-95 transition-all font-semibold text-[15px] text-text-main"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Volume2 size={24} className="text-primary" />
-                      </div>
-                      So'zni eshitish
-                    </button>
-                  </div>
-                  
-                  {currentVocab?.example_german && (
-                    <div className="w-full text-left mt-4 flex-shrink-0">
-                      <div className="w-full h-px bg-border mb-4"></div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-[10px] text-primary font-bold">T</span>
-                        </div>
-                        <span className="text-xs font-bold text-text-tertiary">Misol gap</span>
-                      </div>
-                      <p className="text-lg font-bold text-text-main leading-snug">
-                        {currentVocab?.example_german}
-                      </p>
-                    </div>
-                  )}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
+                  className="flex items-center gap-3 active:scale-95 transition-all font-bold text-base text-primary bg-primary/10 hover:bg-primary/20 px-6 py-3.5 rounded-[16px]"
+                >
+                  <Volume2 size={20} />
+                  Ovozli eshitish
+                </button>
+              </div>
+              
+              {currentVocab?.example_german && (
+                <div className="w-full bg-bg-secondary/50 p-5 rounded-2xl border border-border/40 mt-6 shrink-0">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 block">📝 Misol gap</span>
+                  <p className="text-lg font-semibold text-text-main leading-snug">
+                    {currentVocab?.example_german}
+                  </p>
+                </div>
+              )}
+            </div>
 
-                  <div className="w-full flex justify-center mt-auto pt-4 flex-shrink-0">
-                    <button className="w-full flex items-center justify-center gap-3 py-3 border border-border rounded-2xl text-primary font-bold hover:bg-primary/5 transition-colors">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      Tarjimani ko'rish <ChevronDown size={20} />
-                    </button>
-                  </div>
-                </Card>
+            {/* Back Card */}
+            <div className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px]">
+              <div className="flex justify-end mb-4 shrink-0">
+                <button 
+                  onClick={(e) => toggleSave(e, currentVocab?.id)} 
+                  className="p-3 bg-bg-secondary/30 rounded-full hover:bg-bg-secondary transition-colors"
+                >
+                  <Star size={24} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary"} />
+                </button>
+              </div>
+              
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <span className="text-5xl mb-6">🇺🇿</span>
+                <h2 className="text-4xl sm:text-5xl font-black text-text-main break-words w-full px-4">
+                  {currentVocab?.translation}
+                </h2>
 
-                {/* Back (Translation) */}
-                <Card className="col-start-1 row-start-1 w-full min-h-[350px] [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border shadow-lg bg-white dark:bg-bg-card rounded-3xl">
-                  <div className="flex justify-end mb-2 flex-shrink-0">
-                    <button onClick={(e) => toggleSave(e, currentVocab?.id)} className="p-2 -mr-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                      <Star size={28} className={savedWords[currentVocab?.id] ? "text-yellow-400 fill-yellow-400" : "text-text-tertiary dark:text-white/50"} />
-                    </button>
+                {currentVocab?.example_uzbek && (
+                  <div className="w-full bg-primary/5 p-5 rounded-2xl border border-primary/10 mt-8 shrink-0">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 block">📝 Misol tarjimasi</span>
+                    <p className="text-base font-semibold text-text-main leading-snug">
+                      {currentVocab?.example_uzbek}
+                    </p>
                   </div>
-                  
-                  <div className="text-center mb-6">
-                    <span className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">
-                      Nemischa
-                    </span>
-                    <h2 className="text-3xl font-bold text-text-main break-words">
-                      {currentVocab?.german_word}
-                    </h2>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col gap-4 mt-4">
-                    <div className="bg-success/10 rounded-2xl p-4 border border-success/20">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">🇺🇿</span>
-                        <span className="text-xs font-bold text-success">Tarjima</span>
-                      </div>
-                      <p className="text-xl font-bold text-text-main ml-8">
-                        {currentVocab?.translation}
-                      </p>
-                    </div>
+                )}
+              </div>
 
-                    {currentVocab?.example_uzbek && (
-                      <div className="bg-primary/10 rounded-2xl p-4 border border-primary/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare size={16} className="text-primary" />
-                          <span className="text-xs font-bold text-primary">Misol gapning tarjimasi</span>
-                        </div>
-                        <p className="text-sm font-semibold text-text-main ml-6">
-                          {currentVocab?.example_uzbek}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-center mb-6 mt-4">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
-                      className="flex items-center gap-4 active:scale-95 transition-all font-semibold text-[15px] text-text-main"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Volume2 size={24} className="text-primary" />
-                      </div>
-                      So'zni eshitish
-                    </button>
-                  </div>
-
-                  <div className="mt-auto w-full flex gap-3">
-                    <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-error/10 text-error rounded-2xl font-bold hover:bg-error/20 transition-colors"
-                      onClick={() => handleProgress('weak')}
-                      disabled={savingProgress}
-                    >
-                      {savingProgress ? <Loader2 size={20} className="animate-spin" /> : <><X size={20} /> Bilmayman</>}
-                    </button>
-                    <button 
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-success/10 text-success rounded-2xl font-bold hover:bg-success/20 transition-colors"
-                      onClick={() => handleProgress('learned')}
-                      disabled={savingProgress}
-                    >
-                      {savingProgress ? <Loader2 size={20} className="animate-spin" /> : <><Check size={20} /> Bilaman</>}
-                    </button>
-                  </div>
-                </Card>
+              <div className="flex justify-center mb-6 shrink-0 mt-4">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); playTTS(currentVocab?.german_word); }}
+                  className="flex items-center gap-3 active:scale-95 transition-all font-bold text-base text-primary bg-primary/10 hover:bg-primary/20 px-6 py-3.5 rounded-[16px]"
+                >
+                  <Volume2 size={20} />
+                  Qayta eshitish
+                </button>
+              </div>
+              
+              <div className="w-full flex gap-3 mt-auto shrink-0">
+                <button 
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-error/10 text-error rounded-[20px] font-bold hover:bg-error/20 transition-colors text-lg shadow-sm"
+                  onClick={() => handleProgress('weak')}
+                  disabled={savingProgress}
+                >
+                  {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <>Bilmayman</>}
+                </button>
+                <button 
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-success/10 text-success rounded-[20px] font-bold hover:bg-success/20 transition-colors text-lg shadow-sm"
+                  onClick={() => handleProgress('learned')}
+                  disabled={savingProgress}
+                >
+                  {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <>Bilaman</>}
+                </button>
               </div>
             </div>
-
-            {/* Bottom Controls */}
-            <div className="flex justify-between items-center mt-auto pt-2 pb-2 flex-shrink-0">
-              <button 
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-                className="w-14 h-14 bg-white dark:bg-bg-card border border-border rounded-2xl flex items-center justify-center disabled:opacity-30 shadow-sm text-text-main active:scale-95 transition-all"
-              >
-                <ArrowLeft size={24} />
-              </button>
-              
-              <span className="font-bold text-text-main text-lg">{currentIndex + 1} / {filteredVocabs.length}</span>
-              
-              <button 
-                onClick={handleNext}
-                disabled={currentIndex === filteredVocabs.length - 1}
-                className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center disabled:opacity-30 shadow-md shadow-primary/20 active:scale-95 transition-all"
-              >
-                <ArrowRight size={24} /> 
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </div>
     </div>
