@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -48,14 +48,17 @@ export default function ProfilePage() {
   const handleDownloadBadge = async () => {
     if (!badgeRef.current || !selectedBadge) return;
     try {
-      const dataUrl = await toPng(badgeRef.current, { 
-        cacheBust: true, 
+      const canvas = await html2canvas(badgeRef.current, {
         backgroundColor: theme === 'dark' ? '#1c1c1e' : '#f2f2f7',
-        pixelRatio: 2
+        scale: 2,
+        useCORS: true,
+        logging: false
       });
+      const dataUrl = canvas.toDataURL('image/png');
       setGeneratedImage(dataUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to generate image', err);
+      alert("Rasm yaratishda xatolik: " + err.message);
     }
   };
 
@@ -191,8 +194,8 @@ export default function ProfilePage() {
       </Button>
       {/* Badge Modal */}
       {selectedBadge && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-fade-in overflow-hidden">
-          <div className="bg-bg-base w-[90%] max-w-[320px] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative mx-auto">
+        <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center animate-fade-in">
+          <div className="bg-bg-base w-[300px] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative flex-none">
             <button 
               onClick={closeBadgeModal}
               className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-20"
@@ -212,7 +215,7 @@ export default function ProfilePage() {
               <>
                 <div 
                   ref={badgeRef} 
-                  className="p-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
+                  className="px-6 py-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
                 >
                   <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-5 shadow-lg border-4 border-white dark:border-bg-card">
                     <selectedBadge.icon size={56} />
