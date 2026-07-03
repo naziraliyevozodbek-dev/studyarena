@@ -195,6 +195,24 @@ export default function Home() {
     setShowNotifications(false);
   };
 
+  const handleNotificationClick = (notification: any) => {
+    handleCloseNotifications();
+    if (notification.type === 'homework') {
+      router.push('/tasks');
+    } else if (notification.type === 'resource') {
+      router.push('/resources');
+    } else if (notification.type === 'challenge') {
+      router.push('/challenges');
+    } else if (notification.type === 'vocabulary') {
+      router.push('/learn');
+    }
+  };
+
+  const unreadHomework = notifications.some(n => !n.is_read && n.type === 'homework');
+  const unreadResource = notifications.some(n => !n.is_read && n.type === 'resource');
+  const unreadChallenge = notifications.some(n => !n.is_read && n.type === 'challenge');
+  const unreadVocab = notifications.some(n => !n.is_read && n.type === 'vocabulary');
+
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !courseCode.trim() || !token) return;
@@ -311,7 +329,12 @@ export default function Home() {
                 </div>
               ) : (
                 notifications.map(notification => (
-                  <Card key={notification.id} padding="md" className={`flex gap-3 items-start ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}>
+                  <Card 
+                    key={notification.id} 
+                    padding="md" 
+                    className={`flex gap-3 items-start cursor-pointer hover:bg-bg-secondary/50 transition-colors ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
                     <div className="mt-1 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                       <Bell size={16} />
                     </div>
@@ -398,51 +421,51 @@ export default function Home() {
             </Card>
           )}
 
-          {/* Action Cards Grid */}
+          {/* Action Cards */}
           <div className="grid grid-cols-2 gap-3 mb-8">
-             <Link href="/learn">
+             <Link href="/learn" className="block relative">
+               {unreadVocab && <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card z-10" />}
                <Card interactive padding="md">
                  <div className="w-10 h-10 rounded-full bg-primary-light text-primary flex items-center justify-center mb-3">
                    <BookOpen size={20} />
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Lug'at</h3>
-                 <p className="text-xs text-text-secondary">{recentVocab.length} ta yangi so'z</p>
+                 <p className="text-xs text-text-secondary">Yangi so'zlar</p>
                </Card>
              </Link>
-             <Link href="/tasks">
+             <Link href="/tasks" className="block relative">
+               {unreadHomework && <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card z-10" />}
                <Card interactive padding="md">
-                 <div className="w-10 h-10 rounded-full bg-success-light text-success flex items-center justify-center mb-3">
+                 <div className="w-10 h-10 rounded-full bg-success-light text-success flex items-center justify-center mb-3 relative">
                    <CheckSquare size={20} />
+                   {pendingTasksCount > 0 && (
+                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[20px] h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                       {pendingTasksCount}
+                     </span>
+                   )}
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Vazifalar</h3>
-                 <p className="text-xs text-text-secondary">{pendingTasksCount} ta vazifa</p>
+                 <p className="text-xs text-text-secondary">Uy vazifalari</p>
                </Card>
              </Link>
-             <Link href="/challenges">
+             <Link href="/challenges" className="block relative">
+               {unreadChallenge && <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card z-10" />}
                <Card interactive padding="md">
                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-500/10 text-orange-500 flex items-center justify-center mb-3">
                    <Target size={20} />
                  </div>
-                 <h3 className="font-semibold text-text-main mb-1">Test va Challenge</h3>
+                 <h3 className="font-semibold text-text-main mb-1">Challenge</h3>
                  <p className="text-xs text-text-secondary">XP ishlash</p>
                </Card>
              </Link>
-             <Link href="/learn?category=starred">
-               <Card interactive padding="md">
-                 <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-500/10 text-yellow-500 flex items-center justify-center mb-3">
-                   <Flame size={20} />
-                 </div>
-                 <h3 className="font-semibold text-text-main mb-1">Saqlangan so'zlar</h3>
-                 <p className="text-xs text-text-secondary">Yod olinganlar</p>
-               </Card>
-             </Link>
-             <Link href="/resources">
+             <Link href="/resources" className="block relative">
+               {unreadResource && <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card z-10" />}
                <Card interactive padding="md">
                  <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/10 text-cyan-500 flex items-center justify-center mb-3">
                    <Book size={20} />
                  </div>
                  <h3 className="font-semibold text-text-main mb-1">Resurslar</h3>
-                 <p className="text-xs text-text-secondary">Darsliklar va qoidalar</p>
+                 <p className="text-xs text-text-secondary">Qoidalar</p>
                </Card>
              </Link>
           </div>

@@ -48,13 +48,13 @@ export async function POST(req: Request) {
     if (insertError) throw insertError;
 
     // Notify enrolled students
-    const { data: enrollments } = await supabaseAdmin
-      .from('enrollments')
+    const { data: members } = await supabaseAdmin
+      .from('course_members')
       .select('student_id')
       .eq('course_id', course_id);
 
-    if (enrollments && enrollments.length > 0) {
-      const notifications = enrollments.map(e => ({
+    if (members && members.length > 0) {
+      const notifications = members.map(e => ({
         student_id: e.student_id,
         title: "Yangi vazifa!",
         message: `"${course.title}" kursida yangi vazifa qo'shildi: ${title}`,

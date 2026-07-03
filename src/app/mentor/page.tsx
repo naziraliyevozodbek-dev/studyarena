@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Loader2, Plus, Users, BookOpen, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +25,7 @@ export default function MentorDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (user?.id && token) {
@@ -197,7 +199,21 @@ export default function MentorDashboard() {
               </div>
             ) : (
               notifications.map(notification => (
-                <Card key={notification.id} padding="md" className={`flex gap-3 items-start ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}>
+                <Card 
+                  key={notification.id} 
+                  padding="md" 
+                  className={`flex gap-3 items-start cursor-pointer hover:bg-bg-secondary/50 transition-colors ${!notification.is_read ? 'border-primary/30 bg-primary/5' : ''}`}
+                  onClick={() => {
+                    setShowNotifications(false);
+                    if (notification.type === 'homework') {
+                      router.push('/mentor/homeworks'); // Or wherever mentor checks homeworks
+                    } else if (notification.type === 'resource') {
+                      router.push('/mentor/resources');
+                    } else if (notification.type === 'challenge') {
+                      router.push('/mentor/challenges');
+                    }
+                  }}
+                >
                   <div className="mt-1 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                     <Bell size={16} />
                   </div>
