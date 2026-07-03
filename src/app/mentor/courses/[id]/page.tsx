@@ -639,6 +639,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
 
             <div className="flex items-center justify-between mb-3 px-1">
               <h2 className="text-lg font-semibold text-text-main">Homework List</h2>
+              <Button onClick={() => setShowHomeworkModal(true)} size="sm" className="rounded-full px-4 shadow-sm">
+                <Plus size={16} className="mr-1" />
+                Yangi
+              </Button>
             </div>
             <Card padding="none">
               {homeworks.length === 0 ? (
@@ -668,16 +672,6 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
               )}
             </Card>
 
-            {/* Floating Action Button */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-              <Button 
-                onClick={() => setShowHomeworkModal(true)}
-                className="rounded-full shadow-xl shadow-primary/20 px-6 py-3"
-              >
-                <Plus size={20} className="mr-2" />
-                Yangi
-              </Button>
-            </div>
           </div>
         )}
 

@@ -109,8 +109,10 @@ export async function POST(req: Request) {
           
           if (diffDays === 1) {
             newStreak += 1; // Ketma-ket kirgan, oshadi
-          } else if (diffDays >= 2) {
-            newStreak += 1; // Kirmagan kunlar muzlaydi, streak yo'qolmaydi, davom etadi
+          } else if (diffDays === 2) {
+            newStreak += 1; // 1 kun kirmagan (muzlagan), davom etadi
+          } else {
+            newStreak = 1; // 2 kun yoki ko'proq kirmagan, nolga qaytadi
           }
         } else {
           newStreak = 1;

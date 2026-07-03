@@ -113,10 +113,10 @@ export default function ProfilePage() {
             <Card padding="md" className="relative overflow-hidden flex flex-col items-center justify-center text-center">
               <div className="z-10 flex w-full justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-text-main">Level {user.level || 1}</span>
-                <span className="text-xs text-text-tertiary">{(user.xp || 0) % 100} / 100 XP</span>
+                <span className="text-xs text-text-tertiary">{(user.xp || 0) % 10000} / 10000 XP</span>
               </div>
               <div className="w-full h-2 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden z-10">
-                <div className="h-full bg-primary transition-all" style={{ width: `${(user.xp || 0) % 100}%` }}></div>
+                <div className="h-full bg-primary transition-all" style={{ width: `${((user.xp || 0) % 10000) / 100}%` }}></div>
               </div>
             </Card>
           </div>
@@ -179,8 +179,8 @@ export default function ProfilePage() {
       </Button>
       {/* Badge Modal */}
       {selectedBadge && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-bg-base w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative">
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-fade-in overflow-hidden">
+          <div className="bg-bg-base w-[90%] max-w-[320px] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative mx-auto">
             <button 
               onClick={() => setSelectedBadge(null)}
               className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-10"
@@ -190,14 +190,14 @@ export default function ProfilePage() {
             
             <div 
               ref={badgeRef} 
-              className="p-10 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
+              className="p-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
             >
-              <div className="w-32 h-32 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-lg border-4 border-white dark:border-bg-card">
-                <selectedBadge.icon size={64} />
+              <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-5 shadow-lg border-4 border-white dark:border-bg-card">
+                <selectedBadge.icon size={56} />
               </div>
-              <h2 className="text-2xl font-bold text-text-main mb-2">{selectedBadge.name}</h2>
-              <p className="text-text-secondary">{selectedBadge.desc}</p>
-              <div className="mt-4 inline-flex px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-widest">
+              <h2 className="text-xl font-bold text-text-main mb-2">{selectedBadge.name}</h2>
+              <p className="text-sm text-text-secondary">{selectedBadge.desc}</p>
+              <div className="mt-4 inline-flex px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest">
                 StudyArena
               </div>
             </div>
