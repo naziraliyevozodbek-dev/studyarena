@@ -158,42 +158,45 @@ export default function MentorResources() {
         ) : (
           <div className="flex flex-col gap-4">
             {resources.map(res => (
-              <Card key={res.id} padding="md" className="relative shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3 overflow-hidden">
+              <div key={res.id} className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                      {res.file_type}
+                    </span>
+                    <span className="text-[11px] text-text-tertiary font-medium bg-bg-secondary/50 px-2.5 py-1 rounded-full">
+                      {res.courses?.title}
+                    </span>
+                  </div>
                   
-                  <div className="flex justify-between items-start z-10 relative">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{res.file_type}</span>
-                        <span className="text-xs text-text-tertiary font-medium">• {res.courses?.title}</span>
-                      </div>
-                      <h3 className="font-bold text-text-main text-lg leading-tight mb-2">{res.title}</h3>
-                      {res.description && (
-                         <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/50 p-3 rounded-lg border border-border/50 mb-3">
-                           {res.description}
-                         </p>
-                      )}
-                      
-                      <a 
-                        href={res.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex text-sm items-center gap-2 text-white bg-primary hover:bg-primary-active px-4 py-2 rounded-xl transition-colors font-medium shadow-sm"
-                      >
-                        <BookOpen size={16} /> O'qish / Ko'rish
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-4 right-4 z-10">
-                    <button 
-                      onClick={() => handleDelete(res.id)}
-                      className="w-9 h-9 rounded-full bg-error/10 text-error flex items-center justify-center hover:bg-error hover:text-white transition-colors shadow-sm"
-                      title="O'chirish"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-              </Card>
+                  <button 
+                    onClick={() => handleDelete(res.id)}
+                    className="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center hover:bg-error hover:text-white transition-colors opacity-80 hover:opacity-100"
+                    title="O'chirish"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                
+                <h3 className="font-bold text-text-main text-lg leading-tight mb-2 pr-8">{res.title}</h3>
+                
+                {res.description && (
+                  <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/30 p-3 rounded-xl border border-border/30 mb-4">
+                    {res.description}
+                  </p>
+                )}
+                
+                <div className="mt-4">
+                  <a 
+                    href={res.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex text-sm items-center gap-2 text-primary bg-primary/10 hover:bg-primary hover:text-white px-5 py-2.5 rounded-[12px] transition-all font-semibold"
+                  >
+                    <BookOpen size={16} /> O'qish / Ko'rish
+                  </a>
+                </div>
+              </div>
             ))}
           </div>
         )}

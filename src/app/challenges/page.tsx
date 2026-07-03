@@ -70,43 +70,40 @@ export default function ChallengesPage() {
               
               return (
                 <Link href={`/challenges/${ch.id}`} key={ch.id}>
-                  <div className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm">
-                    <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
-                      {/* Decorative Elements */}
-                      <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-
-                      <div className="flex justify-between items-start z-10 relative">
-                        <div className="flex-1 pr-4">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{ch.courses?.title}</span>
-                          </div>
-                          <h3 className="font-bold text-text-main text-lg leading-tight">{ch.title}</h3>
-                        </div>
-                        <div className="flex items-center justify-center shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black shadow-lg shadow-yellow-500/20">
-                          +{ch.xp_reward}
-                        </div>
+                  <div className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                          {ch.courses?.title}
+                        </span>
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-bg-secondary text-text-secondary uppercase border border-border/50">
+                          {ch.type === 'quiz' ? 'Test' : 'Vazifa'}
+                        </span>
                       </div>
-
-                      <div className="z-10 relative">
-                        <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/50 p-3 rounded-lg border border-border/50">
-                          {ch.description || "No description provided."}
-                        </p>
+                      <div className="flex items-center justify-center shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-md shadow-yellow-500/20 text-sm">
+                        +{ch.xp_reward} XP
                       </div>
+                    </div>
+                    
+                    <h3 className="font-bold text-text-main text-lg leading-tight mb-2 pr-8">{ch.title}</h3>
+                    
+                    <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/30 p-3 rounded-xl border border-border/30 mb-4">
+                      {ch.description || "No description provided."}
+                    </p>
 
-                      <div className="flex justify-between items-center mt-2 z-10 relative">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary bg-bg-secondary px-2 py-1 rounded-md">
-                          <Clock size={14} />
-                          {ch.deadline ? new Date(ch.deadline).toLocaleDateString() : 'No Deadline'}
-                        </div>
-                        <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 ${
-                          isSubmitted 
-                            ? (mySub.status === 'graded' ? 'bg-success/10 text-success' : 'bg-orange-500/10 text-orange-500')
-                            : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors'
-                        }`}>
-                          {statusText} <ChevronRight size={14} />
-                        </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary bg-bg-secondary/50 px-2.5 py-1.5 rounded-lg border border-border/50">
+                        <Clock size={14} />
+                        {ch.deadline ? new Date(ch.deadline).toLocaleDateString() : 'No Deadline'}
                       </div>
-                    </Card>
+                      <div className={`text-xs font-bold px-4 py-2 rounded-[10px] flex items-center gap-1.5 transition-colors ${
+                        isSubmitted 
+                          ? (mySub.status === 'graded' ? 'bg-success/10 text-success' : 'bg-orange-500/10 text-orange-500')
+                          : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'
+                      }`}>
+                        {statusText} <ChevronRight size={14} />
+                      </div>
+                    </div>
                   </div>
                 </Link>
               );

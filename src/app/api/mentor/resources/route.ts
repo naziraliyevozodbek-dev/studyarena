@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     // Verify mentor owns the course
     const { data: course } = await supabaseAdmin
       .from('courses')
-      .select('id')
+      .select('id, title')
       .eq('id', course_id)
       .eq('mentor_id', decoded.sub)
       .single();
@@ -80,6 +80,23 @@ export async function POST(req: Request) {
 
     if (error) {
       return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
+    }
+
+    // Notify enrolled students
+    const { data: enrollments } = await supabaseAdmin
+      .from('enrollments')
+      .select('student_id')
+      .eq('course_id', course_id);
+
+    if (enrollments && enrollments.length > 0) {
+      const notifications = enrollments.map(e => ({
+        student_id: e.student_id,
+        title: "Yangi resurs!",
+        message: `"${course.title}" kursida yangi resurs qo'shildi: ${title}`,
+        type: "system",
+        related_id: resource.id
+      }));
+      await supabaseAdmin.from('notifications').insert(notifications);
     }
 
     return NextResponse.json({ resource }, { status: 201 });

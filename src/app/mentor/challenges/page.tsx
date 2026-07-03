@@ -165,40 +165,35 @@ export default function MentorChallenges() {
         ) : (
           <div className="flex flex-col gap-4">
             {challenges.map(ch => (
-              <div key={ch.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm cursor-pointer" onClick={() => router.push(`/mentor/challenges/${ch.id}`)}>
-                <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
-                  
-                  {/* Decorative Elements */}
-                  <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-                  
-                  <div className="flex justify-between items-start z-10 relative">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{ch.courses?.title}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-bg-base text-text-secondary uppercase border border-border">{ch.type === 'quiz' ? 'Test' : 'Vazifa'}</span>
-                      </div>
-                      <h3 className="font-bold text-text-main text-lg leading-tight">{ch.title}</h3>
-                    </div>
-                    <div className="flex items-center justify-center shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black shadow-lg shadow-yellow-500/20">
-                      +{ch.xp_reward}
-                    </div>
+              <div key={ch.id} className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer" onClick={() => router.push(`/mentor/challenges/${ch.id}`)}>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                      {ch.courses?.title}
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-bg-secondary text-text-secondary uppercase border border-border/50">
+                      {ch.type === 'quiz' ? 'Test' : 'Vazifa'}
+                    </span>
                   </div>
-                  
-                  <div className="z-10 relative">
-                    <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/50 p-3 rounded-lg border border-border/50">
-                      {ch.description || "No description provided."}
-                    </p>
+                  <div className="flex items-center justify-center shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-md shadow-yellow-500/20 text-sm">
+                    +{ch.xp_reward} XP
                   </div>
+                </div>
+                
+                <h3 className="font-bold text-text-main text-lg leading-tight mb-2 pr-8">{ch.title}</h3>
+                
+                <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/30 p-3 rounded-xl border border-border/30 mb-4">
+                  {ch.description || "No description provided."}
+                </p>
 
-                  <div className="flex justify-end z-10 relative mt-1">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDelete(ch.id); }}
-                      className="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                    >
-                      <Trash2 size={14} /> O'chirish
-                    </button>
-                  </div>
-                </Card>
+                <div className="flex justify-end">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDelete(ch.id); }}
+                    className="text-xs font-semibold text-error bg-error/10 hover:text-white hover:bg-error px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5"
+                  >
+                    <Trash2 size={14} /> O'chirish
+                  </button>
+                </div>
               </div>
             ))}
           </div>

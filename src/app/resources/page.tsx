@@ -72,36 +72,40 @@ export default function ResourcesPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {resources.map(res => (
-              <div key={res.id} className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary/40 via-bg-secondary to-primary/10 hover:from-primary/60 hover:to-primary/30 transition-all shadow-sm">
-                <Card padding="md" className="h-full w-full rounded-[15px] border-none flex flex-col gap-3 relative overflow-hidden bg-bg-card">
+              <div key={res.id} className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                      {res.file_type}
+                    </span>
+                    <span className="text-[11px] text-text-tertiary font-medium bg-bg-secondary/50 px-2.5 py-1 rounded-full">
+                      {res.courses?.title}
+                    </span>
+                  </div>
                   
-                  <div className="flex justify-between items-start z-10 relative">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{res.file_type}</span>
-                        <span className="text-xs text-text-tertiary font-medium">• {res.courses?.title}</span>
-                      </div>
-                      <h3 className="font-bold text-text-main text-lg leading-tight mb-2">{res.title}</h3>
-                      {res.description && (
-                         <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/50 p-3 rounded-lg border border-border/50 mb-3">
-                           {res.description}
-                         </p>
-                      )}
-                      
-                      <a 
-                        href={res.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex text-sm items-center gap-2 text-white bg-primary hover:bg-primary-active px-4 py-2 rounded-xl transition-colors font-medium shadow-sm"
-                      >
-                        {getIcon(res.file_type)} <span className="ml-1">O'qish / Ko'rish</span>
-                      </a>
-                    </div>
+                  <div className="text-text-tertiary group-hover:text-primary transition-colors">
+                     <ExternalLink size={18} />
                   </div>
-                  <div className="absolute top-4 right-4 z-10 text-text-tertiary group-hover:text-primary transition-colors">
-                     <ExternalLink size={20} />
-                  </div>
-                </Card>
+                </div>
+                
+                <h3 className="font-bold text-text-main text-lg leading-tight mb-2 pr-8">{res.title}</h3>
+                
+                {res.description && (
+                  <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/30 p-3 rounded-xl border border-border/30 mb-4">
+                    {res.description}
+                  </p>
+                )}
+                
+                <div className="mt-4">
+                  <a 
+                    href={res.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex text-sm items-center gap-2 text-primary bg-primary/10 hover:bg-primary hover:text-white px-5 py-2.5 rounded-[12px] transition-all font-semibold"
+                  >
+                    {getIcon(res.file_type)} <span className="ml-1">O'qish / Ko'rish</span>
+                  </a>
+                </div>
               </div>
             ))}
           </div>
