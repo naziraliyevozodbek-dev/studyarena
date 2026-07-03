@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -48,13 +48,13 @@ export default function ProfilePage() {
   const handleDownloadBadge = async () => {
     if (!badgeRef.current || !selectedBadge) return;
     try {
-      const canvas = await html2canvas(badgeRef.current, {
-        backgroundColor: theme === 'dark' ? '#1c1c1e' : '#f2f2f7',
-        scale: 2,
-        useCORS: true,
-        logging: false
+      // First pass is needed for iOS Safari (Webkit) to properly render foreignObject SVGs
+      await toPng(badgeRef.current, { cacheBust: true });
+      // Second pass generates the actual image
+      const dataUrl = await toPng(badgeRef.current, { 
+        cacheBust: true,
+        pixelRatio: 3
       });
-      const dataUrl = canvas.toDataURL('image/png');
       setGeneratedImage(dataUrl);
     } catch (err: any) {
       console.error('Failed to generate image', err);
@@ -194,8 +194,11 @@ export default function ProfilePage() {
       </Button>
       {/* Badge Modal */}
       {selectedBadge && (
-        <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center animate-fade-in">
-          <div className="bg-bg-base w-[300px] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative flex-none">
+        <div 
+          className="fixed z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          style={{ top: 0, left: 0, right: 0, bottom: 0, height: '100dvh' }}
+        >
+          <div className="bg-bg-base w-[300px] rounded-3xl shadow-2xl relative flex-none flex flex-col overflow-hidden animate-slide-up">
             <button 
               onClick={closeBadgeModal}
               className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-20"
@@ -204,15 +207,14 @@ export default function ProfilePage() {
             </button>
             
             {generatedImage ? (
-              <div className="flex flex-col animate-fade-in">
+              <div className="flex flex-col w-full bg-bg-base animate-fade-in">
                 <img src={generatedImage} alt="Generated Badge" className="w-full h-auto block select-none pointer-events-auto" style={{ WebkitTouchCallout: 'default' }} />
-                <div className="p-4 bg-bg-card border-t border-border text-center">
-                  <p className="text-sm font-semibold text-text-main">Rasmni saqlash uchun ustiga uzoq bosib turing</p>
-                  <p className="text-xs text-text-secondary mt-1">(Long press to save image)</p>
+                <div className="p-4 bg-primary/10 text-center">
+                  <p className="text-sm font-bold text-primary">Rasmni saqlash uchun ustiga uzoq bosing</p>
                 </div>
               </div>
             ) : (
-              <>
+              <div className="flex flex-col w-full">
                 <div 
                   ref={badgeRef} 
                   className="px-6 py-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
@@ -227,13 +229,13 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 
-                <div className="p-4 bg-bg-card border-t border-border">
+                <div className="p-4 border-t border-border bg-bg-base">
                   <Button onClick={handleDownloadBadge} fullWidth className="flex items-center justify-center gap-2">
                     <Download size={20} />
                     Rasm qilib saqlash
                   </Button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
