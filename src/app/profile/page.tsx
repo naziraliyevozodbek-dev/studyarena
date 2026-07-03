@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const { token } = useAuth();
 
@@ -47,14 +48,20 @@ export default function ProfilePage() {
   const handleDownloadBadge = async () => {
     if (!badgeRef.current || !selectedBadge) return;
     try {
-      const dataUrl = await toPng(badgeRef.current, { cacheBust: true, backgroundColor: theme === 'dark' ? '#1c1c1e' : '#f2f2f7' });
-      const link = document.createElement('a');
-      link.download = `${selectedBadge.id}-badge.png`;
-      link.href = dataUrl;
-      link.click();
+      const dataUrl = await toPng(badgeRef.current, { 
+        cacheBust: true, 
+        backgroundColor: theme === 'dark' ? '#1c1c1e' : '#f2f2f7',
+        pixelRatio: 2
+      });
+      setGeneratedImage(dataUrl);
     } catch (err) {
-      console.error('Failed to download image', err);
+      console.error('Failed to generate image', err);
     }
+  };
+
+  const closeBadgeModal = () => {
+    setSelectedBadge(null);
+    setGeneratedImage(null);
   };
 
   return (
@@ -136,7 +143,12 @@ export default function ProfilePage() {
                     key={achievement.id} 
                     padding="md" 
                     className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
-                    onClick={() => isUnlocked && setSelectedBadge(achievement)}
+                    onClick={() => {
+                      if (isUnlocked) {
+                        setSelectedBadge(achievement);
+                        setGeneratedImage(null);
+                      }
+                    }}
                   >
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
                       <Icon size={28} />
@@ -182,32 +194,44 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-fade-in overflow-hidden">
           <div className="bg-bg-base w-[90%] max-w-[320px] rounded-3xl overflow-hidden shadow-2xl animate-slide-up relative mx-auto">
             <button 
-              onClick={() => setSelectedBadge(null)}
-              className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-10"
+              onClick={closeBadgeModal}
+              className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-20"
             >
               <X size={20} />
             </button>
             
-            <div 
-              ref={badgeRef} 
-              className="p-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
-            >
-              <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-5 shadow-lg border-4 border-white dark:border-bg-card">
-                <selectedBadge.icon size={56} />
+            {generatedImage ? (
+              <div className="flex flex-col animate-fade-in">
+                <img src={generatedImage} alt="Generated Badge" className="w-full h-auto block select-none pointer-events-auto" style={{ WebkitTouchCallout: 'default' }} />
+                <div className="p-4 bg-bg-card border-t border-border text-center">
+                  <p className="text-sm font-semibold text-text-main">Rasmni saqlash uchun ustiga uzoq bosib turing</p>
+                  <p className="text-xs text-text-secondary mt-1">(Long press to save image)</p>
+                </div>
               </div>
-              <h2 className="text-xl font-bold text-text-main mb-2">{selectedBadge.name}</h2>
-              <p className="text-sm text-text-secondary">{selectedBadge.desc}</p>
-              <div className="mt-4 inline-flex px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest">
-                StudyArena
-              </div>
-            </div>
-            
-            <div className="p-4 bg-bg-card border-t border-border">
-              <Button onClick={handleDownloadBadge} fullWidth className="flex items-center justify-center gap-2">
-                <Download size={20} />
-                Rasm qilib saqlash
-              </Button>
-            </div>
+            ) : (
+              <>
+                <div 
+                  ref={badgeRef} 
+                  className="p-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
+                >
+                  <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-5 shadow-lg border-4 border-white dark:border-bg-card">
+                    <selectedBadge.icon size={56} />
+                  </div>
+                  <h2 className="text-xl font-bold text-text-main mb-2">{selectedBadge.name}</h2>
+                  <p className="text-sm text-text-secondary">{selectedBadge.desc}</p>
+                  <div className="mt-4 inline-flex px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    StudyArena
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-bg-card border-t border-border">
+                  <Button onClick={handleDownloadBadge} fullWidth className="flex items-center justify-center gap-2">
+                    <Download size={20} />
+                    Rasm qilib saqlash
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
