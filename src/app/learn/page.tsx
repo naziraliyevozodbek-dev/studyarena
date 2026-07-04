@@ -295,19 +295,21 @@ export default function LearnPage() {
 
       {/* Progress Indicator */}
       {!sessionCompleted && filteredVocabs.length > 0 && (
-        <div className="flex items-center gap-3 px-4 pb-3 shrink-0">
-          <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
-            {currentIndex + 1} / {filteredVocabs.length}
-          </span>
-          <div className="flex-1 h-2 bg-bg-secondary rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-success rounded-full transition-all duration-500"
-              style={{ width: `${((currentIndex + 1) / filteredVocabs.length) * 100}%` }}
-            />
+        <div className="flex justify-center px-4 pb-4 shrink-0">
+          <div className="flex items-center gap-3 w-full max-w-xs bg-white dark:bg-bg-card border border-border/50 px-4 py-2.5 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)]">
+            <span className="text-[11px] font-black text-text-secondary whitespace-nowrap min-w-[32px] text-right">
+              {currentIndex + 1} / {filteredVocabs.length}
+            </span>
+            <div className="flex-1 h-2 bg-bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-success rounded-full transition-all duration-500"
+                style={{ width: `${((currentIndex + 1) / filteredVocabs.length) * 100}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-black text-success whitespace-nowrap min-w-[32px]">
+              {Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%
+            </span>
           </div>
-          <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
-            {Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%
-          </span>
         </div>
       )}
 
@@ -333,12 +335,12 @@ export default function LearnPage() {
             <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <div className="w-full max-w-md flex flex-col items-center gap-4 min-h-0 flex-1 pt-4 pb-6">
-            <div className={`grid w-full flex-1 min-h-0 transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+          <div className="w-full max-w-md flex flex-col gap-4 min-h-0 flex-1 justify-center pb-2">
+            <div className={`grid w-full flex-1 min-h-[300px] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Card */}
             <div 
-              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] transition-shadow"
+              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-5 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] transition-shadow"
             >
               <div className="flex justify-end mb-4 shrink-0">
                 <button 
@@ -349,9 +351,9 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-4">
-                <span className="text-5xl mb-6 shrink-0">🇩🇪</span>
-                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-6 break-words w-full px-4`}>
+              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-2 min-h-0">
+                <span className="text-3xl mb-3 shrink-0">🇩🇪</span>
+                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-6 break-words w-full px-2`}>
                   {currentVocab?.german_word}
                 </h2>
                 
@@ -375,7 +377,7 @@ export default function LearnPage() {
             </div>
 
             {/* Back Card */}
-            <div className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px]">
+            <div className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-5 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px]">
               <div className="flex justify-end mb-4 shrink-0">
                 <button 
                   onClick={(e) => toggleSave(e, currentVocab?.id)} 
@@ -385,9 +387,9 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-4">
-                <span className="text-5xl mb-6 shrink-0">🇺🇿</span>
-                <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-4`}>
+              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-2 min-h-0">
+                <span className="text-3xl mb-3 shrink-0">🇺🇿</span>
+                <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-2`}>
                   {currentVocab?.translation}
                 </h2>
 
