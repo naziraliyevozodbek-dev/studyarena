@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, X, Check, Volume2, Star, BookOpen, Layers } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Check, Volume2, Star, BookOpen, Layers, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -272,10 +272,10 @@ export default function LearnPage() {
   const currentVocab = filteredVocabs[currentIndex];
 
   return (
-    <div className="fixed inset-0 z-50 bg-bg-base flex flex-col p-4 pb-safe-8 animate-in slide-in-from-bottom-5">
+    <div className="fixed inset-0 z-[60] bg-bg-base flex flex-col animate-in slide-in-from-bottom-5" style={{ height: '100dvh' }}>
       <audio id="tts-player" playsInline className="hidden" />
       
-      <div className="flex items-center justify-between pt-safe pb-4 shrink-0">
+      <div className="flex items-center justify-between px-4 pt-safe pb-3 shrink-0">
         <button onClick={exitCategory} className="w-10 h-10 rounded-full bg-bg-secondary/50 text-text-main flex items-center justify-center hover:bg-bg-secondary transition-colors">
           <X size={24} />
         </button>
@@ -290,7 +290,7 @@ export default function LearnPage() {
         <div className="w-10 h-10"></div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 [perspective:1000px] pb-6">
+      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 [perspective:1000px] px-4 pb-4">
         {filteredVocabs.length === 0 ? (
           <Card padding="lg" className="text-center w-full max-w-sm border-dashed">
             <h2 className="text-xl font-bold text-text-main mb-2">Barchasi o'rganilgan!</h2>
@@ -312,12 +312,12 @@ export default function LearnPage() {
             <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <div className={`grid w-full h-full max-w-md max-h-[600px] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+          <div className="w-full max-w-md flex flex-col items-center gap-4" style={{ maxHeight: 'calc(100dvh - 140px)' }}>
+            <div className={`grid w-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`} style={{ height: 'min(500px, calc(100dvh - 220px))' }}>
             
             {/* Front Card */}
             <div 
-              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] cursor-pointer hover:shadow-[0_8px_40px_rgb(0,0,0,0.12)] transition-shadow" 
-              onClick={() => !isFlipped && setIsFlipped(true)}
+              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] transition-shadow"
             >
               <div className="flex justify-end mb-4 shrink-0">
                 <button 
@@ -407,6 +407,16 @@ export default function LearnPage() {
                 </button>
               </div>
             </div>
+            </div>
+
+            {/* Flip Button */}
+            <button
+              onClick={() => setIsFlipped(!isFlipped)}
+              className="flex items-center justify-center gap-2 py-3 px-6 bg-bg-secondary/80 text-text-main rounded-2xl font-bold text-base hover:bg-bg-secondary active:scale-95 transition-all border border-border/50 shadow-sm mx-auto"
+            >
+              <RefreshCw size={18} />
+              {isFlipped ? 'Oldi tomonga' : 'Orqa tomonga'}
+            </button>
           </div>
         )}
       </div>

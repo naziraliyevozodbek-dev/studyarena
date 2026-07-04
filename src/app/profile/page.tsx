@@ -195,41 +195,71 @@ export default function ProfilePage() {
       {/* Badge Modal */}
       {selectedBadge && (
         <div 
-          className="fixed z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          style={{ top: 0, left: 0, right: 0, bottom: 0, height: '100dvh' }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100dvh', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.75)' }}
         >
-          <div className="bg-bg-base w-[300px] rounded-3xl shadow-2xl relative flex-none flex flex-col overflow-hidden animate-slide-up">
+          <div style={{ width: 280, borderRadius: 24, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', position: 'relative' }}>
             <button 
               onClick={closeBadgeModal}
-              className="absolute top-4 right-4 p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition-colors z-20"
+              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, padding: 8, borderRadius: 999, border: 'none', backgroundColor: 'rgba(0,0,0,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <X size={20} />
+              <X size={18} color="#666" />
             </button>
             
             {generatedImage ? (
-              <div className="flex flex-col w-full bg-bg-base animate-fade-in">
-                <img src={generatedImage} alt="Generated Badge" className="w-full h-auto block select-none pointer-events-auto" style={{ WebkitTouchCallout: 'default' }} />
-                <div className="p-4 bg-primary/10 text-center">
-                  <p className="text-sm font-bold text-primary">Rasmni saqlash uchun ustiga uzoq bosing</p>
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                <img 
+                  src={generatedImage} 
+                  alt="Badge" 
+                  style={{ width: '100%', height: 'auto', display: 'block', WebkitTouchCallout: 'default' } as any} 
+                />
+                <div style={{ padding: 16, textAlign: 'center', backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#007AFF', margin: 0 }}>
+                    📥 Rasmni saqlash uchun ustiga uzoq bosing
+                  </p>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col w-full">
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                 <div 
                   ref={badgeRef} 
-                  className="px-6 py-8 flex flex-col items-center text-center bg-gradient-to-b from-primary/20 to-bg-base"
+                  style={{ 
+                    padding: '40px 32px 32px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    textAlign: 'center',
+                    background: theme === 'dark' 
+                      ? 'linear-gradient(180deg, #1a2a4a 0%, #1E2028 100%)' 
+                      : 'linear-gradient(180deg, #e8f0fe 0%, #FFFFFF 100%)',
+                  }}
                 >
-                  <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-5 shadow-lg border-4 border-white dark:border-bg-card">
-                    <selectedBadge.icon size={56} />
+                  <div style={{ 
+                    width: 100, height: 100, borderRadius: 24, 
+                    backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    marginBottom: 20,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                    border: `4px solid ${theme === 'dark' ? '#1E2028' : '#FFFFFF'}`
+                  }}>
+                    <selectedBadge.icon size={48} color={theme === 'dark' ? '#0A84FF' : '#007AFF'} />
                   </div>
-                  <h2 className="text-xl font-bold text-text-main mb-2">{selectedBadge.name}</h2>
-                  <p className="text-sm text-text-secondary">{selectedBadge.desc}</p>
-                  <div className="mt-4 inline-flex px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: theme === 'dark' ? '#FFFFFF' : '#111827', marginBottom: 6 }}>
+                    {selectedBadge.name}
+                  </h2>
+                  <p style={{ fontSize: 13, color: theme === 'dark' ? '#A1A1AA' : '#6B7280', margin: 0 }}>
+                    {selectedBadge.desc}
+                  </p>
+                  <div style={{ 
+                    marginTop: 16, padding: '4px 12px', borderRadius: 999, 
+                    backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
+                    color: theme === 'dark' ? '#0A84FF' : '#007AFF',
+                    fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const
+                  }}>
                     StudyArena
                   </div>
                 </div>
                 
-                <div className="p-4 border-t border-border bg-bg-base">
+                <div style={{ padding: 16, borderTop: `1px solid ${theme === 'dark' ? '#272A35' : '#E5E7EB'}`, backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
                   <Button onClick={handleDownloadBadge} fullWidth className="flex items-center justify-center gap-2">
                     <Download size={20} />
                     Rasm qilib saqlash
