@@ -74,7 +74,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Check for badges
         const badgesToAward = [];
         if (newXp >= 100) badgesToAward.push('xp_100');
+        if (newXp >= 500) badgesToAward.push('xp_500');
         if (newXp >= 1000) badgesToAward.push('xp_1000');
+        if (newXp >= 5000) badgesToAward.push('xp_5000');
 
         if (badgesToAward.length > 0) {
           const { data: existingBadges } = await supabaseAdmin
@@ -94,11 +96,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             await supabaseAdmin.from('user_badges').insert(inserts);
 
             for (const b of newBadges) {
+              let bName = 'Yutuq';
+              if (b === 'xp_100') bName = 'Tez o\'rganuvchi';
+              if (b === 'xp_500') bName = 'O\'sib borayotgan yulduz';
+              if (b === 'xp_1000') bName = 'XP Master';
+              if (b === 'xp_5000') bName = 'XP Əfsanasi';
+
               await supabaseAdmin.from('notifications').insert({
                 user_id: submission.student_id,
                 title: "Yangi Badge (Yutuq)!",
-                message: `Tabriklaymiz! Siz "${b === 'xp_100' ? 'Tez o\'rganuvchi' : 'XP Master'}" nishonini qo'lga kiritdingiz!`,
-                type: "success"
+                message: `Tabriklaymiz! Siz "${bName}" nishonini qo'lga kiritdingiz!`,
+                type: "challenge" // Using 'challenge' as a general 'achievement' category to go to profile
               });
             }
           }

@@ -133,8 +133,22 @@ export async function POST(req: Request) {
       // Check for badges
       const badgesToAward = [];
       if (newStreak >= 3) badgesToAward.push('streak_3');
+      if (newStreak >= 7) badgesToAward.push('streak_7');
+      if (newStreak >= 30) badgesToAward.push('streak_30');
       if (newXp >= 100) badgesToAward.push('xp_100');
+      if (newXp >= 500) badgesToAward.push('xp_500');
       if (newXp >= 1000) badgesToAward.push('xp_1000');
+      if (newXp >= 5000) badgesToAward.push('xp_5000');
+
+      // Count learned vocabularies
+      const { count: learnedCount } = await supabaseAdmin
+        .from('student_vocabulary_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('student_id', studentId)
+        .eq('status', 'learned');
+
+      if (learnedCount && learnedCount >= 50) badgesToAward.push('vocab_50');
+      if (learnedCount && learnedCount >= 200) badgesToAward.push('vocab_200');
 
       if (badgesToAward.length > 0) {
         const { data: existingBadges } = await supabaseAdmin
@@ -155,11 +169,22 @@ export async function POST(req: Request) {
 
           // Notify student
           for (const b of newBadges) {
+            let bName = 'Yutuq';
+            if (b === 'streak_3') bName = 'On Fire';
+            if (b === 'streak_7') bName = 'Haftalik Qahramon';
+            if (b === 'streak_30') bName = 'Oylik Chempion';
+            if (b === 'xp_100') bName = 'Tez o\'rganuvchi';
+            if (b === 'xp_500') bName = 'O\'sib borayotgan yulduz';
+            if (b === 'xp_1000') bName = 'XP Master';
+            if (b === 'xp_5000') bName = 'XP Əfsanasi';
+            if (b === 'vocab_50') bName = 'So\'z ustasi';
+            if (b === 'vocab_200') bName = 'Lug\'at qiroli';
+
             await supabaseAdmin.from('notifications').insert({
               user_id: studentId,
               title: "Yangi Badge (Yutuq)!",
-              message: `Tabriklaymiz! Siz "${b === 'streak_3' ? 'On Fire' : b === 'xp_100' ? 'Tez o\'rganuvchi' : 'XP Master'}" nishonini qo'lga kiritdingiz!`,
-              type: "success"
+              message: `Tabriklaymiz! Siz "${bName}" nishonini qo'lga kiritdingiz!`,
+              type: "challenge" // Using 'challenge' as a general 'achievement' category to go to profile
             });
           }
         }

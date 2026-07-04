@@ -44,89 +44,19 @@ export default function ProfilePage() {
 
   const achievements = [
     { id: 'streak_3', icon: Flame, name: 'On Fire', desc: '3 kunlik Streak (davomiylik)' },
+    { id: 'streak_7', icon: Flame, name: 'Haftalik Qahramon', desc: '7 kunlik uzluksiz kiritish' },
+    { id: 'streak_30', icon: Flame, name: 'Oylik Chempion', desc: '30 kunlik uzluksiz kiritish' },
     { id: 'xp_100', icon: Zap, name: 'Tez o\'rganuvchi', desc: '100 jami XP yig\'ish' },
+    { id: 'xp_500', icon: Zap, name: 'O\'sib borayotgan yulduz', desc: '500 jami XP yig\'ish' },
     { id: 'xp_1000', icon: Star, name: 'XP Master', desc: '1000 jami XP yig\'ish' },
+    { id: 'xp_5000', icon: Star, name: 'XP Əfsanasi', desc: '5000 jami XP yig\'ish' },
+    { id: 'vocab_50', icon: Award, name: 'So\'z ustasi', desc: '50 ta so\'z yodlash' },
+    { id: 'vocab_200', icon: Award, name: 'Lug\'at qiroli', desc: '200 ta so\'z yodlash' },
+    { id: 'challenge_winner', icon: Award, name: 'Chempion', desc: 'Musobaqada g\'olib bo\'lish' },
   ];
 
-  const handleDownloadBadge = async () => {
-    if (!selectedBadge) return;
-    setIsGenerating(true);
-    try {
-      const isDark = theme === 'dark';
-      const W = 560;
-      const H = 560;
-      const canvas = document.createElement('canvas');
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext('2d')!;
-
-      // Background gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, H);
-      if (isDark) {
-        grad.addColorStop(0, '#1a2a4a');
-        grad.addColorStop(1, '#1E2028');
-      } else {
-        grad.addColorStop(0, '#e8f0fe');
-        grad.addColorStop(1, '#FFFFFF');
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Icon circle
-      const cx = W / 2;
-      const iconY = 160;
-      const iconR = 60;
-      ctx.beginPath();
-      ctx.arc(cx, iconY, iconR, 0, Math.PI * 2);
-      ctx.fillStyle = isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)';
-      ctx.fill();
-      ctx.strokeStyle = isDark ? '#1E2028' : '#FFFFFF';
-      ctx.lineWidth = 6;
-      ctx.stroke();
-
-      // Icon emoji
-      ctx.font = '48px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const iconMap: Record<string, string> = { 'streak_3': '🔥', 'xp_100': '⚡', 'xp_1000': '⭐' };
-      ctx.fillText(iconMap[selectedBadge.id] || '🏆', cx, iconY);
-
-      // Badge name
-      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = isDark ? '#FFFFFF' : '#111827';
-      ctx.fillText(selectedBadge.name, cx, 280);
-
-      // Badge description
-      ctx.font = '500 22px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = isDark ? '#A1A1AA' : '#6B7280';
-      ctx.fillText(selectedBadge.desc, cx, 330);
-
-      // StudyArena pill
-      const pillText = 'STUDYARENA';
-      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-      const pillW = ctx.measureText(pillText).width + 40;
-      const pillH = 32;
-      const pillX = cx - pillW / 2;
-      const pillY = 380;
-      ctx.beginPath();
-      ctx.roundRect(pillX, pillY, pillW, pillH, 16);
-      ctx.fillStyle = isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)';
-      ctx.fill();
-      ctx.fillStyle = isDark ? '#0A84FF' : '#007AFF';
-      ctx.fillText(pillText, cx, pillY + pillH / 2 + 1);
-
-      // Watermark
-      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillStyle = isDark ? '#555' : '#bbb';
-      ctx.fillText('study-arena.vercel.app', cx, H - 30);
-
-      setGeneratedImage(canvas.toDataURL('image/png'));
-    } catch (err: any) {
-      console.error('Canvas draw error:', err);
-      alert('Rasm yaratishda xatolik: ' + err.message);
-    } finally {
-      setIsGenerating(false);
-    }
+  const handlePreviewBadge = (badge: any) => {
+    setSelectedBadge(badge);
   };
 
   const closeBadgeModal = () => {
@@ -215,8 +145,7 @@ export default function ProfilePage() {
                     className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
                     onClick={() => {
                       if (isUnlocked) {
-                        setSelectedBadge(achievement);
-                        setGeneratedImage(null);
+                        handlePreviewBadge(achievement);
                       }
                     }}
                   >
@@ -271,82 +200,57 @@ export default function ProfilePage() {
         >
           <div 
             style={{ 
-              width: 280, borderRadius: 24, overflow: 'hidden', 
+              width: '90%', maxWidth: 320, borderRadius: 32, overflow: 'hidden', 
               boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
-              backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF'
+              background: theme === 'dark' 
+                ? 'linear-gradient(180deg, #1E2028 0%, #15171E 100%)' 
+                : 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+              position: 'relative'
             }}
             onClick={(e) => e.stopPropagation()}
+            className="animate-in zoom-in-95 duration-300 border border-white/10"
           >
-            {generatedImage ? (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <img 
-                  src={generatedImage} 
-                  alt="Badge" 
-                  style={{ width: '100%', height: 'auto', display: 'block' }}
-                />
-                <div style={{ padding: 14, textAlign: 'center', backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#007AFF', margin: 0 }}>
-                    📥 Rasmni saqlash uchun ustiga uzoq bosing
-                  </p>
-                  <button 
-                    onClick={closeBadgeModal}
-                    style={{ marginTop: 12, padding: '10px 24px', borderRadius: 12, border: 'none', backgroundColor: theme === 'dark' ? '#333' : '#f0f0f0', color: theme === 'dark' ? '#fff' : '#333', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}
-                  >
-                    Yopish
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <button 
+              onClick={closeBadgeModal}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-text-secondary hover:text-text-main transition-colors z-10"
+            >
+              <X size={18} />
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ 
+                padding: '48px 24px 40px', 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+                position: 'relative', overflow: 'hidden'
+              }}>
+                <div className="absolute inset-0 bg-primary/5 opacity-50"></div>
                 <div style={{ 
-                  padding: '40px 24px 32px', 
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                  background: theme === 'dark' 
-                    ? 'linear-gradient(180deg, #1a2a4a 0%, #1E2028 100%)' 
-                    : 'linear-gradient(180deg, #e8f0fe 0%, #FFFFFF 100%)'
+                  width: 120, height: 120, borderRadius: '50%', 
+                  backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  marginBottom: 24, boxShadow: '0 8px 32px rgba(0,122,255,0.2)',
+                  border: `4px solid ${theme === 'dark' ? '#1E2028' : '#FFFFFF'}`,
+                  position: 'relative', zIndex: 1
                 }}>
-                  <div style={{ 
-                    width: 100, height: 100, borderRadius: 24, 
-                    backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                    marginBottom: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-                    border: `4px solid ${theme === 'dark' ? '#1E2028' : '#FFFFFF'}`
-                  }}>
-                    <selectedBadge.icon size={48} color={theme === 'dark' ? '#0A84FF' : '#007AFF'} />
-                  </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 800, color: theme === 'dark' ? '#FFFFFF' : '#111827', margin: '0 0 6px' }}>
-                    {selectedBadge.name}
-                  </h2>
-                  <p style={{ fontSize: 13, color: theme === 'dark' ? '#A1A1AA' : '#6B7280', margin: 0 }}>
-                    {selectedBadge.desc}
-                  </p>
-                  <div style={{ 
-                    marginTop: 16, padding: '4px 12px', borderRadius: 999, 
-                    backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
-                    color: theme === 'dark' ? '#0A84FF' : '#007AFF',
-                    fontSize: 10, fontWeight: 800, letterSpacing: '0.1em'
-                  }}>
-                    STUDYARENA
-                  </div>
+                  <selectedBadge.icon size={56} color={theme === 'dark' ? '#0A84FF' : '#007AFF'} />
                 </div>
+                <h2 style={{ fontSize: 24, fontWeight: 900, color: theme === 'dark' ? '#FFFFFF' : '#111827', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>
+                  {selectedBadge.name}
+                </h2>
+                <p style={{ fontSize: 15, color: theme === 'dark' ? '#A1A1AA' : '#6B7280', margin: 0, fontWeight: 500, position: 'relative', zIndex: 1 }}>
+                  {selectedBadge.desc}
+                </p>
                 
-                <div style={{ padding: 16, borderTop: `1px solid ${theme === 'dark' ? '#272A35' : '#E5E7EB'}`, backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
-                  <button
-                    onClick={handleDownloadBadge}
-                    disabled={isGenerating}
-                    style={{ 
-                      width: '100%', padding: '14px 0', borderRadius: 12, border: 'none', 
-                      backgroundColor: '#007AFF', color: '#FFFFFF', fontWeight: 700, fontSize: 15, 
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      opacity: isGenerating ? 0.6 : 1
-                    }}
-                  >
-                    <Download size={20} />
-                    {isGenerating ? 'Yaratilmoqda...' : 'Rasm qilib saqlash'}
-                  </button>
+                <div style={{ 
+                  marginTop: 32, padding: '6px 16px', borderRadius: 999, 
+                  backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.2)' : 'rgba(0,122,255,0.15)', 
+                  color: theme === 'dark' ? '#4da3ff' : '#007AFF',
+                  fontSize: 12, fontWeight: 900, letterSpacing: '0.15em',
+                  position: 'relative', zIndex: 1
+                }}>
+                  STUDYARENA
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>,
         document.body

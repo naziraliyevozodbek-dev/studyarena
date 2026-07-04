@@ -271,11 +271,19 @@ export default function LearnPage() {
 
   const currentVocab = filteredVocabs[currentIndex];
 
+  const getFontSize = (text: string) => {
+    if (!text) return 'text-4xl sm:text-5xl';
+    if (text.length > 50) return 'text-xl sm:text-2xl';
+    if (text.length > 30) return 'text-2xl sm:text-3xl';
+    if (text.length > 15) return 'text-3xl sm:text-4xl';
+    return 'text-4xl sm:text-5xl';
+  };
+
   return (
     <div className="fixed inset-0 z-[60] bg-bg-base flex flex-col animate-in slide-in-from-bottom-5" style={{ height: '100dvh' }}>
       <audio id="tts-player" playsInline className="hidden" />
       
-      <div className="flex items-center justify-between px-4 pt-safe pb-2 shrink-0">
+      <div className="flex items-center justify-between px-4 pt-8 mt-2 pb-4 shrink-0">
         <button onClick={exitCategory} className="w-10 h-10 rounded-full bg-bg-secondary/50 text-text-main flex items-center justify-center hover:bg-bg-secondary transition-colors">
           <X size={24} />
         </button>
@@ -325,8 +333,8 @@ export default function LearnPage() {
             <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <div className="w-full max-w-md flex flex-col items-center gap-4" style={{ maxHeight: 'calc(100dvh - 140px)' }}>
-            <div className={`grid w-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`} style={{ height: 'min(500px, calc(100dvh - 220px))' }}>
+          <div className="w-full max-w-md flex flex-col items-center gap-4 min-h-0 flex-1 justify-center">
+            <div className={`grid w-full h-[500px] max-h-[60vh] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Card */}
             <div 
@@ -343,7 +351,7 @@ export default function LearnPage() {
               
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <span className="text-5xl mb-6">🇩🇪</span>
-                <h2 className="text-4xl sm:text-5xl font-black text-text-main mb-10 break-words w-full px-4">
+                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-10 break-words w-full px-4`}>
                   {currentVocab?.german_word}
                 </h2>
                 
@@ -379,7 +387,7 @@ export default function LearnPage() {
               
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <span className="text-5xl mb-6">🇺🇿</span>
-                <h2 className="text-4xl sm:text-5xl font-black text-text-main break-words w-full px-4">
+                <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-4`}>
                   {currentVocab?.translation}
                 </h2>
 
@@ -422,10 +430,9 @@ export default function LearnPage() {
             </div>
             </div>
 
-            {/* Flip Button */}
             <button
               onClick={() => setIsFlipped(!isFlipped)}
-              className="flex items-center justify-center gap-2 py-3 px-6 bg-bg-secondary/80 text-text-main rounded-2xl font-bold text-base hover:bg-bg-secondary active:scale-95 transition-all border border-border/50 shadow-sm mx-auto"
+              className="flex w-full items-center justify-center gap-2 py-4 bg-bg-secondary/80 text-text-main rounded-2xl font-bold text-base hover:bg-bg-secondary active:scale-95 transition-all border border-border/50 shadow-sm shrink-0"
             >
               <RefreshCw size={18} />
               {isFlipped ? 'Oldi tomonga' : 'Orqa tomonga'}
