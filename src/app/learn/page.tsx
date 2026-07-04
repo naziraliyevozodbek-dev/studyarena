@@ -296,7 +296,7 @@ export default function LearnPage() {
       {/* Progress Indicator */}
       {!sessionCompleted && filteredVocabs.length > 0 && (
         <div className="flex justify-center px-4 pb-4 shrink-0">
-          <div className="flex items-center gap-3 w-full max-w-xs bg-white dark:bg-bg-card border border-border/50 px-4 py-2.5 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)]">
+          <div className="flex items-center gap-3 w-full max-w-md bg-white dark:bg-bg-card border border-border/50 px-4 py-2.5 rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.04)]">
             <span className="text-[11px] font-black text-text-secondary whitespace-nowrap min-w-[32px] text-right">
               {currentIndex + 1} / {filteredVocabs.length}
             </span>
@@ -313,7 +313,7 @@ export default function LearnPage() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 [perspective:1000px] px-4 pb-4">
+      <div className="flex-1 overflow-y-auto flex flex-col items-center w-full [perspective:1000px] px-4 pb-4">
         {filteredVocabs.length === 0 ? (
           <Card padding="lg" className="text-center w-full max-w-sm border-dashed">
             <h2 className="text-xl font-bold text-text-main mb-2">Barchasi o'rganilgan!</h2>
@@ -335,12 +335,12 @@ export default function LearnPage() {
             <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <div className="w-full max-w-md flex flex-col gap-4 min-h-0 flex-1 justify-center pb-2">
-            <div className={`grid w-full flex-1 min-h-[300px] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+          <div className="w-full max-w-md flex flex-col gap-4 my-auto pb-6 pt-2">
+            <div className={`grid w-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Card */}
             <div 
-              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-5 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] transition-shadow"
+              className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px] transition-shadow"
             >
               <div className="flex justify-end mb-4 shrink-0">
                 <button 
@@ -351,9 +351,9 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-2 min-h-0">
-                <span className="text-3xl mb-3 shrink-0">🇩🇪</span>
-                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-6 break-words w-full px-2`}>
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-2">
+                <span className="text-4xl mb-2 shrink-0">🇩🇪</span>
+                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-4 break-words w-full px-2`}>
                   {currentVocab?.german_word}
                 </h2>
                 
@@ -377,7 +377,7 @@ export default function LearnPage() {
             </div>
 
             {/* Back Card */}
-            <div className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-5 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px]">
+            <div className="col-start-1 row-start-1 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white dark:bg-bg-card rounded-[32px]">
               <div className="flex justify-end mb-4 shrink-0">
                 <button 
                   onClick={(e) => toggleSave(e, currentVocab?.id)} 
@@ -387,9 +387,9 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-2 min-h-0">
-                <span className="text-3xl mb-3 shrink-0">🇺🇿</span>
-                <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-2`}>
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-2">
+                <span className="text-4xl mb-2 shrink-0">🇺🇿</span>
+                <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-2 mb-4`}>
                   {currentVocab?.translation}
                 </h2>
 
