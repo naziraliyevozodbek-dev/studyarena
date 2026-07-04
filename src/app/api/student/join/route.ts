@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
-
-import { z } from 'zod';
-
-const JoinSchema = z.object({
-  course_code: z.string().min(6, "Course code must be at least 6 characters").max(15, "Course code must be at most 15 characters")
-});
+import { studentJoinSchema } from '@/lib/validations';
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('Authorization');
@@ -17,7 +12,13 @@ export async function POST(req: Request) {
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
 
     const body = await req.json();
-    const { course_code } = JoinSchema.parse(body);
+    const parsed = studentJoinSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    }
+
+    const { course_code } = parsed.data;
 
     // Find course
     const { data: course, error: courseError } = await supabaseAdmin

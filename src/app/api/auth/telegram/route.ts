@@ -2,14 +2,16 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
+import { telegramAuthSchema } from '@/lib/validations';
 
 export async function POST(req: Request) {
   try {
-    const { initData } = await req.json();
-
-    if (!initData) {
-      return NextResponse.json({ error: 'Missing initData' }, { status: 400 });
+    const body = await req.json();
+    const parsed = telegramAuthSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { initData } = parsed.data;
 
     // Parse initData
     const urlParams = new URLSearchParams(initData);

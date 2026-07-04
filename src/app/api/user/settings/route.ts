@@ -19,7 +19,11 @@ export async function POST(req: Request) {
     const userId = decoded.sub;
 
     const body = await req.json();
-    const { full_name, role } = SettingsSchema.parse(body);
+    const parsed = SettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    }
+    const { full_name, role } = parsed.data;
 
     const updateData: any = {};
     if (full_name) updateData.full_name = full_name;

@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, CheckSquare, Trophy, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
 
   if (!user) return null;
   if (pathname === '/onboarding') return null;
@@ -44,11 +46,19 @@ export default function BottomNav() {
             <Link 
               key={item.href} 
               href={item.href}
-              className={`flex 1 flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+              className={`relative flex 1 flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
                 isActive ? 'text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              <div className="relative">
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                {((item.href === '/' || item.href === '/mentor') && unreadCount > 0) && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-error border-2 border-bg-card"></span>
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium tracking-wide">
                 {item.label}
               </span>

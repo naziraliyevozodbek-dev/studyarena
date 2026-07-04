@@ -124,7 +124,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
          const studentName = user?.full_name || 'O\'quvchi';
 
          await supabaseAdmin.from('notifications').insert({
-            student_id: course.mentor_id,
+            user_id: course.mentor_id,
             title: "Vazifa topshirildi",
             message: `${studentName} "${course.title}" dagi "${homework.title}" vazifasini yubordi.`,
             type: "homework",

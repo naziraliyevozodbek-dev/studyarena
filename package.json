@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.108.2",
     "canvas-confetti": "^1.9.4",
     "crypto-js": "^4.2.0",
@@ -21,10 +22,13 @@
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.80.0",
     "react-image-crop": "^11.1.2",
     "sonner": "^2.0.7",
+    "swr": "^2.4.2",
     "use-sound": "^5.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

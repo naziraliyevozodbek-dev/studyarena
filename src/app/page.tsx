@@ -12,22 +12,23 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
+import { useNotifications } from '@/hooks/useNotifications';
+
+const fetcher = async (url: string, token: string) => {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error('API Error');
+  return res.json();
+};
 
 export default function Home() {
   const { user, token } = useAuth();
   const router = useRouter();
   
-  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
-  const [fetchingCourses, setFetchingCourses] = useState(true);
   const [courseCode, setCourseCode] = useState('');
   const [enrolling, setEnrolling] = useState(false);
-  const [recentVocab, setRecentVocab] = useState<any[]>([]);
-  const [pendingTasksCount, setPendingTasksCount] = useState(0);
-  const [weakWords, setWeakWords] = useState<any[]>([]);
-  const [activityDays, setActivityDays] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   // Redirect Mentors
   useEffect(() => {
@@ -36,159 +37,71 @@ export default function Home() {
     }
   }, [user, router]);
 
+  const shouldFetch = user?.id && user.role !== 'mentor' && token;
+
+  // SWR Hooks for Data Fetching
+  const { data: coursesData, isLoading: fetchingCourses, mutate: mutateCourses } = useSWR(
+    shouldFetch ? '/api/student/courses' : null,
+    (url: string) => fetcher(url, token!),
+    { revalidateOnFocus: true }
+  );
+  const enrolledCourses = coursesData?.courses || [];
+
+  const { data: tasksData } = useSWR(
+    (shouldFetch && enrolledCourses.length > 0) ? '/api/student/tasks' : null,
+    (url: string) => fetcher(url, token!)
+  );
+  const pendingTasksCount = (tasksData?.tasks || []).filter((t: any) => !t.submission || t.submission.status === 'rejected').length;
+
+  const { data: weakWordsData } = useSWR(
+    (shouldFetch && enrolledCourses.length > 0) ? '/api/student/learn/weak' : null,
+    (url: string) => fetcher(url, token!)
+  );
+  const weakWords = weakWordsData?.vocabularies || [];
+
+  const { data: activityData } = useSWR(
+    (shouldFetch && enrolledCourses.length > 0) ? '/api/student/activity' : null,
+    (url: string) => fetcher(url, token!)
+  );
+  const activityDays = activityData?.activityDays || [];
+
+  const [realtimeVocab, setRealtimeVocab] = useState<any[]>([]);
+  const { data: vocabData } = useSWR(
+    (shouldFetch && enrolledCourses.length > 0) ? `/api/student/vocabularies?courseId=${enrolledCourses[0].id}` : null,
+    (url: string) => fetcher(url, token!)
+  );
+  
+  // Combine SWR vocab with realtime updates
+  const recentVocab = realtimeVocab.length > 0 
+    ? [...realtimeVocab, ...(vocabData?.vocabularies || [])].slice(0, 5) 
+    : (vocabData?.vocabularies || []).slice(0, 5);
+
   useEffect(() => {
-    if (user?.id && user.role !== 'mentor') {
-      fetchEnrolledCourses();
-      fetchWeakWords();
-      fetchActivity();
-      fetchNotifications();
-
-      // Poll notifications every 10 seconds for pseudo-realtime
-      const notifInterval = setInterval(() => {
-        fetchNotifications();
-      }, 10000);
-
-      if (!localStorage.getItem('studyarena_onboarded')) {
-        // If they have no enrolled courses and not onboarded yet
-        // Wait for fetchEnrolledCourses to finish? 
-        // We'll just rely on localStorage to keep it simple and fast
+    if (shouldFetch) {
+      if (!localStorage.getItem('studyarena_onboarded') && !fetchingCourses && enrolledCourses.length === 0) {
         router.push('/onboarding');
       }
 
-      // Setup Realtime Listener for new vocabularies
       const channel = supabase
         .channel('schema-db-changes')
         .on(
           'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'vocabularies',
-          },
+          { event: 'INSERT', schema: 'public', table: 'vocabularies' },
           (payload) => {
-            setRecentVocab((prev) => [payload.new, ...prev].slice(0, 5));
+            setRealtimeVocab((prev) => [payload.new, ...prev].slice(0, 5));
           }
         )
         .subscribe();
 
       return () => {
         supabase.removeChannel(channel);
-        clearInterval(notifInterval);
       };
     }
-  }, [user, token]);
-
-  const fetchEnrolledCourses = async () => {
-    if (!user || !token) return;
-    try {
-      const res = await fetch('/api/student/courses', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-      
-      const courses = data.courses || [];
-      setEnrolledCourses(courses);
-      
-      if (courses.length > 0) {
-        fetchRecentVocab(courses[0].id);
-        fetchPendingTasksCount();
-      }
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-    } finally {
-      setFetchingCourses(false);
-    }
-  };
-
-  const fetchRecentVocab = async (courseId: string) => {
-    try {
-      if (!token) return;
-      const res = await fetch(`/api/student/vocabularies?courseId=${courseId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-      setRecentVocab(data.vocabularies || []);
-    } catch (error) {
-      console.error('Error fetching vocab:', error);
-    }
-  };
-
-  const fetchPendingTasksCount = async () => {
-    try {
-      if (!token) return;
-      const res = await fetch('/api/student/tasks', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-      const tasks = data.tasks || [];
-      const pending = tasks.filter((t: any) => !t.submission || t.submission.status === 'rejected');
-      setPendingTasksCount(pending.length);
-    } catch (error) {
-      console.error('Error fetching tasks count:', error);
-    }
-  };
-
-  const fetchWeakWords = async () => {
-    try {
-      if (!token) return;
-      const res = await fetch('/api/student/learn/weak', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setWeakWords(data.vocabularies || []);
-    } catch (error) {
-      console.error('Error fetching weak words:', error);
-    }
-  };
-
-  const fetchActivity = async () => {
-    try {
-      if (!token) return;
-      const res = await fetch('/api/student/activity', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setActivityDays(data.activityDays || []);
-    } catch (error) {
-      console.error('Error fetching activity:', error);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      if (!token) return;
-      const res = await fetch('/api/student/notifications', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setNotifications(data.notifications || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  const markNotificationsAsRead = async () => {
-    if (unreadCount === 0 || !token) return;
-    try {
-      await fetch('/api/student/notifications', {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch (error) {
-      console.error('Error marking as read:', error);
-    }
-  };
+  }, [shouldFetch, fetchingCourses, enrolledCourses.length, router]);
 
   const handleOpenNotifications = () => {
     setShowNotifications(true);
-    markNotificationsAsRead();
+    markAsRead();
   };
 
   const handleCloseNotifications = () => {
@@ -208,10 +121,10 @@ export default function Home() {
     }
   };
 
-  const unreadHomework = notifications.some(n => !n.is_read && n.type === 'homework');
-  const unreadResource = notifications.some(n => !n.is_read && n.type === 'resource');
-  const unreadChallenge = notifications.some(n => !n.is_read && n.type === 'challenge');
-  const unreadVocab = notifications.some(n => !n.is_read && n.type === 'vocabulary');
+  const unreadHomework = notifications.some((n: any) => !n.is_read && n.type === 'homework');
+  const unreadResource = notifications.some((n: any) => !n.is_read && n.type === 'resource');
+  const unreadChallenge = notifications.some((n: any) => !n.is_read && n.type === 'challenge');
+  const unreadVocab = notifications.some((n: any) => !n.is_read && n.type === 'vocabulary');
 
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,7 +156,7 @@ export default function Home() {
 
       toast.success('Kursga muvaffaqiyatli qo\'shildingiz!');
       setCourseCode('');
-      fetchEnrolledCourses();
+      mutateCourses();
     } catch (error: any) {
       console.error('Enrollment error:', error.message);
       toast.error('Tarmoq xatosi yuz berdi');
@@ -261,7 +174,7 @@ export default function Home() {
       });
       if (!res.ok) throw new Error('Failed to leave');
       toast.success('Kursdan chiqdingiz');
-      fetchEnrolledCourses();
+      mutateCourses();
     } catch (error) {
       console.error(error);
       toast.error('Xatolik yuz berdi');
@@ -328,7 +241,7 @@ export default function Home() {
                   <p>Hozircha bildirishnomalar yo'q</p>
                 </div>
               ) : (
-                notifications.map(notification => (
+                notifications.map((notification: any) => (
                   <Card 
                     key={notification.id} 
                     padding="md" 
@@ -409,7 +322,7 @@ export default function Home() {
           {activityDays.length > 0 && (
             <Card padding="md" className="mb-8 overflow-hidden bg-bg-card">
               <div className="flex justify-between w-full">
-                {activityDays.map((day, idx) => (
+                {activityDays.map((day: any, idx: number) => (
                   <div key={idx} className="flex flex-col items-center gap-2">
                     <span className="text-[10px] uppercase font-bold text-text-tertiary tracking-wider">{day.day}</span>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${day.active ? 'bg-success text-white shadow-sm' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-500'}`}>
@@ -503,7 +416,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {recentVocab.slice(0, 5).map((v, i) => (
+                {recentVocab.slice(0, 5).map((v: any, i: number) => (
                   <div key={v.id || i} className="p-4 flex items-center justify-between bg-bg-card">
                     <div className="flex flex-col">
                       <span className="font-semibold text-text-main text-base">{v.german_word}</span>
@@ -538,7 +451,7 @@ export default function Home() {
               </form>
               <div className="border-t border-border pt-4">
                 <p className="text-sm text-text-secondary mb-3">Your enrolled courses</p>
-                {enrolledCourses.map(c => (
+                {enrolledCourses.map((c: any) => (
                   <div key={c.id} className="flex justify-between items-center bg-bg-secondary p-3 rounded-xl mb-2">
                     <span className="font-semibold text-text-main text-sm">{c.title}</span>
                     <button 

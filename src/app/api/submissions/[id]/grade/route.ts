@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
+import { submissionGradeSchema } from '@/lib/validations';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authHeader = req.headers.get('Authorization');
@@ -11,11 +12,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
     const submissionId = (await params).id;
-    const { status, score, feedback } = await req.json();
-
-    if (!['graded', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    const body = await req.json();
+    const parsed = submissionGradeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { status, score, feedback } = parsed.data;
 
     // Verify ownership
     const { data: submission, error: subError } = await supabaseAdmin
@@ -66,7 +68,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           user_id: submission.student_id,
           title: "Vazifa Qabul Qilindi!",
           message: `Tabriklaymiz! Mentor vazifangizni qabul qildi va sizga +${awardedScore} XP berildi.`,
-          type: "success"
+          type: "homework"
         });
 
         // Check for badges
@@ -107,7 +109,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         user_id: submission.student_id,
         title: "Vazifa Qaytarildi",
         message: `Mentor vazifangizni qabul qilmadi. ${feedback ? `Izoh: "${feedback}"` : "Iltimos qaytadan urinib ko'ring."}`,
-        type: "warning"
+        type: "homework"
       });
     }
 

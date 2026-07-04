@@ -9,33 +9,36 @@ import { useRouter } from 'next/navigation';
 import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import useSWR from 'swr';
+
+const fetcher = async (url: string, token: string) => {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error('API Error');
+  return res.json();
+};
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const { token } = useAuth();
 
   useEffect(() => {
     setMounted(true);
-    if (token && user?.role !== 'mentor') {
-      fetch('/api/student/badges', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.badges) {
-          setUnlockedBadges(data.badges.map((b: any) => b.badge_type));
-        }
-      })
-      .catch(console.error);
-    }
-  }, [token, user]);
+  }, []);
+
+  const shouldFetch = token && user?.role !== 'mentor';
+
+  const { data: badgesData } = useSWR(
+    shouldFetch ? '/api/student/badges' : null,
+    (url: string) => fetcher(url, token!),
+    { revalidateOnFocus: true }
+  );
+
+  const unlockedBadges = (badgesData?.badges || []).map((b: any) => b.badge_type);
 
   if (!user) return null;
 

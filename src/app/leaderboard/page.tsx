@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useSupabase } from '@/hooks/useSupabase';
-import { Crown, Loader2 } from 'lucide-react';
+import { Crown } from 'lucide-react';
+import { Skeleton } from '@/components/ui/Skeleton';
+import useSWR from 'swr';
 import Image from 'next/image';
+
+const fetcher = async (url: string, token: string) => {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error('API Error');
+  return res.json();
+};
 
 type LeaderboardEntry = {
   rank: number;
@@ -16,39 +23,23 @@ type LeaderboardEntry = {
 
 export default function LeaderboardPage() {
   const { user, token } = useAuth();
-  const supabase = useSupabase();
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'daily'|'monthly'|'all'>('daily');
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      if (!user || !token) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/leaderboard?filter=${timeFilter}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        
-        const mapped = (data.leaderboard || []).map((l: any, index: number) => ({
-          rank: index + 1,
-          name: l.full_name || `@${l.username}` || 'Unknown',
-          xp: l.xp || 0,
-          isMe: l.id === user.id,
-          avatar: l.avatar_url
-        }));
-        setLeaderboard(mapped);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const shouldFetch = user?.id && token;
 
-    fetchLeaderboard();
-  }, [user, token, timeFilter]);
+  const { data, isLoading: loading } = useSWR(
+    shouldFetch ? `/api/leaderboard?filter=${timeFilter}` : null,
+    (url: string) => fetcher(url, token!),
+    { revalidateOnFocus: true }
+  );
+
+  const leaderboard: LeaderboardEntry[] = (data?.leaderboard || []).map((l: any, index: number) => ({
+    rank: index + 1,
+    name: l.full_name || `@${l.username}` || 'Unknown',
+    xp: l.xp || 0,
+    isMe: l.id === user?.id,
+    avatar: l.avatar_url
+  }));
 
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
@@ -98,8 +89,19 @@ export default function LeaderboardPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-text-tertiary" size={32} />
+        <div className="flex flex-col items-center justify-center py-10 px-4 w-full max-w-sm mx-auto">
+          {/* Skeleton Podium */}
+          <div className="flex items-end justify-center h-[180px] w-full gap-2 mb-8">
+            <Skeleton className="w-[30%] h-[120px] rounded-t-2xl" />
+            <Skeleton className="w-[36%] h-[160px] rounded-t-2xl" />
+            <Skeleton className="w-[30%] h-[100px] rounded-t-2xl" />
+          </div>
+          {/* Skeleton List */}
+          <div className="w-full space-y-3">
+            <Skeleton className="h-16 w-full rounded-2xl" />
+            <Skeleton className="h-16 w-full rounded-2xl" />
+            <Skeleton className="h-16 w-full rounded-2xl" />
+          </div>
         </div>
       ) : (
         <>

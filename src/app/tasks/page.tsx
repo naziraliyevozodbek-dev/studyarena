@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckSquare, Clock, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import Link from 'next/link';
+import useSWR from 'swr';
+
+const fetcher = async (url: string, token: string) => {
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error('API Error');
+  return res.json();
+};
 
 interface Task {
   id: string;
@@ -20,38 +28,30 @@ interface Task {
 export default function TasksPage() {
   const { user, token } = useAuth();
   const router = useRouter();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const shouldFetch = user?.id && user.role !== 'mentor' && token;
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      if (!token) return;
-      const res = await fetch('/api/student/tasks', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('API Error');
-      const data = await res.json();
-      setTasks(data.tasks || []);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const { data, isLoading: loading } = useSWR(
+    shouldFetch ? '/api/student/tasks' : null,
+    (url: string) => fetcher(url, token!),
+    { revalidateOnFocus: true }
+  );
+
+  const tasks: Task[] = data?.tasks || [];
 
   useEffect(() => {
     if (!user) return;
     if (user.role === 'mentor') {
       router.push('/mentor');
-      return;
     }
-    fetchTasks();
-  }, [user, router, fetchTasks]);
+  }, [user, router]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div className="flex flex-col gap-4 py-8 px-4">
+        <Skeleton className="h-10 w-48 mb-4 rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
