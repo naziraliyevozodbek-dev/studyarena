@@ -134,7 +134,7 @@ export default function LearnPage() {
   // FLASHCARDS LOGIC FOR SELECTED CATEGORY
   const filteredVocabs = useMemo(() => {
     if (!selectedCategory) return [];
-    return vocabularies.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory && v.progress_status !== 'learned');
+    return vocabularies.filter(v => (v.category || "Asosiy so'zlar") === selectedCategory);
   }, [vocabularies, selectedCategory]);
 
   const enterCategory = (catName: string) => {
@@ -275,20 +275,33 @@ export default function LearnPage() {
     <div className="fixed inset-0 z-[60] bg-bg-base flex flex-col animate-in slide-in-from-bottom-5" style={{ height: '100dvh' }}>
       <audio id="tts-player" playsInline className="hidden" />
       
-      <div className="flex items-center justify-between px-4 pt-safe pb-3 shrink-0">
+      <div className="flex items-center justify-between px-4 pt-safe pb-2 shrink-0">
         <button onClick={exitCategory} className="w-10 h-10 rounded-full bg-bg-secondary/50 text-text-main flex items-center justify-center hover:bg-bg-secondary transition-colors">
           <X size={24} />
         </button>
         <div className="text-center">
           <h2 className="font-bold text-text-main text-lg truncate max-w-[200px]">{selectedCategory}</h2>
-          {!sessionCompleted && filteredVocabs.length > 0 && (
-            <p className="text-xs font-bold text-text-secondary bg-bg-secondary/50 px-2 py-0.5 rounded-full inline-block mt-1 border border-border">
-              {currentIndex + 1} / {filteredVocabs.length}
-            </p>
-          )}
         </div>
         <div className="w-10 h-10"></div>
       </div>
+
+      {/* Progress Indicator */}
+      {!sessionCompleted && filteredVocabs.length > 0 && (
+        <div className="flex items-center gap-3 px-4 pb-3 shrink-0">
+          <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
+            {currentIndex + 1} / {filteredVocabs.length}
+          </span>
+          <div className="flex-1 h-2 bg-bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-success rounded-full transition-all duration-500"
+              style={{ width: `${((currentIndex + 1) / filteredVocabs.length) * 100}%` }}
+            />
+          </div>
+          <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
+            {Math.round(((currentIndex + 1) / filteredVocabs.length) * 100)}%
+          </span>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 [perspective:1000px] px-4 pb-4">
         {filteredVocabs.length === 0 ? (

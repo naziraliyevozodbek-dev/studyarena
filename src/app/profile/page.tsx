@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
@@ -8,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { toPng } from 'html-to-image';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const badgeRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -46,19 +46,83 @@ export default function ProfilePage() {
   ];
 
   const handleDownloadBadge = async () => {
-    if (!badgeRef.current || !selectedBadge) return;
+    if (!selectedBadge) return;
+    setIsGenerating(true);
     try {
-      // First pass is needed for iOS Safari (Webkit) to properly render foreignObject SVGs
-      await toPng(badgeRef.current, { cacheBust: true });
-      // Second pass generates the actual image
-      const dataUrl = await toPng(badgeRef.current, { 
-        cacheBust: true,
-        pixelRatio: 3
-      });
-      setGeneratedImage(dataUrl);
+      const isDark = theme === 'dark';
+      const W = 560;
+      const H = 560;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (isDark) {
+        grad.addColorStop(0, '#1a2a4a');
+        grad.addColorStop(1, '#1E2028');
+      } else {
+        grad.addColorStop(0, '#e8f0fe');
+        grad.addColorStop(1, '#FFFFFF');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Icon circle
+      const cx = W / 2;
+      const iconY = 160;
+      const iconR = 60;
+      ctx.beginPath();
+      ctx.arc(cx, iconY, iconR, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)';
+      ctx.fill();
+      ctx.strokeStyle = isDark ? '#1E2028' : '#FFFFFF';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // Icon emoji
+      ctx.font = '48px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const iconMap: Record<string, string> = { 'streak_3': '🔥', 'xp_100': '⚡', 'xp_1000': '⭐' };
+      ctx.fillText(iconMap[selectedBadge.id] || '🏆', cx, iconY);
+
+      // Badge name
+      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = isDark ? '#FFFFFF' : '#111827';
+      ctx.fillText(selectedBadge.name, cx, 280);
+
+      // Badge description
+      ctx.font = '500 22px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = isDark ? '#A1A1AA' : '#6B7280';
+      ctx.fillText(selectedBadge.desc, cx, 330);
+
+      // StudyArena pill
+      const pillText = 'STUDYARENA';
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+      const pillW = ctx.measureText(pillText).width + 40;
+      const pillH = 32;
+      const pillX = cx - pillW / 2;
+      const pillY = 380;
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+      ctx.fillStyle = isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)';
+      ctx.fill();
+      ctx.fillStyle = isDark ? '#0A84FF' : '#007AFF';
+      ctx.fillText(pillText, cx, pillY + pillH / 2 + 1);
+
+      // Watermark
+      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = isDark ? '#555' : '#bbb';
+      ctx.fillText('study-arena.vercel.app', cx, H - 30);
+
+      setGeneratedImage(canvas.toDataURL('image/png'));
     } catch (err: any) {
-      console.error('Failed to generate image', err);
-      alert("Rasm yaratishda xatolik: " + err.message);
+      console.error('Canvas draw error:', err);
+      alert('Rasm yaratishda xatolik: ' + err.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -192,58 +256,62 @@ export default function ProfilePage() {
       <Button variant="outline" className="w-full border-none bg-error/10 text-error hover:bg-error hover:text-white transition-colors" onClick={() => window.location.reload()}>
         <LogOut size={20} /> Sign Out
       </Button>
-      {/* Badge Modal */}
-      {selectedBadge && (
+      {/* Badge Modal - Portal to body */}
+      {selectedBadge && typeof document !== 'undefined' && createPortal(
         <div 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100dvh', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.75)' }}
+          style={{ 
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', 
+            zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            backgroundColor: 'rgba(0,0,0,0.8)', margin: 0, padding: 0 
+          }}
+          onClick={closeBadgeModal}
         >
-          <div style={{ width: 280, borderRadius: 24, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', position: 'relative' }}>
-            <button 
-              onClick={closeBadgeModal}
-              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, padding: 8, borderRadius: 999, border: 'none', backgroundColor: 'rgba(0,0,0,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <X size={18} color="#666" />
-            </button>
-            
+          <div 
+            style={{ 
+              width: 280, borderRadius: 24, overflow: 'hidden', 
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
+              backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {generatedImage ? (
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <img 
                   src={generatedImage} 
                   alt="Badge" 
-                  style={{ width: '100%', height: 'auto', display: 'block', WebkitTouchCallout: 'default' } as any} 
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
                 />
-                <div style={{ padding: 16, textAlign: 'center', backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
+                <div style={{ padding: 14, textAlign: 'center', backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#007AFF', margin: 0 }}>
                     📥 Rasmni saqlash uchun ustiga uzoq bosing
                   </p>
+                  <button 
+                    onClick={closeBadgeModal}
+                    style={{ marginTop: 12, padding: '10px 24px', borderRadius: 12, border: 'none', backgroundColor: theme === 'dark' ? '#333' : '#f0f0f0', color: theme === 'dark' ? '#fff' : '#333', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}
+                  >
+                    Yopish
+                  </button>
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                <div 
-                  ref={badgeRef} 
-                  style={{ 
-                    padding: '40px 32px 32px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    textAlign: 'center',
-                    background: theme === 'dark' 
-                      ? 'linear-gradient(180deg, #1a2a4a 0%, #1E2028 100%)' 
-                      : 'linear-gradient(180deg, #e8f0fe 0%, #FFFFFF 100%)',
-                  }}
-                >
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ 
+                  padding: '40px 24px 32px', 
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+                  background: theme === 'dark' 
+                    ? 'linear-gradient(180deg, #1a2a4a 0%, #1E2028 100%)' 
+                    : 'linear-gradient(180deg, #e8f0fe 0%, #FFFFFF 100%)'
+                }}>
                   <div style={{ 
                     width: 100, height: 100, borderRadius: 24, 
                     backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
                     display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                    marginBottom: 20,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                    marginBottom: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
                     border: `4px solid ${theme === 'dark' ? '#1E2028' : '#FFFFFF'}`
                   }}>
                     <selectedBadge.icon size={48} color={theme === 'dark' ? '#0A84FF' : '#007AFF'} />
                   </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 800, color: theme === 'dark' ? '#FFFFFF' : '#111827', marginBottom: 6 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: theme === 'dark' ? '#FFFFFF' : '#111827', margin: '0 0 6px' }}>
                     {selectedBadge.name}
                   </h2>
                   <p style={{ fontSize: 13, color: theme === 'dark' ? '#A1A1AA' : '#6B7280', margin: 0 }}>
@@ -253,22 +321,32 @@ export default function ProfilePage() {
                     marginTop: 16, padding: '4px 12px', borderRadius: 999, 
                     backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
                     color: theme === 'dark' ? '#0A84FF' : '#007AFF',
-                    fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const
+                    fontSize: 10, fontWeight: 800, letterSpacing: '0.1em'
                   }}>
-                    StudyArena
+                    STUDYARENA
                   </div>
                 </div>
                 
                 <div style={{ padding: 16, borderTop: `1px solid ${theme === 'dark' ? '#272A35' : '#E5E7EB'}`, backgroundColor: theme === 'dark' ? '#1E2028' : '#FFFFFF' }}>
-                  <Button onClick={handleDownloadBadge} fullWidth className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleDownloadBadge}
+                    disabled={isGenerating}
+                    style={{ 
+                      width: '100%', padding: '14px 0', borderRadius: 12, border: 'none', 
+                      backgroundColor: '#007AFF', color: '#FFFFFF', fontWeight: 700, fontSize: 15, 
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      opacity: isGenerating ? 0.6 : 1
+                    }}
+                  >
                     <Download size={20} />
-                    Rasm qilib saqlash
-                  </Button>
+                    {isGenerating ? 'Yaratilmoqda...' : 'Rasm qilib saqlash'}
+                  </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
