@@ -333,8 +333,8 @@ export default function LearnPage() {
             <Button onClick={exitCategory} fullWidth className="h-14 text-lg">Davom etish</Button>
           </Card>
         ) : (
-          <div className="w-full max-w-md flex flex-col items-center gap-4 min-h-0 flex-1 justify-center">
-            <div className={`grid w-full h-[500px] max-h-[60vh] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+          <div className="w-full max-w-md flex flex-col items-center gap-4 min-h-0 flex-1 pt-4 pb-6">
+            <div className={`grid w-full flex-1 min-h-0 transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             
             {/* Front Card */}
             <div 
@@ -349,9 +349,9 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <span className="text-5xl mb-6">🇩🇪</span>
-                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-10 break-words w-full px-4`}>
+              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-4">
+                <span className="text-5xl mb-6 shrink-0">🇩🇪</span>
+                <h2 className={`${getFontSize(currentVocab?.german_word || '')} font-black text-text-main mb-6 break-words w-full px-4`}>
                   {currentVocab?.german_word}
                 </h2>
                 
@@ -385,8 +385,8 @@ export default function LearnPage() {
                 </button>
               </div>
               
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <span className="text-5xl mb-6">🇺🇿</span>
+              <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center text-center py-4">
+                <span className="text-5xl mb-6 shrink-0">🇺🇿</span>
                 <h2 className={`${getFontSize(currentVocab?.translation || '')} font-black text-text-main break-words w-full px-4`}>
                   {currentVocab?.translation}
                 </h2>

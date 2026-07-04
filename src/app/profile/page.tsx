@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<any | null>(null);
+  const [showAllBadges, setShowAllBadges] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -131,33 +132,48 @@ export default function ProfilePage() {
           {/* Badges Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-lg font-bold text-text-main tracking-tight">Nishonlar</h2>
+              <h2 className="text-lg font-bold text-text-main tracking-tight">Olingan nishonlar</h2>
+              <button 
+                onClick={() => setShowAllBadges(true)}
+                className="text-primary font-bold text-sm bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                Barchasi ({unlockedBadges.length}/{achievements.length})
+              </button>
             </div>
             <div className="grid gap-3">
-              {achievements.map((achievement) => {
-                const isUnlocked = unlockedBadges.includes(achievement.id);
-                const Icon = achievement.icon;
-                
-                return (
-                  <Card 
-                    key={achievement.id} 
-                    padding="md" 
-                    className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
-                    onClick={() => {
-                      if (isUnlocked) {
-                        handlePreviewBadge(achievement);
-                      }
-                    }}
-                  >
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
-                      <Icon size={28} />
-                    </div>
-                    <div>
-                      <h3 className={`font-semibold text-base mb-1 ${isUnlocked ? 'text-primary' : 'text-text-main'}`}>{achievement.name}</h3>
-                      <p className="text-sm text-text-secondary">{achievement.desc}</p>
-                    </div>
-                  </Card>
-                );
+              {[...achievements]
+                .sort((a, b) => {
+                  const aUnl = unlockedBadges.includes(a.id);
+                  const bUnl = unlockedBadges.includes(b.id);
+                  if (aUnl && !bUnl) return -1;
+                  if (!aUnl && bUnl) return 1;
+                  return 0;
+                })
+                .slice(0, 3)
+                .map((achievement) => {
+                  const isUnlocked = unlockedBadges.includes(achievement.id);
+                  const Icon = achievement.icon;
+                  
+                  return (
+                    <Card 
+                      key={achievement.id} 
+                      padding="md" 
+                      className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
+                      onClick={() => {
+                        if (isUnlocked) {
+                          handlePreviewBadge(achievement);
+                        }
+                      }}
+                    >
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                        <Icon size={28} />
+                      </div>
+                      <div>
+                        <h3 className={`font-semibold text-base mb-1 ${isUnlocked ? 'text-primary' : 'text-text-main'}`}>{achievement.name}</h3>
+                        <p className="text-sm text-text-secondary leading-tight">{achievement.desc}</p>
+                      </div>
+                    </Card>
+                  );
               })}
             </div>
           </div>
@@ -187,8 +203,7 @@ export default function ProfilePage() {
 
       <Button variant="outline" className="w-full border-none bg-error/10 text-error hover:bg-error hover:text-white transition-colors" onClick={() => window.location.reload()}>
         <LogOut size={20} /> Sign Out
-      </Button>
-      {/* Badge Modal - Portal to body */}
+      </Button>      {/* Badge Modal - Portal to body */}
       {selectedBadge && typeof document !== 'undefined' && createPortal(
         <div 
           style={{ 
@@ -250,6 +265,61 @@ export default function ProfilePage() {
                   STUDYARENA
                 </div>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* All Badges Modal */}
+      {showAllBadges && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[9998] flex flex-col animate-in fade-in duration-200"
+          style={{ backgroundColor: theme === 'dark' ? '#0A0A0A' : '#F9FAFB' }}
+        >
+          <div className="p-4 flex items-center justify-between bg-white dark:bg-bg-card border-b border-border shadow-sm sticky top-0 z-10">
+            <h2 className="text-xl font-bold text-text-main tracking-tight">Barcha Nishonlar</h2>
+            <button 
+              onClick={() => setShowAllBadges(false)} 
+              className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-bg-tertiary transition-colors text-text-secondary"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="p-4 flex-1 overflow-y-auto">
+            <div className="grid gap-3 pb-safe">
+              {[...achievements]
+                .sort((a, b) => {
+                  const aUnl = unlockedBadges.includes(a.id);
+                  const bUnl = unlockedBadges.includes(b.id);
+                  if (aUnl && !bUnl) return -1;
+                  if (!aUnl && bUnl) return 1;
+                  return 0;
+                })
+                .map((achievement) => {
+                  const isUnlocked = unlockedBadges.includes(achievement.id);
+                  const Icon = achievement.icon;
+                  return (
+                    <Card 
+                      key={achievement.id} 
+                      padding="md" 
+                      className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
+                      onClick={() => {
+                        if (isUnlocked) {
+                          handlePreviewBadge(achievement);
+                        }
+                      }}
+                    >
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                        <Icon size={28} />
+                      </div>
+                      <div>
+                        <h3 className={`font-semibold text-base mb-1 ${isUnlocked ? 'text-primary' : 'text-text-main'}`}>{achievement.name}</h3>
+                        <p className="text-sm text-text-secondary leading-tight">{achievement.desc}</p>
+                      </div>
+                    </Card>
+                  );
+              })}
             </div>
           </div>
         </div>,
