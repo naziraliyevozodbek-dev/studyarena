@@ -14,12 +14,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
     const courseId = (await params).groupId;
 
     // Check if user is enrolled or mentor
-    const { data: course } = await supabaseAdmin.from('courses').select('mentor_id').eq('id', courseId).single();
+    const { data: course } = await supabaseAdmin.from('courses').select('name, mentor_id').eq('id', courseId).single();
     const { data: enrollment } = await supabaseAdmin.from('course_members').select('id').eq('course_id', courseId).eq('student_id', currentUserId).single();
 
     if (course?.mentor_id !== currentUserId && !enrollment) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const { count: studentCount } = await supabaseAdmin.from('course_members').select('*', { count: 'exact', head: true }).eq('course_id', courseId);
 
     const { data, error } = await supabaseAdmin
       .from('messages')
@@ -29,7 +31,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
 
     if (error) throw error;
 
-    return NextResponse.json({ messages: data });
+    return NextResponse.json({ 
+      messages: data, 
+      courseName: course?.name || 'Guruh Chati', 
+      memberCount: (studentCount || 0) + 1 
+    });
   } catch (err: unknown) {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }

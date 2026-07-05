@@ -15,6 +15,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [groupName, setGroupName] = useState('Guruh Chati');
+  const [memberCount, setMemberCount] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,9 +38,8 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         if (!res.ok) throw new Error('Failed to fetch messages');
         const data = await res.json();
         setMessages(data.messages || []);
-        
-        // As a quick UX win, we don't fetch course name explicitly, but could.
-        // For now "Guruh Chati" is sufficient or derived from first fetch.
+        if (data.courseName) setGroupName(data.courseName);
+        if (data.memberCount) setMemberCount(data.memberCount);
         
         // Only scroll to bottom on initial load or if user is near bottom
         if (loading) setTimeout(scrollToBottom, 100);
@@ -129,22 +129,22 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-bg-base overflow-hidden">
       {/* Header */}
-      <div className="flex items-center px-4 py-3 bg-bg-card border-b border-border z-10 sticky top-0">
+      <div className="flex items-center px-4 py-3 bg-bg-card border-b border-border z-10 shrink-0 shadow-sm">
         <button 
           onClick={() => router.back()} 
-          className="mr-3 text-text-secondary hover:text-text-main transition-colors"
+          className="mr-3 text-text-secondary hover:text-text-main transition-colors p-1"
         >
           <ArrowLeft size={24} />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
             <Users size={20} />
           </div>
           <div>
-            <div className="font-bold text-text-main leading-tight">{groupName}</div>
-            <div className="text-xs text-text-tertiary">{messages.length} xabar</div>
+            <div className="font-bold text-text-main leading-tight line-clamp-1">{groupName}</div>
+            <div className="text-xs text-text-tertiary">{memberCount ? `${memberCount} a'zo` : '...'} • {messages.length} xabar</div>
           </div>
         </div>
       </div>
@@ -223,9 +223,9 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-bg-card border-t border-border mt-auto">
-        <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-          <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors">
+      <div className="p-3 bg-bg-card border-t border-border shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
+        <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
+          <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors shadow-sm">
             <textarea 
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
