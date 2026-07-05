@@ -60,6 +60,9 @@ export default function WeakWordsPage() {
       const player = document.getElementById('tts-player') as HTMLAudioElement;
       if (player) {
         player.src = `/api/tts?text=${encodeURIComponent(text)}`;
+        const isSoundEnabled = localStorage.getItem('setting_sound') !== 'false';
+        if (!isSoundEnabled) return;
+
         const playPromise = player.play();
         if (playPromise !== undefined) {
           playPromise.catch((err) => {

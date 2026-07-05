@@ -44,16 +44,16 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const achievements = [
-    { id: 'streak_3', icon: Flame, name: 'On Fire', desc: '3 kunlik Streak (davomiylik)' },
-    { id: 'streak_7', icon: Flame, name: 'Haftalik Qahramon', desc: '7 kunlik uzluksiz kiritish' },
-    { id: 'streak_30', icon: Flame, name: 'Oylik Chempion', desc: '30 kunlik uzluksiz kiritish' },
-    { id: 'xp_100', icon: Zap, name: 'Tez o\'rganuvchi', desc: '100 jami XP yig\'ish' },
-    { id: 'xp_500', icon: Zap, name: 'O\'sib borayotgan yulduz', desc: '500 jami XP yig\'ish' },
-    { id: 'xp_1000', icon: Star, name: 'XP Master', desc: '1000 jami XP yig\'ish' },
-    { id: 'xp_5000', icon: Star, name: 'XP Əfsanasi', desc: '5000 jami XP yig\'ish' },
-    { id: 'vocab_50', icon: Award, name: 'So\'z ustasi', desc: '50 ta so\'z yodlash' },
-    { id: 'vocab_200', icon: Award, name: 'Lug\'at qiroli', desc: '200 ta so\'z yodlash' },
-    { id: 'challenge_winner', icon: Award, name: 'Chempion', desc: 'Musobaqada g\'olib bo\'lish' },
+    { id: 'streak_3', icon: Flame, name: 'On Fire', desc: '3 kunlik Streak (davomiylik)', color: 'text-orange-500 bg-orange-100 dark:bg-orange-500/10 border-orange-500/20', hex: '#f97316' },
+    { id: 'streak_7', icon: Flame, name: 'Haftalik Qahramon', desc: '7 kunlik uzluksiz kiritish', color: 'text-red-500 bg-red-100 dark:bg-red-500/10 border-red-500/20', hex: '#ef4444' },
+    { id: 'streak_30', icon: Flame, name: 'Oylik Chempion', desc: '30 kunlik uzluksiz kiritish', color: 'text-purple-500 bg-purple-100 dark:bg-purple-500/10 border-purple-500/20', hex: '#a855f7' },
+    { id: 'xp_100', icon: Zap, name: 'Tez o\'rganuvchi', desc: '100 jami XP yig\'ish', color: 'text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10 border-yellow-500/20', hex: '#eab308' },
+    { id: 'xp_500', icon: Zap, name: 'O\'sib borayotgan yulduz', desc: '500 jami XP yig\'ish', color: 'text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-400/20', hex: '#facc15' },
+    { id: 'xp_1000', icon: Star, name: 'XP Master', desc: '1000 jami XP yig\'ish', color: 'text-blue-500 bg-blue-100 dark:bg-blue-500/10 border-blue-500/20', hex: '#3b82f6' },
+    { id: 'xp_5000', icon: Star, name: 'XP Əfsanasi', desc: '5000 jami XP yig\'ish', color: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-500/10 border-indigo-500/20', hex: '#6366f1' },
+    { id: 'vocab_50', icon: Award, name: 'So\'z ustasi', desc: '50 ta so\'z yodlash', color: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-500/20', hex: '#10b981' },
+    { id: 'vocab_200', icon: Award, name: 'Lug\'at qiroli', desc: '200 ta so\'z yodlash', color: 'text-teal-500 bg-teal-100 dark:bg-teal-500/10 border-teal-500/20', hex: '#14b8a6' },
+    { id: 'challenge_winner', icon: Award, name: 'Chempion', desc: 'Musobaqada g\'olib bo\'lish', color: 'text-rose-500 bg-rose-100 dark:bg-rose-500/10 border-rose-500/20', hex: '#f43f5e' },
   ];
 
   const handlePreviewBadge = (badge: any) => {
@@ -158,14 +158,14 @@ export default function ProfilePage() {
                     <Card 
                       key={achievement.id} 
                       padding="md" 
-                      className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed'}`}
+                      className={`flex items-center gap-4 transition-all ${isUnlocked ? 'border-primary/30 shadow-md cursor-pointer hover:scale-[1.02]' : 'opacity-60 grayscale cursor-not-allowed border-transparent'}`}
                       onClick={() => {
                         if (isUnlocked) {
                           handlePreviewBadge(achievement);
                         }
                       }}
                     >
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${isUnlocked ? 'bg-primary/10 text-primary' : 'bg-bg-secondary text-text-tertiary'}`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 border ${isUnlocked ? achievement.color : 'bg-bg-secondary text-text-tertiary border-border'}`}>
                         <Icon size={28} />
                       </div>
                       <div>
@@ -237,16 +237,13 @@ export default function ProfilePage() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
                 position: 'relative', overflow: 'hidden'
               }}>
-                <div className="absolute inset-0 bg-primary/5 opacity-50"></div>
-                <div style={{ 
-                  width: 120, height: 120, borderRadius: '50%', 
-                  backgroundColor: theme === 'dark' ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.1)', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                  marginBottom: 24, boxShadow: '0 8px 32px rgba(0,122,255,0.2)',
-                  border: `4px solid ${theme === 'dark' ? '#1E2028' : '#FFFFFF'}`,
-                  position: 'relative', zIndex: 1
-                }}>
-                  <selectedBadge.icon size={56} color={theme === 'dark' ? '#0A84FF' : '#007AFF'} />
+                <div className="absolute inset-0 opacity-20" style={{ backgroundColor: selectedBadge.hex }}></div>
+                
+                {/* Decorative background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl rounded-full" style={{ backgroundColor: selectedBadge.hex, opacity: 0.3 }}></div>
+
+                <div className={`w-[120px] h-[120px] rounded-full flex items-center justify-center mb-6 relative z-10 border-4 border-bg-base shadow-2xl ${selectedBadge.color}`}>
+                  <selectedBadge.icon size={56} color={selectedBadge.hex} />
                 </div>
                 <h2 style={{ fontSize: 24, fontWeight: 900, color: theme === 'dark' ? '#FFFFFF' : '#111827', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>
                   {selectedBadge.name}

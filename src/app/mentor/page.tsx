@@ -183,8 +183,9 @@ export default function MentorDashboard() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-bg-base/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md mx-auto flex flex-col h-full bg-bg-base border-x border-border shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base">
+          {/* True Fullscreen Modal */}
+          <div className="relative w-full h-full flex flex-col z-10 bg-bg-base border-x border-border shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20 shrink-0">
               <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
               <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
