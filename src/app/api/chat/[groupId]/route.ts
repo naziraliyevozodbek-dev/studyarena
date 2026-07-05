@@ -14,7 +14,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
     const courseId = (await params).groupId;
 
     // Check if user is enrolled or mentor
-    const { data: course } = await supabaseAdmin.from('courses').select('name, mentor_id').eq('id', courseId).single();
+    const { data: course } = await supabaseAdmin.from('courses').select('title, mentor_id').eq('id', courseId).single();
     const { data: enrollment } = await supabaseAdmin.from('course_members').select('id').eq('course_id', courseId).eq('student_id', currentUserId).single();
 
     if (course?.mentor_id !== currentUserId && !enrollment) {
@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
 
     return NextResponse.json({ 
       messages: data, 
-      courseName: course?.name || 'Guruh Chati', 
+      courseName: course?.title || 'Guruh Chati', 
       memberCount: (studentCount || 0) + 1 
     });
   } catch (err: unknown) {

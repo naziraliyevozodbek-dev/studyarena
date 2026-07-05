@@ -25,11 +25,11 @@ export async function GET(req: Request) {
       // Mentor sees their courses
       const { data: courses } = await supabaseAdmin
         .from('courses')
-        .select('id, name')
+        .select('id, title')
         .eq('mentor_id', userId);
         
       if (courses) {
-        groups = courses.map(c => ({ id: c.id, name: c.name, type: 'course' }));
+        groups = courses.map(c => ({ id: c.id, name: c.title, type: 'course' }));
       }
     } else {
       // Student sees their enrolled courses
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
         enrollments.forEach((e: any) => {
           const course = Array.isArray(e.courses) ? e.courses[0] : e.courses;
           if (course && !courseMap.has(course.id)) {
-            courseMap.set(course.id, { id: course.id, name: course.name, type: 'course' });
+            courseMap.set(course.id, { id: course.id, name: course.title, type: 'course' });
           }
         });
         groups = Array.from(courseMap.values());

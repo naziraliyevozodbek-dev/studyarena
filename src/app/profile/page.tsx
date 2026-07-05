@@ -258,15 +258,6 @@ export default function ProfilePage() {
                   STUDYARENA
                 </div>
               </div>
-              <div className="border-t border-border bg-bg-base/50 p-4 w-full">
-                <Button 
-                  fullWidth 
-                  className="bg-bg-secondary hover:bg-bg-secondary/80 text-text-main flex items-center justify-center gap-2"
-                  onClick={closeBadgeModal}
-                >
-                  Yopish
-                </Button>
-              </div>
             </div>
           </div>
         </div>,
