@@ -35,12 +35,12 @@ export async function GET(req: Request) {
       // Student sees their enrolled courses
       const { data: enrollments } = await supabaseAdmin
         .from('course_members')
-        .select('courses(id, name)')
+        .select('course_id, courses(*)')
         .eq('student_id', userId);
 
       if (enrollments) {
         const courseMap = new Map();
-        enrollments.forEach(e => {
+        enrollments.forEach((e: any) => {
           const course = Array.isArray(e.courses) ? e.courses[0] : e.courses;
           if (course && !courseMap.has(course.id)) {
             courseMap.set(course.id, { id: course.id, name: course.name, type: 'course' });
