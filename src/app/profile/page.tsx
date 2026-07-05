@@ -60,7 +60,6 @@ export default function ProfilePage() {
 
   const closeBadgeModal = () => {
     setSelectedBadge(null);
-    setGeneratedImage(null);
   };
 
   const handleShareTelegram = () => {
