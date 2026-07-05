@@ -237,12 +237,9 @@ export default function ProfilePage() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
                 position: 'relative', overflow: 'hidden'
               }}>
-                <div className="absolute inset-0 opacity-20" style={{ backgroundColor: selectedBadge.hex }}></div>
+                <div className="absolute inset-0 bg-primary/5 opacity-50"></div>
                 
-                {/* Decorative background glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl rounded-full" style={{ backgroundColor: selectedBadge.hex, opacity: 0.3 }}></div>
-
-                <div className={`w-[120px] h-[120px] rounded-full flex items-center justify-center mb-6 relative z-10 border-4 border-bg-base shadow-2xl ${selectedBadge.color}`}>
+                <div className={`w-[120px] h-[120px] rounded-full flex items-center justify-center mb-6 relative z-10 border-4 ${theme === 'dark' ? 'border-[#1E2028]' : 'border-white'} shadow-xl ${selectedBadge.color}`}>
                   <selectedBadge.icon size={56} color={selectedBadge.hex} />
                 </div>
                 <h2 style={{ fontSize: 24, fontWeight: 900, color: theme === 'dark' ? '#FFFFFF' : '#111827', margin: '0 0 8px', position: 'relative', zIndex: 1 }}>

@@ -223,9 +223,9 @@ export default function Home() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base">
+        <div className="fixed inset-0 z-50 flex flex-col bg-bg-base animate-fade-in">
           {/* True Fullscreen Modal */}
-          <div className="relative w-full h-full flex flex-col z-10 bg-bg-base border-x border-border shadow-2xl">
+          <div className="w-full h-full flex flex-col">
             
             <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20 shrink-0">
               <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
@@ -381,6 +381,17 @@ export default function Home() {
                  <p className="text-xs text-text-secondary">Qoidalar</p>
                </Card>
              </Link>
+             <Link href="/learn?category=starred" className="block relative col-span-2">
+               <Card interactive padding="md" className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-500/10 text-yellow-500 flex items-center justify-center shrink-0">
+                   <Star size={20} />
+                 </div>
+                 <div>
+                   <h3 className="font-semibold text-text-main mb-0.5">Saqlangan so'zlar</h3>
+                   <p className="text-xs text-text-secondary">Yod olinganlar</p>
+                 </div>
+               </Card>
+             </Link>
           </div>
 
           {/* Weak Words Section */}
@@ -405,7 +416,7 @@ export default function Home() {
 
           {/* Recent Vocabulary Section */}
           <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-lg font-semibold text-text-main tracking-tight">Saqlangan so'zlar</h3>
+            <h3 className="text-lg font-semibold text-text-main tracking-tight">Recent Words</h3>
             <span className="text-xs font-medium text-text-tertiary">{enrolledCourses[0]?.title}</span>
           </div>
           

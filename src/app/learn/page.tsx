@@ -98,14 +98,11 @@ export default function LearnPage() {
 
   const playTTS = (text: string) => {
     if (!text) return;
-    try {
-      const player = document.getElementById('tts-player') as HTMLAudioElement;
-      if (player) {
-        player.src = `/api/tts?text=${encodeURIComponent(text)}`;
-        const isSoundEnabled = localStorage.getItem('setting_sound') !== 'false';
-        if (!isSoundEnabled) return;
-
-        const playPromise = player.play();
+      try {
+        const player = document.getElementById('tts-player') as HTMLAudioElement;
+        if (player) {
+          player.src = `/api/tts?text=${encodeURIComponent(text)}`;
+          const playPromise = player.play();
         if (playPromise !== undefined) {
           playPromise.catch((err) => {
             console.error("Audio playback failed", err);
