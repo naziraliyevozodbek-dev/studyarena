@@ -223,18 +223,18 @@ export default function Home() {
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in bg-bg-base/80 backdrop-blur-sm">
           {/* True Fullscreen Modal */}
-          <div className="relative w-full h-full flex flex-col z-10">
+          <div className="relative w-full max-w-md mx-auto h-full flex flex-col z-10 bg-bg-base border-x border-border shadow-2xl">
             
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20 shrink-0">
               <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
               <button onClick={handleCloseNotifications} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
                 <X size={20} />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pb-safe">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-text-tertiary">
                   <Bell size={48} className="mb-4 opacity-20" />

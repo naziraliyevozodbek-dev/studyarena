@@ -118,8 +118,8 @@ export default function StudentAnalytics({ params }: { params: Promise<{ id: str
           {analytics.chartData?.map((data: any, i: number) => {
             const heightPercentage = data.words > 0 ? Math.max((data.words / maxWords) * 100, 10) : 0;
             return (
-              <div key={i} className="flex flex-col items-center flex-1 gap-2 group">
-                <div className="relative w-full flex justify-center h-full items-end">
+              <div key={i} className="h-full flex flex-col items-center flex-1 gap-2 group">
+                <div className="relative w-full flex justify-center flex-1 items-end">
                   {/* Tooltip */}
                   <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-text-main text-white text-[10px] py-1 px-2 rounded whitespace-nowrap transition-opacity pointer-events-none z-10">
                     {data.words} words
@@ -130,7 +130,7 @@ export default function StudentAnalytics({ params }: { params: Promise<{ id: str
                     style={{ height: `${heightPercentage}%` }}
                   />
                 </div>
-                <span className="text-[10px] uppercase font-bold text-text-tertiary tracking-wider">{data.day}</span>
+                <span className="text-[10px] uppercase font-bold text-text-tertiary tracking-wider shrink-0">{data.day}</span>
               </div>
             );
           })}

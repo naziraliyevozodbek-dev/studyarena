@@ -165,36 +165,40 @@ export default function MentorChallenges() {
         ) : (
           <div className="flex flex-col gap-4">
             {challenges.map(ch => (
-              <div key={ch.id} className="relative group bg-bg-card rounded-[20px] p-5 border border-border/40 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer" onClick={() => router.push(`/mentor/challenges/${ch.id}`)}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
-                      {ch.courses?.title}
-                    </span>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-bg-secondary text-text-secondary uppercase border border-border/50">
-                      {ch.type === 'quiz' ? 'Test' : 'Vazifa'}
-                    </span>
+              <Card 
+                key={ch.id} 
+                padding="md" 
+                className="group cursor-pointer hover:border-primary/50 transition-colors" 
+                onClick={() => router.push(`/mentor/challenges/${ch.id}`)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 pr-4">
+                    <h3 className="font-bold text-text-main text-lg mb-1">{ch.title}</h3>
+                    <p className="text-sm text-text-secondary line-clamp-1 mb-2">
+                      {ch.description || "No description provided."}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-bg-secondary text-text-secondary uppercase">
+                        {ch.courses?.title?.substring(0, 15)}...
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase">
+                        {ch.type === 'quiz' ? 'Test' : 'Vazifa'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black shadow-md shadow-yellow-500/20 text-sm">
-                    +{ch.xp_reward} XP
+                  <div className="flex flex-col items-end shrink-0 gap-3">
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      +{ch.xp_reward} XP
+                    </span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDelete(ch.id); }}
+                      className="text-text-tertiary hover:text-error transition-colors p-2"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
-                
-                <h3 className="font-bold text-text-main text-lg leading-tight mb-2 pr-8">{ch.title}</h3>
-                
-                <p className="text-sm text-text-secondary leading-relaxed bg-bg-secondary/30 p-3 rounded-xl border border-border/30 mb-4">
-                  {ch.description || "No description provided."}
-                </p>
-
-                <div className="flex justify-end">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleDelete(ch.id); }}
-                    className="text-xs font-semibold text-error bg-error/10 hover:text-white hover:bg-error px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5"
-                  >
-                    <Trash2 size={14} /> O'chirish
-                  </button>
-                </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}

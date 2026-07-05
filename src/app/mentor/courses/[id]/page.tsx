@@ -649,14 +649,16 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                 <p className="text-sm text-text-secondary text-center py-6">No homeworks created yet.</p>
               ) : (
                 <div className="divide-y divide-border">
-                  {homeworks.map(hw => (
+                  {homeworks.map(hw => {
+                    const isExpired = hw.deadline && new Date(hw.deadline) < new Date();
+                    return (
                     <div 
                       key={hw.id} 
-                      className="p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer"
+                      className={`p-4 bg-bg-card active:bg-bg-secondary transition-colors cursor-pointer ${isExpired ? 'opacity-60' : ''}`}
                       onClick={() => router.push(`/mentor/courses/${resolvedParams.id}/homeworks/${hw.id}`)}
                     >
                       <div className="flex justify-between items-start mb-1">
-                        <span className="font-semibold text-text-main">{hw.title}</span>
+                        <span className={`font-semibold text-text-main ${isExpired ? 'line-through text-text-tertiary' : ''}`}>{hw.title}</span>
                         <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">+{hw.xp_reward} XP</span>
                       </div>
                       {hw.description && (
@@ -664,10 +666,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                       )}
                       <div className="flex justify-between items-center text-xs text-text-tertiary">
                         <span>{hw._count?.[0]?.count || 0} Submissions</span>
-                        {hw.deadline && <span>Due: {new Date(hw.deadline).toLocaleDateString()}</span>}
+                        {hw.deadline && <span className={isExpired ? 'text-error' : ''}>Due: {new Date(hw.deadline).toLocaleDateString()}</span>}
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
             </Card>
