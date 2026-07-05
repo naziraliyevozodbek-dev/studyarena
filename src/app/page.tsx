@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, Book } from 'lucide-react';
+import { Target, Loader2, BookOpen, CheckSquare, Flame, AlertTriangle, Bell, X, Book, Star } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
