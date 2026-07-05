@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { DatePicker } from '@/components/ui/DatePicker';
 
 export default function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -622,12 +623,10 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                     />
                   </div>
                   <div className="flex-1">
-                    <Input
-                      label="Deadline (Optional)"
-                      type="date"
-                      className="[color-scheme:light] dark:[color-scheme:dark]"
+                    <DatePicker
+                      label="Deadline (Ixtiyoriy)"
                       value={hwDeadline}
-                      onChange={(e) => setHwDeadline(e.target.value)}
+                      onChange={setHwDeadline}
                     />
                   </div>
                 </div>

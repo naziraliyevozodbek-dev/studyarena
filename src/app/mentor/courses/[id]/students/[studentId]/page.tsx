@@ -3,8 +3,11 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ArrowLeft, Loader2, BookOpen, AlertTriangle, Target, Clock, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, BookOpen, AlertTriangle, Target, Clock, TrendingUp, UserMinus } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { toast } from 'sonner';
 
 export default function StudentAnalytics({ params }: { params: Promise<{ id: string, studentId: string }> }) {
   const resolvedParams = use(params);
@@ -14,6 +17,9 @@ export default function StudentAnalytics({ params }: { params: Promise<{ id: str
   
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  const [isKicking, setIsKicking] = useState(false);
+  const [showKickConfirm, setShowKickConfirm] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== 'mentor') {
@@ -38,6 +44,27 @@ export default function StudentAnalytics({ params }: { params: Promise<{ id: str
 
     fetchAnalytics();
   }, [user, token, resolvedParams.id, resolvedParams.studentId, router]);
+
+  const handleKickStudent = async () => {
+    setIsKicking(true);
+    try {
+      const res = await fetch(`/api/mentor/courses/${resolvedParams.id}/students/${resolvedParams.studentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to remove student');
+      }
+      toast.success("O'quvchi kursdan chetlashtirildi!");
+      router.push(`/mentor/courses/${resolvedParams.id}`);
+    } catch (error: any) {
+      console.error('Kick error:', error);
+      toast.error("Xatolik: " + error.message);
+      setIsKicking(false);
+      setShowKickConfirm(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -161,6 +188,43 @@ export default function StudentAnalytics({ params }: { params: Promise<{ id: str
           </div>
         )}
       </Card>
+
+      {/* Kick Student Action */}
+      <div className="mt-12">
+        <Button 
+          variant="outline" 
+          fullWidth 
+          className="border-error text-error hover:bg-error/10 py-6"
+          onClick={() => setShowKickConfirm(true)}
+        >
+          <UserMinus className="mr-2" size={20} /> O'quvchini kursdan chetlashtirish
+        </Button>
+      </div>
+
+      <Modal isOpen={showKickConfirm} onClose={() => !isKicking && setShowKickConfirm(false)} title="Diqqat!">
+        <div className="flex flex-col gap-4 py-2">
+          <p className="text-text-secondary text-sm">
+            Rostdan ham bu o'quvchini kursdan chetlashtirmoqchimisiz? O'quvchi bu kursga qayta kira olmaydi (agar yana kod bilan qo'shilmasa).
+          </p>
+          <div className="flex gap-3 mt-4">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setShowKickConfirm(false)}
+              disabled={isKicking}
+            >
+              Bekor qilish
+            </Button>
+            <Button 
+              className="flex-1 bg-error hover:bg-error/90 text-white"
+              onClick={handleKickStudent}
+              disabled={isKicking}
+            >
+              {isKicking ? <Loader2 className="animate-spin" size={20} /> : "Chetlashtirish"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
     </div>
   );

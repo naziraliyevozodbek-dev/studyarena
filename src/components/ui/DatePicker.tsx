@@ -1,101 +1,122 @@
-import React, { useState } from 'react';
-import { Modal } from './Modal';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DatePickerProps {
-  value?: string;
-  onChange: (value: string) => void;
+  value: string;
+  onChange: (date: string) => void;
+  placeholder?: string;
+  className?: string;
   label?: string;
-  error?: string;
 }
 
-export function DatePicker({ value, onChange, label, error }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Sanani tanlang", className = "", label }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Parse value or use current date
-  const [currentDate, setCurrentDate] = useState(() => {
-    if (value) {
-      const parts = value.split('-');
-      if (parts.length === 3) {
-        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  const [currentDate, setCurrentDate] = useState(value ? new Date(value) : new Date());
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
     }
-    return new Date();
-  });
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
 
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const blanks = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, (_, i) => i);
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
 
-  const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
-
-  const pad = (n: number) => n.toString().padStart(2, '0');
-
-  const handleSelect = (day: number) => {
-    const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
-    onChange(dateStr);
+  const handleDateClick = (day: number) => {
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const offset = newDate.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(newDate.getTime() - offset)).toISOString().split('T')[0];
+    onChange(localISOTime);
     setIsOpen(false);
   };
 
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const days = [];
+  const paddingDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  for (let i = 0; i < paddingDays; i++) {
+    days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+    const offset = dateObj.getTimezoneOffset() * 60000;
+    const dateStr = (new Date(dateObj.getTime() - offset)).toISOString().split('T')[0];
+    const todayObj = new Date();
+    const todayStr = (new Date(todayObj.getTime() - todayObj.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    
+    const isSelected = value === dateStr;
+    const isToday = todayStr === dateStr;
+    days.push(
+      <button
+        key={i}
+        type="button"
+        onClick={() => handleDateClick(i)}
+        className={`w-8 h-8 flex items-center justify-center rounded-full text-sm transition-colors ${
+          isSelected 
+            ? 'bg-primary text-white font-bold shadow-md' 
+            : isToday 
+              ? 'bg-primary/20 text-primary font-bold' 
+              : 'text-text-main hover:bg-bg-secondary active:bg-bg-tertiary'
+        }`}
+      >
+        {i}
+      </button>
+    );
+  }
 
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
   return (
-    <div className="flex flex-col gap-1.5 w-full relative">
-      {label && <label className="text-sm font-medium text-text-main ml-1">{label}</label>}
+    <div className={`relative w-full flex flex-col ${className}`} ref={containerRef}>
+      {label && <label className="text-sm font-medium text-text-secondary mb-1 block">{label}</label>}
       <div 
-        className={`w-full px-4 py-3.5 bg-bg-secondary border border-border rounded-[var(--radius-input)] text-text-main text-base outline-none flex justify-between items-center cursor-pointer active:scale-[0.98] ${error ? 'border-red-500' : ''}`}
-        onClick={() => setIsOpen(true)}
+        className="flex items-center justify-between w-full bg-bg-secondary text-text-main px-4 py-3 rounded-xl border border-border cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={value ? 'text-text-main font-semibold' : 'text-text-tertiary'}>
-          {value || 'Sanani tanlang...'}
+        <span className={value ? "text-text-main" : "text-text-tertiary"}>
+          {value || placeholder}
         </span>
-        <CalendarIcon size={20} className="text-text-tertiary" />
+        <Calendar size={18} className="text-text-secondary" />
       </div>
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Sana tanlash">
-        <div className="flex justify-between items-center mb-4 px-2">
-          <button type="button" onClick={prevMonth} className="p-2 bg-bg-secondary rounded-full hover:bg-border transition-colors"><ChevronLeft size={20}/></button>
-          <span className="font-bold text-lg">{monthNames[month]} {year}</span>
-          <button type="button" onClick={nextMonth} className="p-2 bg-bg-secondary rounded-full hover:bg-border transition-colors"><ChevronRight size={20}/></button>
-        </div>
-        <div className="grid grid-cols-7 gap-1 text-center mb-2">
-          {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
-            <div key={d} className="text-xs font-bold text-text-tertiary py-2">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {blanks.map(b => <div key={`blank-${b}`} className="p-2"/>)}
-          {days.map(d => {
-            const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
-            const isSelected = value === dateStr;
-            const isToday = todayStr === dateStr;
-            return (
-              <button 
-                type="button"
-                key={d} 
-                onClick={() => handleSelect(d)}
-                className={`
-                  aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-colors
-                  ${isSelected ? 'bg-primary text-white font-bold shadow-md' : 
-                    isToday ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 
-                    'hover:bg-bg-secondary active:bg-border text-text-main'}
-                `}
-              >
+      {isOpen && (
+        <div className="absolute top-[calc(100%+8px)] right-0 sm:left-0 w-[280px] bg-bg-card border border-border rounded-2xl shadow-xl z-50 p-4 animate-fade-in origin-top">
+          <div className="flex items-center justify-between mb-4">
+            <button type="button" onClick={handlePrevMonth} className="p-1.5 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
+              <ChevronLeft size={18} />
+            </button>
+            <div className="font-semibold text-text-main">
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </div>
+            <button type="button" onClick={handleNextMonth} className="p-1.5 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
+              <div key={d} className="w-8 h-8 flex items-center justify-center text-xs font-bold text-text-tertiary uppercase tracking-wider">
                 {d}
-              </button>
-            )
-          })}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1">
+            {days}
+          </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
