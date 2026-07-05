@@ -62,14 +62,7 @@ export default function ProfilePage() {
     setSelectedBadge(null);
   };
 
-  const handleShareTelegram = () => {
-    if (!selectedBadge) return;
-    const text = `🏆 Men StudyArena'da yangi "${selectedBadge.name}" yutug'ini qo'lga kiritdim!\n\nSen ham o'z bilimingni sinab ko'r:`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/SizningBot_Username')}&text=${encodeURIComponent(text)}`;
-    if (typeof window !== 'undefined') {
-      window.open(url, '_blank');
-    }
-  };
+
 
   return (
     <div className="animate-fade-in pb-8">
@@ -268,10 +261,10 @@ export default function ProfilePage() {
               <div className="border-t border-border bg-bg-base/50 p-4 w-full">
                 <Button 
                   fullWidth 
-                  className="bg-[#0088cc] hover:bg-[#0077b5] text-white flex items-center justify-center gap-2"
-                  onClick={handleShareTelegram}
+                  className="bg-bg-secondary hover:bg-bg-secondary/80 text-text-main flex items-center justify-center gap-2"
+                  onClick={closeBadgeModal}
                 >
-                  <Send size={18} /> Telegram'da ulashish
+                  Yopish
                 </Button>
               </div>
             </div>
