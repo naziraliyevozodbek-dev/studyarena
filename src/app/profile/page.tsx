@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { toBlob } from 'html-to-image';
 import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download, Send } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const badgeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -65,13 +67,37 @@ export default function ProfilePage() {
     setGeneratedImage(null);
   };
 
-  const handleShareTelegram = () => {
+  const handleShareTelegram = async () => {
     if (!selectedBadge) return;
-    const text = `🏆 Men StudyArena'da yangi "${selectedBadge.name}" yutug'ini qo'lga kiritdim!\n\nSen ham o'z bilimingni sinab ko'r:`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/SizningBot_Username')}&text=${encodeURIComponent(text)}`;
+    
+    setIsGenerating(true);
+    const text = `🏆 Men StudyArena'da yangi "${selectedBadge.name}" yutug'ini qo'lga kiritdim! 👉 https://t.me/studyarena_bot`;
+    
+    try {
+      if (badgeRef.current) {
+        const blob = await toBlob(badgeRef.current, { cacheBust: true });
+        if (blob) {
+          const file = new File([blob], 'badge.png', { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              text: text,
+              files: [file]
+            });
+            setIsGenerating(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
+    
+    // Fallback to text only
+    const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/studyarena_bot')}&text=${encodeURIComponent(`🏆 Men StudyArena'da yangi "${selectedBadge.name}" yutug'ini qo'lga kiritdim!`)}`;
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
+    setIsGenerating(false);
   };
 
   return (
@@ -241,10 +267,13 @@ export default function ProfilePage() {
               <X size={18} />
             </button>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ 
+              <div ref={badgeRef} style={{ 
                 padding: '48px 24px 40px', 
                 display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                position: 'relative', overflow: 'hidden'
+                position: 'relative', overflow: 'hidden',
+                background: theme === 'dark' 
+                  ? 'linear-gradient(180deg, #1E2028 0%, #15171E 100%)' 
+                  : 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
               }}>
                 <div className="absolute inset-0 bg-primary/5 opacity-50"></div>
                 
@@ -273,8 +302,10 @@ export default function ProfilePage() {
                   fullWidth 
                   className="bg-[#0088cc] hover:bg-[#0077b5] text-white flex items-center justify-center gap-2"
                   onClick={handleShareTelegram}
+                  disabled={isGenerating}
                 >
-                  <Send size={18} /> Telegram'da ulashish
+                  {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} 
+                  {isGenerating ? "Tayyorlanmoqda..." : "Telegram'da ulashish"}
                 </Button>
               </div>
             </div>

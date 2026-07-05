@@ -17,16 +17,16 @@ export default function BottomNav() {
   const navItems = user.role === 'mentor'
     ? [
         { href: '/mentor', label: 'Dashboard', icon: Home },
-        { href: '/mentor/courses', label: 'Courses', icon: BookOpen },
         { href: '/chat', label: 'Chat', icon: MessageCircle },
+        { href: '/mentor/courses', label: 'Courses', icon: BookOpen },
         { href: '/profile', label: 'Profile', icon: User },
       ]
     : [
         { href: '/', label: 'Home', icon: Home },
+        { href: '/chat', label: 'Chat', icon: MessageCircle },
         { href: '/learn', label: 'Learn', icon: BookOpen },
         { href: '/tasks', label: 'Tasks', icon: CheckSquare },
         { href: '/leaderboard', label: 'Ranks', icon: Trophy },
-        { href: '/chat', label: 'Chat', icon: MessageCircle },
         { href: '/profile', label: 'Profile', icon: User },
       ];
 
