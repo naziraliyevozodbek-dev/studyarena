@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     } else {
       // Student sees their enrolled courses
       const { data: enrollments } = await supabaseAdmin
-        .from('course_enrollments')
+        .from('course_members')
         .select('courses(id, name)')
         .eq('student_id', userId);
 

@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
 
     // Check if user is enrolled or mentor
     const { data: course } = await supabaseAdmin.from('courses').select('mentor_id').eq('id', courseId).single();
-    const { data: enrollment } = await supabaseAdmin.from('course_enrollments').select('id').eq('course_id', courseId).eq('student_id', currentUserId).single();
+    const { data: enrollment } = await supabaseAdmin.from('course_members').select('id').eq('course_id', courseId).eq('student_id', currentUserId).single();
 
     if (course?.mentor_id !== currentUserId && !enrollment) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
