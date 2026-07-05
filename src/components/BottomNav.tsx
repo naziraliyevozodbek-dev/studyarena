@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, CheckSquare, Trophy, User } from 'lucide-react';
+import { Home, BookOpen, CheckSquare, Trophy, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -18,6 +18,7 @@ export default function BottomNav() {
     ? [
         { href: '/mentor', label: 'Dashboard', icon: Home },
         { href: '/mentor/courses', label: 'Courses', icon: BookOpen },
+        { href: '/chat', label: 'Chat', icon: MessageCircle },
         { href: '/profile', label: 'Profile', icon: User },
       ]
     : [
@@ -25,6 +26,7 @@ export default function BottomNav() {
         { href: '/learn', label: 'Learn', icon: BookOpen },
         { href: '/tasks', label: 'Tasks', icon: CheckSquare },
         { href: '/leaderboard', label: 'Ranks', icon: Trophy },
+        { href: '/chat', label: 'Chat', icon: MessageCircle },
         { href: '/profile', label: 'Profile', icon: User },
       ];
 

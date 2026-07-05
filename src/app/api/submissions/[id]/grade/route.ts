@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 import { submissionGradeSchema } from '@/lib/validations';
+import { sendTelegramMessage } from '@/lib/telegram';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authHeader = req.headers.get('Authorization');
@@ -52,7 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       
       const { data: student } = await supabaseAdmin
         .from('users')
-        .select('xp')
+        .select('xp, telegram_id')
         .eq('id', submission.student_id)
         .single();
 
@@ -70,6 +71,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           message: `Tabriklaymiz! Mentor vazifangizni qabul qildi va sizga +${awardedScore} XP berildi.`,
           type: "homework"
         });
+
+        // Send Telegram notification
+        if (student.telegram_id) {
+          await sendTelegramMessage(
+            student.telegram_id,
+            `✅ <b>Vazifa qabul qilindi!</b>\n\nTabriklaymiz! Mentor vazifangizni qabul qildi va sizga <b>+${awardedScore} XP</b> berildi.`
+          );
+        }
 
         // Check for badges
         const badgesToAward = [];
@@ -108,6 +117,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 message: `Tabriklaymiz! Siz "${bName}" nishonini qo'lga kiritdingiz!`,
                 type: "challenge" // Using 'challenge' as a general 'achievement' category to go to profile
               });
+
+              if (student.telegram_id) {
+                await sendTelegramMessage(
+                  student.telegram_id,
+                  `🏆 <b>Yangi Badge!</b>\n\nTabriklaymiz! Siz <b>"${bName}"</b> nishonini qo'lga kiritdingiz!`
+                );
+              }
             }
           }
         }
@@ -119,6 +135,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         message: `Mentor vazifangizni qabul qilmadi. ${feedback ? `Izoh: "${feedback}"` : "Iltimos qaytadan urinib ko'ring."}`,
         type: "homework"
       });
+
+      // Get student's telegram_id
+      const { data: student } = await supabaseAdmin.from('users').select('telegram_id').eq('id', submission.student_id).single();
+      if (student?.telegram_id) {
+        await sendTelegramMessage(
+          student.telegram_id,
+          `❌ <b>Vazifa qaytarildi!</b>\n\nMentor vazifangizni qabul qilmadi.\n${feedback ? `Izoh: <i>"${feedback}"</i>` : "Iltimos qaytadan urinib ko'ring."}`
+        );
+      }
     }
 
     return NextResponse.json({ success: true });

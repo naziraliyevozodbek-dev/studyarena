@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
-import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download } from 'lucide-react';
+import { Settings, LogOut, Moon, Sun, User, Loader2, Award, Zap, Flame, Star, X, Download, Send } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import useSWR from 'swr';
@@ -63,6 +63,15 @@ export default function ProfilePage() {
   const closeBadgeModal = () => {
     setSelectedBadge(null);
     setGeneratedImage(null);
+  };
+
+  const handleShareTelegram = () => {
+    if (!selectedBadge) return;
+    const text = `🏆 Men StudyArena'da yangi "${selectedBadge.name}" yutug'ini qo'lga kiritdim!\n\nSen ham o'z bilimingni sinab ko'r:`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/SizningBot_Username')}&text=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -258,6 +267,15 @@ export default function ProfilePage() {
                 }}>
                   STUDYARENA
                 </div>
+              </div>
+              <div className="border-t border-border bg-bg-base/50 p-4 w-full">
+                <Button 
+                  fullWidth 
+                  className="bg-[#0088cc] hover:bg-[#0077b5] text-white flex items-center justify-center gap-2"
+                  onClick={handleShareTelegram}
+                >
+                  <Send size={18} /> Telegram'da ulashish
+                </Button>
               </div>
             </div>
           </div>
