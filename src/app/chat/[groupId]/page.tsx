@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Send, Trash2, MoreVertical, Users } from 'lucide-react';
-import { useChatStore } from '@/store/chatStore';
+import { Loader2, ArrowLeft, Send, X } from 'lucide-react';
+import { useChatStore, Message } from '@/store/chatStore';
 import { useChatRealtime } from '@/hooks/useChatRealtime';
+import MessageItem from '@/components/chat/MessageItem';
 
 export default function ChatRoom({ params }: { params: Promise<{ groupId: string }> }) {
   const resolvedParams = use(params);
@@ -29,6 +30,8 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   const [groupName, setGroupName] = useState('Guruh Chati');
   const [memberCount, setMemberCount] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editingMsg, setEditingMsg] = useState<Message | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -81,23 +84,30 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
       room_id: activeRoomId || '',
       content: currentInput,
       created_at: new Date().toISOString(),
-      reply_to_message_id: null,
+      reply_to_message_id: replyTo?.id || null,
+      reply_to_message: replyTo || undefined,
       is_edited: false,
       deleted_for_users: [],
       users: { full_name: user?.full_name, avatar_url: user?.avatar_url, role: user?.role }
-    };
+    } as Message;
     
     addMessage(optimisticMsg);
+    setReplyTo(null);
+    setEditingMsg(null);
     setTimeout(scrollToBottom, 100);
 
     try {
       const res = await fetch(`/api/chat/${resolvedParams.groupId}`, {
-        method: 'POST',
+        method: editingMsg ? 'PUT' : 'POST',
         headers: { 
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ content: currentInput })
+        body: JSON.stringify({ 
+          content: currentInput, 
+          reply_to_message_id: replyTo?.id,
+          messageId: editingMsg?.id 
+        })
       });
       
       if (!res.ok) throw new Error('Failed to send');
@@ -174,72 +184,43 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
             Hali xabarlar yo'q. Birinchi bo'lib yozing!
           </div>
         ) : (
-          messages.map(msg => {
-            const isMine = msg.sender_id === user?.id;
-            const isMentor = msg.users?.role === 'mentor';
-            const isSelected = selectedMessage === msg.id;
-            
-            return (
-              <div 
-                key={msg.id} 
-                className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'}`}
-              >
-                {!isMine && (
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-bg-secondary mr-2 shrink-0 flex items-center justify-center self-end mb-1">
-                    {msg.users?.avatar_url ? (
-                      <img src={msg.users.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-bold text-text-secondary">
-                        {msg.users?.full_name?.charAt(0) || '?'}
-                      </span>
-                    )}
-                  </div>
-                )}
-                
-                <div className={`relative max-w-[75%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                  {!isMine && (
-                    <span className="text-[11px] text-text-tertiary ml-1 mb-1 font-medium flex items-center gap-1">
-                      {msg.users?.full_name || 'Foydalanuvchi'}
-                      {isMentor && <span className="bg-primary/10 text-primary px-1 rounded text-[9px] uppercase">Mentor</span>}
-                    </span>
-                  )}
-                  
-                  <div 
-                    onClick={(e) => { e.stopPropagation(); isMine && setSelectedMessage(isSelected ? null : msg.id); }}
-                    className={`relative rounded-2xl px-4 py-2 cursor-pointer transition-colors ${
-                      isMine 
-                        ? 'bg-primary text-white rounded-br-sm hover:bg-primary/90' 
-                        : 'bg-bg-card border border-border text-text-main rounded-bl-sm'
-                    } ${isSelected ? 'ring-2 ring-error/50' : ''}`}
-                  >
-                    <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                    <div className={`text-[10px] mt-1 flex items-center ${isMine ? 'justify-end text-white/70' : 'justify-end text-text-tertiary'}`}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  
-                  {/* Delete Option Popover */}
-                  {isSelected && isMine && (
-                    <div className="absolute top-full right-0 mt-1 z-20">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id); }}
-                        className="flex items-center gap-2 bg-bg-card border border-border shadow-lg rounded-xl px-3 py-2 text-error text-sm font-medium hover:bg-error/10 transition-colors"
-                      >
-                        <Trash2 size={16} /> O'chirish
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          messages.map(msg => (
+            <MessageItem 
+              key={msg.id} 
+              msg={msg} 
+              isSelected={selectedMessage === msg.id}
+              onSelect={() => setSelectedMessage(selectedMessage === msg.id ? null : msg.id)}
+              onReply={(m) => { setReplyTo(m); setSelectedMessage(null); setEditingMsg(null); }}
+              onEdit={(m) => { setEditingMsg(m); setInputValue(m.content); setReplyTo(null); setSelectedMessage(null); }}
+            />
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-bg-card border-t border-border shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
-        <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
+      <div className="bg-bg-card border-t border-border shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
+        {(replyTo || editingMsg) && (
+          <div className="px-4 py-2 border-b border-border bg-bg-base/50 flex items-center justify-between">
+            <div className="text-sm">
+              <div className="text-primary font-medium flex items-center gap-2">
+                {editingMsg ? <Edit2 size={14}/> : <Reply size={14}/>}
+                {editingMsg ? 'Xabarni tahrirlash' : `Javob: ${replyTo?.users?.full_name || 'Xabar'}`}
+              </div>
+              <div className="text-text-tertiary truncate max-w-[250px] text-xs">
+                {editingMsg ? editingMsg.content : replyTo?.content}
+              </div>
+            </div>
+            <button 
+              onClick={() => { setReplyTo(null); setEditingMsg(null); setInputValue(''); }}
+              className="p-1 rounded-full hover:bg-bg-secondary text-text-secondary"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        <div className="p-3">
+          <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
           <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors shadow-sm">
             <textarea 
               value={inputValue}

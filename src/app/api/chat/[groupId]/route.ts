@@ -141,3 +141,39 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ group
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
   }
 }
+
+// PUT to edit a message
+export async function PUT(req: Request, { params }: { params: Promise<{ groupId: string }> }) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    const currentUserId = decoded.sub;
+    
+    const { messageId, content } = await req.json();
+
+    if (!messageId || !content || typeof content !== 'string') {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
+    const { data: msg } = await supabaseAdmin.from('messages').select('sender_id').eq('id', messageId).single();
+    if (!msg || msg.sender_id !== currentUserId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('messages')
+      .update({ content: content.trim(), is_edited: true })
+      .eq('id', messageId)
+      .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role), message_reactions(*), message_reads(*), message_files(*)')
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ message: data });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: 'Failed to edit message' }, { status: 500 });
+  }
+}
