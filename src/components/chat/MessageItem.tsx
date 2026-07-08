@@ -1,6 +1,6 @@
 import { Message, useChatStore } from '@/store/chatStore';
 import { useAuth } from '@/context/AuthContext';
-import { Check, CheckCheck, Edit2, Trash2, Reply, SmilePlus, Pin } from 'lucide-react';
+import { Check, CheckCheck, Edit2, Trash2, Reply, SmilePlus, Pin, FileText, Download } from 'lucide-react';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -106,7 +106,44 @@ export default function MessageItem({ msg, isSelected, onSelect, onReply, onEdit
           {msg.reply_to_message_id && msg.reply_to_message && (
             <div className={`mb-1 px-2 py-1 border-l-2 rounded text-sm ${isMine ? 'border-white/50 bg-black/10' : 'border-primary/50 bg-primary/5'}`}>
               <div className="font-semibold text-xs opacity-80">{msg.reply_to_message.users?.full_name || 'Xabar'}</div>
-              <div className="truncate opacity-90">{msg.reply_to_message.content}</div>
+              <div className="truncate opacity-90">{msg.reply_to_message.content || 'Fayl'}</div>
+            </div>
+          )}
+
+          {/* Media & Files Render */}
+          {msg.message_files && msg.message_files.length > 0 && (
+            <div className="flex flex-col gap-2 mb-1">
+              {msg.message_files.map(file => {
+                const isImage = file.file_type.startsWith('image/');
+                const isAudio = file.file_type.startsWith('audio/');
+                
+                if (isImage) {
+                  return <img key={file.id} src={file.file_url} alt="" className="rounded-lg max-w-full max-h-[300px] object-cover cursor-pointer hover:opacity-90" onClick={() => window.open(file.file_url, '_blank')} />;
+                }
+                
+                if (isAudio) {
+                  return (
+                    <div key={file.id} className="min-w-[200px]">
+                      <audio controls src={file.file_url} className="w-full h-8" />
+                    </div>
+                  );
+                }
+
+                return (
+                  <a key={file.id} href={file.file_url} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-lg ${isMine ? 'bg-black/10' : 'bg-bg-secondary'} hover:opacity-80 transition-opacity`}>
+                    <div className={`p-2 rounded-full ${isMine ? 'bg-white/20' : 'bg-primary/10 text-primary'}`}>
+                      <FileText size={20} />
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="text-sm font-medium truncate">{file.file_name}</span>
+                      <span className="text-[10px] opacity-70">
+                        {(file.file_size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                    </div>
+                    <Download size={16} className="ml-auto opacity-70" />
+                  </a>
+                );
+              })}
             </div>
           )}
 

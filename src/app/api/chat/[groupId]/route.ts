@@ -81,8 +81,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ groupId
     const currentUserId = decoded.sub;
     const courseId = (await params).groupId;
 
-    const { content } = await req.json();
-    if (!content || typeof content !== 'string') {
+    const { content, reply_to_message_id, file } = await req.json();
+
+    if ((!content || typeof content !== 'string') && !file) {
       return NextResponse.json({ error: 'Invalid content' }, { status: 400 });
     }
 
@@ -104,14 +105,32 @@ export async function POST(req: Request, { params }: { params: Promise<{ groupId
         sender_id: currentUserId,
         course_id: actualCourseId, // keep for backward compatibility
         room_id: roomId,
-        content: content.trim()
+        reply_to_message_id,
+        content: content ? content.trim() : ''
       })
-      .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role), message_reactions(*), message_reads(*), message_files(*)')
+      .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role)')
       .single();
 
     if (error) throw error;
+    
+    if (file && data) {
+      await supabaseAdmin.from('message_files').insert({
+        message_id: data.id,
+        file_url: file.file_url,
+        file_type: file.file_type,
+        file_size: file.file_size,
+        file_name: file.file_name
+      });
+    }
+    
+    // Re-fetch message with all relations
+    const { data: finalMsg } = await supabaseAdmin
+      .from('messages')
+      .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role), message_reactions(*), message_reads(*), message_files(*)')
+      .eq('id', data.id)
+      .single();
 
-    return NextResponse.json({ message: data });
+    return NextResponse.json({ message: finalMsg });
   } catch (err: unknown) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
   }

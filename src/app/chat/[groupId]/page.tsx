@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Send, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Send, X, Paperclip, Mic } from 'lucide-react';
 import { useChatStore, Message } from '@/store/chatStore';
 import { useChatRealtime } from '@/hooks/useChatRealtime';
 import MessageItem from '@/components/chat/MessageItem';
 import PinnedBanner from '@/components/chat/PinnedBanner';
+import VoiceRecorder from '@/components/chat/VoiceRecorder';
+import { supabase } from '@/lib/supabase';
 
 export default function ChatRoom({ params }: { params: Promise<{ groupId: string }> }) {
   const resolvedParams = use(params);
@@ -35,6 +36,11 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMsg, setEditingMsg] = useState<Message | null>(null);
   
+  const [isRecording, setIsRecording] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -73,33 +79,68 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     fetchMessages();
   }, [user, token, resolvedParams.groupId, router, loading, setActiveRoom, setMessages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || sending) return;
+  const handleSendMessage = async (e?: React.FormEvent, audioFile?: File) => {
+    if (e) e.preventDefault();
+    if ((!inputValue.trim() && !selectedFile && !audioFile) || sending) return;
 
     const currentInput = inputValue.trim();
     setInputValue('');
     setSending(true);
 
-    const optimisticMsg = {
-      id: 'temp-' + Date.now(),
-      sender_id: user?.id || '',
-      room_id: activeRoomId || '',
-      content: currentInput,
-      created_at: new Date().toISOString(),
-      reply_to_message_id: replyTo?.id || null,
-      reply_to_message: replyTo || undefined,
-      is_edited: false,
-      deleted_for_users: [],
-      users: { full_name: user?.full_name, avatar_url: user?.avatar_url, role: user?.role }
-    } as Message;
-    
-    addMessage(optimisticMsg);
-    setReplyTo(null);
-    setEditingMsg(null);
-    setTimeout(scrollToBottom, 100);
-
     try {
+      let fileData = null;
+      const fileToSend = audioFile || selectedFile;
+      
+      if (fileToSend) {
+        setUploadingFile(true);
+        const fileExt = fileToSend.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        const filePath = `${activeRoomId}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('chat-files')
+          .upload(filePath, fileToSend, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: publicUrlData } = supabase.storage.from('chat-files').getPublicUrl(filePath);
+        
+        fileData = {
+          file_name: fileToSend.name,
+          file_url: publicUrlData.publicUrl,
+          file_type: fileToSend.type,
+          file_size: fileToSend.size
+        };
+        
+        setSelectedFile(null);
+        setIsRecording(false);
+        setUploadingFile(false);
+      }
+
+      // Optimistic only for text without files (for simplicity)
+      if (!fileData) {
+        const optimisticMsg = {
+          id: 'temp-' + Date.now(),
+          sender_id: user?.id || '',
+          room_id: activeRoomId || '',
+          content: currentInput,
+          created_at: new Date().toISOString(),
+          reply_to_message_id: replyTo?.id || null,
+          reply_to_message: replyTo || undefined,
+          is_edited: false,
+          deleted_for_users: [],
+          users: { full_name: user?.full_name, avatar_url: user?.avatar_url, role: user?.role }
+        } as Message;
+        addMessage(optimisticMsg);
+      }
+
+      setReplyTo(null);
+      setEditingMsg(null);
+      setTimeout(scrollToBottom, 100);
+
       const res = await fetch(`/api/chat/${resolvedParams.groupId}`, {
         method: editingMsg ? 'PUT' : 'POST',
         headers: { 
@@ -109,23 +150,23 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         body: JSON.stringify({ 
           content: currentInput, 
           reply_to_message_id: replyTo?.id,
-          messageId: editingMsg?.id 
+          messageId: editingMsg?.id,
+          file: fileData
         })
       });
       
       if (!res.ok) throw new Error('Failed to send');
-      const data = await res.json();
       
-      // We don't necessarily need to replace it manually since Realtime will push the INSERT event.
-      // But we should remove the temp message and let realtime handle the real one, 
-      // or we just replace the temp one to avoid flicker.
-      deleteMessage(optimisticMsg.id);
-      addMessage(data.message);
+      // Realtime will catch the insert, we don't strictly need to do anything for files 
+      // but if we used optimistic text, we might want to clean it up (handled in Realtime or here)
+      // Actually, for simplicity we just let realtime do its job.
+      
     } catch (error) {
       console.error(error);
-      deleteMessage(optimisticMsg.id);
+      alert("Xabar jo'natishda xatolik yuz berdi");
     } finally {
       setSending(false);
+      setUploadingFile(false);
     }
   };
 
@@ -202,56 +243,106 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
           ))
         )}
         <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
+      </div>      {/* Input Area */}
       <div className="bg-bg-card border-t border-border shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
-        {(replyTo || editingMsg) && (
-          <div className="px-4 py-2 border-b border-border bg-bg-base/50 flex items-center justify-between">
-            <div className="text-sm">
-              <div className="text-primary font-medium flex items-center gap-2">
-                {editingMsg ? <Edit2 size={14}/> : <Reply size={14}/>}
-                {editingMsg ? 'Xabarni tahrirlash' : `Javob: ${replyTo?.users?.full_name || 'Xabar'}`}
+        {(replyTo || editingMsg || selectedFile) && (
+          <div className="px-4 py-2 border-b border-border bg-bg-base/50 flex flex-col gap-1">
+            {selectedFile && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-primary flex items-center gap-2">
+                  <Paperclip size={14} /> Biriktirilgan fayl: <span className="font-medium truncate max-w-[200px]">{selectedFile.name}</span>
+                </div>
+                <button onClick={() => setSelectedFile(null)} className="p-1 rounded-full hover:bg-bg-secondary text-text-secondary"><X size={16} /></button>
               </div>
-              <div className="text-text-tertiary truncate max-w-[250px] text-xs">
-                {editingMsg ? editingMsg.content : replyTo?.content}
+            )}
+            {(replyTo || editingMsg) && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  <div className="text-primary font-medium flex items-center gap-2">
+                    {editingMsg ? <Edit2 size={14}/> : <Reply size={14}/>}
+                    {editingMsg ? 'Xabarni tahrirlash' : `Javob: ${replyTo?.users?.full_name || 'Xabar'}`}
+                  </div>
+                  <div className="text-text-tertiary truncate max-w-[250px] text-xs">
+                    {editingMsg ? editingMsg.content : replyTo?.content || 'Fayl'}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { setReplyTo(null); setEditingMsg(null); setInputValue(''); }}
+                  className="p-1 rounded-full hover:bg-bg-secondary text-text-secondary"
+                >
+                  <X size={18} />
+                </button>
               </div>
-            </div>
-            <button 
-              onClick={() => { setReplyTo(null); setEditingMsg(null); setInputValue(''); }}
-              className="p-1 rounded-full hover:bg-bg-secondary text-text-secondary"
-            >
-              <X size={18} />
-            </button>
+            )}
           </div>
         )}
-        <div className="p-3">
-          <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
-          <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors shadow-sm">
-            <textarea 
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Xabar yozish..."
-              className="w-full bg-transparent border-none text-text-main p-3 max-h-32 min-h-[44px] resize-none focus:outline-none focus:ring-0 text-[15px]"
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
+        <div className="p-2">
+          {isRecording ? (
+            <VoiceRecorder 
+              onSend={(file) => handleSendMessage(undefined, file)} 
+              onCancel={() => setIsRecording(false)} 
             />
-          </div>
-          <button 
-            type="submit" 
-            disabled={!inputValue.trim() || sending}
-            className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-              inputValue.trim() && !sending ? 'bg-primary text-white' : 'bg-bg-secondary text-text-tertiary cursor-not-allowed'
-            }`}
-          >
-            <Send size={20} className={inputValue.trim() && !sending ? 'ml-1' : ''} />
-          </button>
-        </form>
+          ) : (
+            <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-10 h-10 flex items-center justify-center shrink-0 rounded-full hover:bg-bg-secondary text-text-secondary transition-colors"
+              >
+                <Paperclip size={22} />
+              </button>
+              <input 
+                type="file" 
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const f = e.target.files[0];
+                    if (f.size > 20 * 1024 * 1024) {
+                      alert("Fayl hajmi 20MB dan oshmasligi kerak!");
+                      return;
+                    }
+                    setSelectedFile(f);
+                  }
+                }}
+              />
+              
+              <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors shadow-sm">
+                <textarea 
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e as any);
+                    }
+                  }}
+                  placeholder="Xabar yozing..."
+                  className="w-full bg-transparent p-3 max-h-32 min-h-[44px] focus:outline-none resize-none text-text-main placeholder:text-text-tertiary text-[15px]"
+                  rows={1}
+                />
+              </div>
+
+              {(inputValue.trim() || selectedFile) ? (
+                <button 
+                  type="submit" 
+                  disabled={sending || uploadingFile}
+                  className="w-10 h-10 flex items-center justify-center shrink-0 bg-primary text-white rounded-full hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-sm"
+                >
+                  {(sending || uploadingFile) ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="ml-1" />}
+                </button>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={() => setIsRecording(true)}
+                  className="w-10 h-10 flex items-center justify-center shrink-0 hover:bg-bg-secondary text-text-secondary rounded-full transition-colors"
+                >
+                  <Mic size={22} />
+                </button>
+              )}
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
