@@ -21,7 +21,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     deleteMessage 
   } = useChatStore();
 
-  useChatRealtime(activeRoomId);
+  useChatRealtime(activeRoomId, token);
 
   const [loading, setLoading] = useState(true);
   const [inputValue, setInputValue] = useState('');

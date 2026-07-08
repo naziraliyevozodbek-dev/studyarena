@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useChatStore, Message, MessageReaction, MessageRead } from '@/store/chatStore';
 
-export function useChatRealtime(roomId: string | null) {
+export function useChatRealtime(roomId: string | null, token: string | null) {
   const { 
     addMessage, 
     updateMessage, 
@@ -13,7 +13,10 @@ export function useChatRealtime(roomId: string | null) {
   } = useChatStore();
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !token) return;
+
+    // Set the JWT token for Realtime so RLS policies pass
+    supabase.realtime.setAuth(token);
 
     // We create a channel specifically for this room
     const channel = supabase.channel(`room:${roomId}`);
