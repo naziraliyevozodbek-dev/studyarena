@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useChatStore, Message, MessageReaction, MessageRead } from '@/store/chatStore';
+import { useChatStore, Message, MessageReaction, MessageRead, PinnedMessage } from '@/store/chatStore';
 
 export function useChatRealtime(roomId: string | null, token: string | null) {
   const { 
@@ -9,7 +9,9 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
     deleteMessage, 
     addReaction, 
     removeReaction,
-    addReadReceipt 
+    addReadReceipt,
+    addPinnedMessage,
+    removePinnedMessage
   } = useChatStore();
 
   useEffect(() => {
@@ -91,6 +93,30 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
       }
     );
 
+    // Subscribe to pinned messages
+    channel.on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'pinned_messages', filter: `room_id=eq.${roomId}` },
+      async (payload) => {
+        const newPinned = payload.new as PinnedMessage;
+        // Fetch the message content
+        const { data: msgData } = await supabase
+          .from('messages')
+          .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role)')
+          .eq('id', newPinned.message_id)
+          .single();
+        if (msgData) newPinned.messages = msgData;
+        addPinnedMessage(newPinned);
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'pinned_messages', filter: `room_id=eq.${roomId}` },
+      (payload) => {
+        removePinnedMessage(payload.old.id);
+      }
+    );
+
     channel.subscribe((status) => {
       console.log(`Realtime subscription status for room ${roomId}:`, status);
     });
@@ -98,5 +124,5 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, addMessage, updateMessage, deleteMessage, addReaction, removeReaction, addReadReceipt]);
+  }, [roomId, token, addMessage, updateMessage, deleteMessage, addReaction, removeReaction, addReadReceipt, addPinnedMessage, removePinnedMessage]);
 }

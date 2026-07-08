@@ -52,6 +52,19 @@ export default function MessageItem({ msg, isSelected, onSelect, onReply, onEdit
     }
   };
 
+  const handlePin = async () => {
+    if (!user) return;
+    try {
+      await supabase.from('pinned_messages').insert({
+        room_id: msg.room_id,
+        message_id: msg.id,
+        pinned_by: user.id
+      });
+    } catch (e) {
+      console.error('Failed to pin:', e);
+    }
+  };
+
   // Group reactions
   const reactionCounts: Record<string, { count: number, me: boolean }> = {};
   msg.message_reactions?.forEach(r => {
@@ -138,7 +151,7 @@ export default function MessageItem({ msg, isSelected, onSelect, onReply, onEdit
               <Reply size={18} />
             </button>
             {isMeMentor && (
-              <button onClick={(e) => { e.stopPropagation(); /* implement pin API later */ }} className="p-2 hover:bg-bg-secondary rounded-lg text-text-secondary transition-colors" title="Qadab qo'yish">
+              <button onClick={(e) => { e.stopPropagation(); handlePin(); }} className="p-2 hover:bg-bg-secondary rounded-lg text-text-secondary transition-colors" title="Qadab qo'yish">
                 <Pin size={18} />
               </button>
             )}

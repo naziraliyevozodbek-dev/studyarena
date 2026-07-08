@@ -51,9 +51,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
     // Filter out messages deleted for this user
     const visibleMessages = data.filter(m => !m.deleted_for_users?.includes(currentUserId));
 
+    const { data: pinnedData } = await supabaseAdmin
+      .from('pinned_messages')
+      .select('*, messages(*, users!messages_sender_id_fkey(full_name, avatar_url, role))')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: false });
+
     return NextResponse.json({ 
       roomId,
       messages: visibleMessages, 
+      pinnedMessages: pinnedData || [],
       courseName: courseInfo?.title || 'Guruh Chati', 
       memberCount: (studentCount || 0) + 1 
     });

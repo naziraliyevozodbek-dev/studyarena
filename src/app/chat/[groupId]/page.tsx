@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, Send, X } from 'lucide-react';
 import { useChatStore, Message } from '@/store/chatStore';
 import { useChatRealtime } from '@/hooks/useChatRealtime';
 import MessageItem from '@/components/chat/MessageItem';
+import PinnedBanner from '@/components/chat/PinnedBanner';
 
 export default function ChatRoom({ params }: { params: Promise<{ groupId: string }> }) {
   const resolvedParams = use(params);
@@ -19,7 +20,8 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     addMessage, 
     activeRoomId, 
     setActiveRoom, 
-    deleteMessage 
+    deleteMessage,
+    setPinnedMessages
   } = useChatStore();
 
   useChatRealtime(activeRoomId, token);
@@ -55,6 +57,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         
         if (data.roomId) setActiveRoom(data.roomId);
         setMessages(data.messages || []);
+        if (data.pinnedMessages) setPinnedMessages(data.pinnedMessages);
         if (data.courseName) setGroupName(data.courseName);
         if (data.memberCount) setMemberCount(data.memberCount);
         
@@ -173,6 +176,9 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
           </div>
         </div>
       </div>
+
+      {/* Pinned Messages Banner */}
+      <PinnedBanner />
 
       {/* Messages Area */}
       <div 

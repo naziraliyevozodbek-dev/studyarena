@@ -46,8 +46,18 @@ export interface Message {
   reply_to_message?: Partial<Message>; // For UI preview
 }
 
+export interface PinnedMessage {
+  id: string;
+  room_id: string;
+  message_id: string;
+  pinned_by: string;
+  created_at: string;
+  messages?: Message; // The actual message joined
+}
+
 interface ChatState {
   messages: Message[];
+  pinnedMessages: PinnedMessage[];
   activeRoomId: string | null;
   isLoading: boolean;
   
@@ -55,6 +65,7 @@ interface ChatState {
   setActiveRoom: (roomId: string | null) => void;
   setLoading: (loading: boolean) => void;
   setMessages: (messages: Message[]) => void;
+  setPinnedMessages: (pinned: PinnedMessage[]) => void;
   
   // Optimistic/Realtime Updates
   addMessage: (message: Message) => void;
@@ -65,10 +76,13 @@ interface ChatState {
   removeReaction: (reactionId: string, messageId: string) => void;
   
   addReadReceipt: (read: MessageRead) => void;
+  addPinnedMessage: (pinned: PinnedMessage) => void;
+  removePinnedMessage: (pinnedId: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   messages: [],
+  pinnedMessages: [],
   activeRoomId: null,
   isLoading: true,
 
@@ -76,6 +90,7 @@ export const useChatStore = create<ChatState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   
   setMessages: (messages) => set({ messages }),
+  setPinnedMessages: (pinnedMessages) => set({ pinnedMessages }),
   
   addMessage: (message) => set((state) => {
     // Prevent duplicates
@@ -124,5 +139,11 @@ export const useChatStore = create<ChatState>((set) => ({
       }
       return m;
     })
-  }))
+  })),
+
+  addPinnedMessage: (pinned) => 
+    set((state) => ({ pinnedMessages: [...state.pinnedMessages, pinned] })),
+  
+  removePinnedMessage: (pinnedId) =>
+    set((state) => ({ pinnedMessages: state.pinnedMessages.filter(p => p.id !== pinnedId) }))
 }));
