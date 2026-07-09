@@ -264,6 +264,37 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     }
   };
 
+  const handleDeleteCategory = async (category: string) => {
+    const twa = (window as any).Telegram?.WebApp;
+    if (twa?.showConfirm) {
+      twa.showConfirm(`Barcha "${category}" so'zlarini o'chirmoqchimisiz?`, async (confirmed: boolean) => {
+        if (confirmed) {
+          await executeDeleteCategory(category);
+        }
+      });
+    } else {
+      if (window.confirm(`Barcha "${category}" so'zlarini o'chirmoqchimisiz?`)) {
+        await executeDeleteCategory(category);
+      }
+    }
+  };
+
+  const executeDeleteCategory = async (category: string) => {
+    try {
+      const res = await fetch(`/api/vocabularies?courseId=${resolvedParams.id}&category=${encodeURIComponent(category)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Kategoriyani o'chirib bo'lmadi");
+      
+      setVocabularies(prev => prev.filter(v => v.category !== category));
+      if (openCategory === category) setOpenCategory(null);
+      toast.success("Kategoriya o'chirildi!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const handleAddHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hwTitle.trim() || !hwXp) return;
@@ -530,6 +561,13 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                               title="Nomini o'zgartirish"
                             >
                               <Pencil size={14} />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat); }}
+                              className="p-1.5 text-text-tertiary hover:text-red-500 transition-colors"
+                              title="Kategoriyani o'chirish"
+                            >
+                              <Trash2 size={14} />
                             </button>
                             {openCategory === cat ? <ChevronUp size={16} className="text-text-secondary"/> : <ChevronDown size={16} className="text-text-secondary"/>}
                         </div>

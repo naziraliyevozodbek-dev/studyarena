@@ -97,7 +97,6 @@ export async function PUT(req: Request) {
     const body = await req.json();  
     const { german_word, translation, example_german, example_uzbek } = body;  
     const { error } = await supabaseAdmin.from('vocabularies').update({ german_word, translation, example_german, example_uzbek }).eq('id', id);  
-    if (error) throw error;  
     return NextResponse.json({ success: true });  
   } catch (err: any) {  
     return NextResponse.json({ error: err.message }, { status: 500 });  
@@ -112,12 +111,37 @@ export async function DELETE(req: Request) {
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;  
     const mentorId = decoded.sub;  
     const { searchParams } = new URL(req.url);  
-    const id = searchParams.get('id');  
-    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });  
+    const id = searchParams.get('id');
+    const category = searchParams.get('category');
+    const courseId = searchParams.get('courseId');
+
+    if (category && courseId) {
+      // Delete all words in a category for a specific course
+      // First verify course ownership
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('id')
+        .eq('id', courseId)
+        .eq('mentor_id', mentorId)
+        .single();
+      
+      if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+
+      const { error } = await supabaseAdmin
+        .from('vocabularies')
+        .delete()
+        .eq('course_id', courseId)
+        .eq('category', category);
+      
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    if (!id) return NextResponse.json({ error: 'Missing id or category' }, { status: 400 });  
     const { error } = await supabaseAdmin.from('vocabularies').delete().eq('id', id);  
     if (error) throw error;  
     return NextResponse.json({ success: true });  
   } catch (err: any) {  
     return NextResponse.json({ error: err.message }, { status: 500 });  
   }  
-} 
+}
