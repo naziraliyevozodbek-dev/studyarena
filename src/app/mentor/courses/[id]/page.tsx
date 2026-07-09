@@ -234,6 +234,36 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
     }
   };
 
+  const handleDeleteVocab = async (id: string) => {
+    const twa = (window as any).Telegram?.WebApp;
+    if (twa?.showConfirm) {
+      twa.showConfirm("So'zni o'chirmoqchimisiz?", async (confirmed: boolean) => {
+        if (confirmed) {
+          await executeDeleteVocab(id);
+        }
+      });
+    } else {
+      if (window.confirm("So'zni o'chirmoqchimisiz?")) {
+        await executeDeleteVocab(id);
+      }
+    }
+  };
+
+  const executeDeleteVocab = async (id: string) => {
+    try {
+      const res = await fetch(`/api/vocabularies?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("So'zni o'chirib bo'lmadi");
+      
+      setVocabularies(prev => prev.filter(v => v.id !== id));
+      toast.success("So'z o'chirildi!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const handleAddHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hwTitle.trim() || !hwXp) return;
@@ -565,18 +595,27 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                                       <span className="text-xs text-text-tertiary block">📝 {v.example_german}</span>
                                     )}
                                   </div>
-                                  <button 
-                                    onClick={() => {
-                                      setEditWordId(v.id);
-                                      setEditGerman(v.german_word);
-                                      setEditTranslation(v.translation);
-                                      setEditExampleG(v.example_german || '');
-                                      setEditExampleU(v.example_uzbek || '');
-                                    }}
-                                    className="p-1.5 text-text-tertiary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <Pencil size={14} />
-                                  </button>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                      onClick={() => {
+                                        setEditWordId(v.id);
+                                        setEditGerman(v.german_word);
+                                        setEditTranslation(v.translation);
+                                        setEditExampleG(v.example_german || '');
+                                        setEditExampleU(v.example_uzbek || '');
+                                      }}
+                                      className="p-1.5 text-text-tertiary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                    >
+                                      <Pencil size={14} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDeleteVocab(v.id)}
+                                      className="p-1.5 text-text-tertiary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                      title="O'chirish"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>

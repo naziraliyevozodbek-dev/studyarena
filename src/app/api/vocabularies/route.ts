@@ -83,3 +83,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }
+  
+export async function PUT(req: Request) {  
+  const authHeader = req.headers.get('Authorization');  
+  if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });  
+  try {  
+    const token = authHeader.replace('Bearer ', '');  
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;  
+    const mentorId = decoded.sub;  
+    const { searchParams } = new URL(req.url);  
+    const id = searchParams.get('id');  
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });  
+    const body = await req.json();  
+    const { german_word, translation, example_german, example_uzbek } = body;  
+    const { error } = await supabaseAdmin.from('vocabularies').update({ german_word, translation, example_german, example_uzbek }).eq('id', id);  
+    if (error) throw error;  
+    return NextResponse.json({ success: true });  
+  } catch (err: any) {  
+    return NextResponse.json({ error: err.message }, { status: 500 });  
+  }  
+}  
+  
+export async function DELETE(req: Request) {  
+  const authHeader = req.headers.get('Authorization');  
+  if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });  
+  try {  
+    const token = authHeader.replace('Bearer ', '');  
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;  
+    const mentorId = decoded.sub;  
+    const { searchParams } = new URL(req.url);  
+    const id = searchParams.get('id');  
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });  
+    const { error } = await supabaseAdmin.from('vocabularies').delete().eq('id', id);  
+    if (error) throw error;  
+    return NextResponse.json({ success: true });  
+  } catch (err: any) {  
+    return NextResponse.json({ error: err.message }, { status: 500 });  
+  }  
+} 

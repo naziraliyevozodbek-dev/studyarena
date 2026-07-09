@@ -91,29 +91,32 @@ export function DatePicker({ value, onChange, placeholder = "Sanani tanlang", cl
       </div>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] right-0 sm:left-0 w-[280px] bg-bg-card border border-border rounded-2xl shadow-xl z-50 p-4 animate-fade-in origin-top">
-          <div className="flex items-center justify-between mb-4">
-            <button type="button" onClick={handlePrevMonth} className="p-1.5 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
-              <ChevronLeft size={18} />
-            </button>
-            <div className="font-semibold text-text-main">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </div>
-            <button type="button" onClick={handleNextMonth} className="p-1.5 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
-              <div key={d} className="w-8 h-8 flex items-center justify-center text-xs font-bold text-text-tertiary uppercase tracking-wider">
-                {d}
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <div className="relative w-full max-w-[300px] bg-bg-card border border-border rounded-3xl shadow-2xl p-5 animate-fade-in">
+            <div className="flex items-center justify-between mb-5">
+              <button type="button" onClick={handlePrevMonth} className="p-2 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
+                <ChevronLeft size={20} />
+              </button>
+              <div className="font-bold text-text-main text-lg">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
-            ))}
-          </div>
-          
-          <div className="grid grid-cols-7 gap-1">
-            {days}
+              <button type="button" onClick={handleNextMonth} className="p-2 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
+                <ChevronRight size={20} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-7 gap-1 mb-3">
+              {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
+                <div key={d} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-text-tertiary uppercase tracking-wider">
+                  {d}
+                </div>
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-7 gap-1">
+              {days}
+            </div>
           </div>
         </div>
       )}
