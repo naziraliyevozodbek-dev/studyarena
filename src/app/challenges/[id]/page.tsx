@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, use } from 'react';
+import { useState, useEffect, useRef, use, useCallback } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -90,16 +90,7 @@ export default function ChallengeDetail({ params }: { params: Promise<{ id: stri
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === 'mentor') {
-      router.push('/mentor');
-      return;
-    }
-    fetchChallenge();
-  }, [user, router, resolvedParams.id]);
-
-  const fetchChallenge = async () => {
+  const fetchChallenge = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch(`/api/student/challenges`, {
@@ -115,7 +106,16 @@ export default function ChallengeDetail({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, resolvedParams.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchChallenge();
+  }, [user, router, resolvedParams.id, fetchChallenge]);
 
   const handleFiles = async (newFiles: File[]) => {
     setIsCompressing(true);

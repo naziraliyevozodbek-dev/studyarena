@@ -200,7 +200,15 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <Button variant="outline" className="w-full border-none bg-error/10 text-error hover:bg-error hover:text-white transition-colors" onClick={() => window.location.reload()}>
+      <Button variant="outline" className="w-full border-none bg-error/10 text-error hover:bg-error hover:text-white transition-colors" onClick={() => {
+        localStorage.removeItem('studyarena_onboarded');
+        localStorage.removeItem('token');
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+          (window as any).Telegram.WebApp.close();
+        } else {
+          window.location.reload();
+        }
+      }}>
         <LogOut size={20} /> Sign Out
       </Button>      {/* Badge Modal - Portal to body */}
       {selectedBadge && typeof document !== 'undefined' && createPortal(

@@ -76,12 +76,18 @@ export default function Home() {
     ? [...realtimeVocab, ...(vocabData?.vocabularies || [])].slice(0, 5) 
     : (vocabData?.vocabularies || []).slice(0, 5);
 
+  // 1. Onboarding check
   useEffect(() => {
-    if (shouldFetch) {
-      if (!localStorage.getItem('studyarena_onboarded') && !fetchingCourses && enrolledCourses.length === 0) {
+    if (shouldFetch && !fetchingCourses) {
+      if (!localStorage.getItem('studyarena_onboarded') && enrolledCourses.length === 0) {
         router.push('/onboarding');
       }
+    }
+  }, [shouldFetch, fetchingCourses, enrolledCourses.length, router]);
 
+  // 2. Realtime subscription
+  useEffect(() => {
+    if (shouldFetch) {
       const channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -97,7 +103,7 @@ export default function Home() {
         supabase.removeChannel(channel);
       };
     }
-  }, [shouldFetch, fetchingCourses, enrolledCourses.length, router]);
+  }, [shouldFetch, supabase]);
 
   const handleOpenNotifications = () => {
     setShowNotifications(true);

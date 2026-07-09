@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, X, Check, Volume2, Star, BookOpen, Layers, RefreshCw } from 'lucide-react';
@@ -60,16 +60,7 @@ export default function LearnPage() {
     }
   };
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === 'mentor') {
-      router.push('/mentor');
-      return;
-    }
-    fetchVocabularies();
-  }, [user, router]);
-
-  const fetchVocabularies = async () => {
+  const fetchVocabularies = useCallback(async () => {
     try {
       if (!token) return;
       setLoading(true);
@@ -84,7 +75,16 @@ export default function LearnPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchVocabularies();
+  }, [user, router, fetchVocabularies]);
 
   const fallbackTTS = (text: string) => {
     if ('speechSynthesis' in window) {

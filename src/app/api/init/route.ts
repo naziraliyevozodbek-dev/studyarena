@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(req: Request) {
+  const authKey = req.headers.get('X-Admin-Key');
+  if (authKey !== process.env.ADMIN_SECRET_KEY) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const { data, error } = await supabaseAdmin.storage.createBucket('homeworks', {
       public: true,

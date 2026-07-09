@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { bot } from '@/lib/bot';
+import jwt from 'jsonwebtoken';
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
+    
+    if (decoded.user_role !== 'mentor') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { type, courseId, data } = body;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, Users, ChevronRight, Copy, Loader2, Trash2 } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -30,30 +30,27 @@ export default function MentorCourses() {
   const supabase = useSupabase();
   const { user, token } = useAuth();
 
-  useEffect(() => {
-    if (token) {
-      fetchCourses();
-    }
-  }, [token]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/courses', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      
-      if (res.ok && data.courses) {
-        setCourses(data.courses);
-      } else if (data.error) {
-        console.error('Failed to fetch courses', data.error);
-      }
+      setCourses(Array.isArray(data) ? data : (data.courses || []));
     } catch (error) {
-      console.error('Failed to fetch courses', error);
+      console.error(error);
+      toast.error('Kurslarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      fetchCourses();
+    }
+  }, [token, fetchCourses]);
 
   const handleOpenModal = () => {
     const code = 'GER-' + Math.random().toString(36).substring(2, 8).toUpperCase();

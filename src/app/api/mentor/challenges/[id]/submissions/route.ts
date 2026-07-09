@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
-    if (decoded.role !== 'mentor') {
+    if (decoded.user_role !== 'mentor') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -49,7 +49,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     
-    if (decoded.role !== 'mentor') {
+    if (decoded.user_role !== 'mentor') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

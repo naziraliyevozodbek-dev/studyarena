@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, X, Check, Volume2, AlertTriangle } from 'lucide-react';
@@ -18,16 +18,7 @@ export default function WeakWordsPage() {
   const [savingProgress, setSavingProgress] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === 'mentor') {
-      router.push('/mentor');
-      return;
-    }
-    fetchVocabularies();
-  }, [user, router]);
-
-  const fetchVocabularies = async () => {
+  const fetchVocabularies = useCallback(async () => {
     try {
       if (!token) return;
       setLoading(true);
@@ -39,10 +30,20 @@ export default function WeakWordsPage() {
       setVocabularies(data.vocabularies || []);
     } catch (error) {
       console.error('Error fetching vocabularies:', error);
+      toast.error('So\'zlarni yuklashda xatolik');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'mentor') {
+      router.push('/mentor');
+      return;
+    }
+    fetchVocabularies();
+  }, [user, router, fetchVocabularies]);
 
   const fallbackTTS = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -141,7 +142,7 @@ export default function WeakWordsPage() {
             </div>
             <h2 className="text-xl font-bold text-text-main mb-2">No Weak Words!</h2>
             <p className="text-text-secondary text-sm mb-6">
-              You&apos;re doing great! Keep learning new words.
+              You're doing great! Keep learning new words.
             </p>
             <Button onClick={() => router.push('/')}>Go to Dashboard</Button>
           </Card>
@@ -231,7 +232,7 @@ export default function WeakWordsPage() {
                       onClick={() => handleProgress('weak')}
                       disabled={savingProgress}
                     >
-                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Still don&apos;t know</>}
+                      {savingProgress ? <Loader2 size={24} className="animate-spin" /> : <><X size={24} className="mr-2" /> Still don't know</>}
                     </Button>
                     <Button 
                       className="flex-1 py-6 bg-success text-white hover:bg-success-hover" 

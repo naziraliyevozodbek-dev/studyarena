@@ -44,6 +44,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const processedReadsRef = useRef<Set<string>>(new Set());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -143,10 +144,12 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     if (!user || messages.length === 0) return;
 
     const unreadMessageIds = messages
-      .filter(m => m.sender_id !== user.id && !m.message_reads?.some(r => r.user_id === user.id))
+      .filter(m => m.sender_id !== user.id && !m.message_reads?.some(r => r.user_id === user.id) && !processedReadsRef.current.has(m.id))
       .map(m => m.id);
 
     if (unreadMessageIds.length > 0) {
+      unreadMessageIds.forEach(id => processedReadsRef.current.add(id));
+      
       // Optimistically add read receipts
       const now = new Date().toISOString();
       unreadMessageIds.forEach(id => {
@@ -211,22 +214,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         setUploadingFile(false);
       }
 
-      // Optimistic only for text without files (for simplicity)
-      if (!fileData) {
-        const optimisticMsg = {
-          id: 'temp-' + Date.now(),
-          sender_id: user?.id || '',
-          room_id: activeRoomId || '',
-          content: currentInput,
-          created_at: new Date().toISOString(),
-          reply_to_message_id: replyTo?.id || null,
-          reply_to_message: replyTo || undefined,
-          is_edited: false,
-          deleted_for_users: [],
-          users: { full_name: user?.full_name, avatar_url: user?.avatar_url, role: user?.role }
-        } as Message;
-        addMessage(optimisticMsg);
-      }
+      // Optimistic only for text without files (for simplicity) - REMOVED to prevent C-02 duplicate optimistic messages issue
 
       setReplyTo(null);
       setEditingMsg(null);

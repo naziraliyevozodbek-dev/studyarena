@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
 
-    if (decoded.role !== 'mentor') {
+    if (decoded.user_role !== 'mentor') {
       return NextResponse.json({ error: 'Faqat mentorlar tahrirlay oladi' }, { status: 403 });
     }
 
@@ -17,6 +17,17 @@ export async function POST(req: Request) {
 
     if (!courseId || !oldCategory || !newCategory) {
       return NextResponse.json({ error: 'Barcha maydonlar to\'ldirilishi shart' }, { status: 400 });
+    }
+
+    const { data: course } = await supabaseAdmin
+      .from('courses')
+      .select('id')
+      .eq('id', courseId)
+      .eq('mentor_id', decoded.sub)
+      .single();
+      
+    if (!course) {
+      return NextResponse.json({ error: 'Siz faqat o\'z kursingizni tahrirlay olasiz' }, { status: 403 });
     }
 
     // Since we use the category column to group, we need to update all vocabularies in this course with this old category

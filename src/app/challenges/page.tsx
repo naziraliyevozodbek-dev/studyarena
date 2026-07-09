@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowLeft, Loader2, Trophy, Clock, ChevronRight } from 'lucide-react';
@@ -15,11 +15,7 @@ export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.id && token) fetchChallenges();
-  }, [user, token]);
-
-  const fetchChallenges = async () => {
+  const fetchChallenges = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/student/challenges', {
@@ -34,7 +30,11 @@ export default function ChallengesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (user?.id && token) fetchChallenges();
+  }, [user, token, fetchChallenges]);
 
   if (loading) {
     return (

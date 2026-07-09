@@ -45,7 +45,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing user data' }, { status: 400 });
     }
 
-    const telegramUser = JSON.parse(userStr);
+    let telegramUser;
+    try {
+      telegramUser = JSON.parse(userStr);
+    } catch {
+      return NextResponse.json({ error: 'Invalid user data format' }, { status: 400 });
+    }
+
+    if (!telegramUser?.id || typeof telegramUser.id !== 'number') {
+      return NextResponse.json({ error: 'Invalid Telegram user' }, { status: 400 });
+    }
 
     // Check if user exists
     const { data: existingUser } = await supabaseAdmin

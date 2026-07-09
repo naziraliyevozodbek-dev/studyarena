@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -22,16 +22,7 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
   const [rejectReason, setRejectReason] = useState('');
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'mentor') {
-      router.push('/');
-      return;
-    }
-    fetchData();
-  }, [user, router, resolvedParams.id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch(`/api/mentor/challenges/${resolvedParams.id}/submissions`, {
@@ -44,11 +35,20 @@ export default function MentorChallengeDetails({ params }: { params: Promise<{ i
       setSubmissions(data.submissions || []);
     } catch (err) {
       console.error(err);
-      toast.error('Maʼlumotlarni yuklashda xatolik');
+      toast.error("Xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, resolvedParams.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'mentor') {
+      router.push('/');
+      return;
+    }
+    fetchData();
+  }, [user, router, fetchData]);
 
   const handleGrade = async (submissionId: string, status: 'graded' | 'rejected', feedback?: string) => {
     setGradingId(submissionId);

@@ -3,7 +3,9 @@ import { bot } from '@/lib/bot';
 import { NextResponse } from 'next/server';
 
 // We use grammy's webhookCallback adapter for standard web standards (Next.js Request/Response)
-const handleUpdate = webhookCallback(bot, 'std/http');
+const handleUpdate = webhookCallback(bot, 'std/http', {
+  secretToken: process.env.TELEGRAM_WEBHOOK_SECRET,
+});
 
 export async function POST(req: Request) {
   try {

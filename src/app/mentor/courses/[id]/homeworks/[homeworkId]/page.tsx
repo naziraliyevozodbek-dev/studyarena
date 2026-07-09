@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -23,16 +23,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'mentor') {
-      router.push('/');
-      return;
-    }
-    fetchData();
-  }, [user, router, resolvedParams.homeworkId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch(`/api/homeworks/${resolvedParams.homeworkId}`, {
@@ -47,7 +38,16 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, resolvedParams.homeworkId]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'mentor') {
+      router.push('/');
+      return;
+    }
+    fetchData();
+  }, [user, router, fetchData]);
 
   const handleGrade = async (submissionId: string, status: 'graded' | 'rejected', feedback?: string) => {
     setGradingId(submissionId);

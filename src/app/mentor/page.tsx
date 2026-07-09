@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Loader2, Plus, Users, BookOpen, ChevronRight } from 'lucide-react';
@@ -27,22 +27,7 @@ export default function MentorDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (user?.id && token) {
-      fetchCourses();
-      fetchNotifications();
-
-      const notifInterval = setInterval(() => {
-        fetchNotifications();
-      }, 10000);
-
-      return () => {
-        clearInterval(notifInterval);
-      };
-    }
-  }, [user, token]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch('/api/student/notifications', {
@@ -56,22 +41,9 @@ export default function MentorDashboard() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [token]);
 
-  useEffect(() => {
-    if (showNotifications && unreadCount > 0 && token) {
-      // Mark as read
-      fetch('/api/student/notifications', {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(() => {
-        setUnreadCount(0);
-        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      });
-    }
-  }, [showNotifications, unreadCount, token]);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       if (!token) return;
       const res = await fetch('/api/courses', {
@@ -95,7 +67,35 @@ export default function MentorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (user?.id && token) {
+      fetchCourses();
+      fetchNotifications();
+
+      const notifInterval = setInterval(() => {
+        fetchNotifications();
+      }, 10000);
+
+      return () => {
+        clearInterval(notifInterval);
+      };
+    }
+  }, [user, token, fetchCourses, fetchNotifications]);
+
+  useEffect(() => {
+    if (showNotifications && unreadCount > 0 && token) {
+      // Mark as read
+      fetch('/api/student/notifications', {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(() => {
+        setUnreadCount(0);
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      });
+    }
+  }, [showNotifications, unreadCount, token]);
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();

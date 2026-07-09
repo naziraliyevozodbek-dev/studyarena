@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowLeft, Loader2, Plus, Target, Trash2 } from 'lucide-react';
@@ -33,40 +33,41 @@ export default function MentorChallenges() {
   const [challengeType, setChallengeType] = useState('upload');
   const [quizQuestions, setQuizQuestions] = useState<{question: string, options: string[], answer: number}[]>([{ question: '', options: ['', '', '', ''], answer: 0 }]);
 
-  useEffect(() => {
-    if (user?.id && token) {
-      fetchData();
-    }
-  }, [user, token]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/courses', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const resData = await res.json();
-      const myCourses = resData.courses || [];
+      const data = await res.json();
       
-      setCourses(myCourses);
+      const coursesData = Array.isArray(data) ? data : (data.courses || []);
+      setCourses(coursesData);
       
-      if (myCourses && myCourses.length > 0) {
-        if (!selectedCourse) setSelectedCourse(myCourses[0].id);
-        
-        // Fetch challenges
-        const challResponse = await fetch('/api/mentor/challenges', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const challData = await challResponse.json();
-          
-        setChallenges(challData.challenges || []);
+      if (coursesData.length > 0) {
+        setSelectedCourse(coursesData[0].id);
       }
+
+      // Fetch all challenges
+      const challRes = await fetch('/api/mentor/challenges', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const challData = await challRes.json();
+      setChallenges(challData.challenges || []);
+
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching data:', error);
+      toast.error("Ma'lumotlarni yuklashda xatolik");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (user?.id && token) {
+      fetchData();
+    }
+  }, [user, token, fetchData]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

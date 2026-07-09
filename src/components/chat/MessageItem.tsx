@@ -15,7 +15,7 @@ interface MessageItemProps {
 export const EMOJIS = ['👍', '❤️', '🔥', '👏', '😄', '😢'];
 
 export default function MessageItem({ msg, isSelected, onSelect, onReply, onEdit }: MessageItemProps) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const isMine = msg.sender_id === user?.id;
   const isMentor = msg.users?.role === 'mentor';
   const isMeMentor = user?.role === 'mentor';
@@ -27,7 +27,7 @@ export default function MessageItem({ msg, isSelected, onSelect, onReply, onEdit
     try {
       await fetch(`/api/chat/${msg.room_id}?messageId=${msg.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${(window as any).localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
     } catch (e) {
       console.error(e);

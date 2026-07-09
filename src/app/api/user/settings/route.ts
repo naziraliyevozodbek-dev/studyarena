@@ -5,8 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { z } from 'zod';
 
 const SettingsSchema = z.object({
-  full_name: z.string().min(2, "Full name must be at least 2 characters").max(50).optional(),
-  role: z.enum(['student', 'mentor']).optional()
+  full_name: z.string().min(2, "Full name must be at least 2 characters").max(50).optional()
 });
 
 export async function POST(req: Request) {
@@ -23,11 +22,10 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
-    const { full_name, role } = parsed.data;
+    const { full_name } = parsed.data;
 
     const updateData: any = {};
     if (full_name) updateData.full_name = full_name;
-    if (role) updateData.role = role;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

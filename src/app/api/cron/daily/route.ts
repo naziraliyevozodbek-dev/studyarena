@@ -4,6 +4,10 @@ import { bot } from '@/lib/bot';
 
 // This endpoint should be protected in production (e.g., verifying Vercel CRON headers)
 export async function GET(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     // Find all students who haven&apos;t completed a lesson today or need a reminder
     // For this prototype, we'll send a reminder to all active students

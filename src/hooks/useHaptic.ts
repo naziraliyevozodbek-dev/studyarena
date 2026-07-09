@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export function useHaptic() {
   const isAvailable = typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.HapticFeedback;
@@ -23,5 +23,9 @@ export function useHaptic() {
     }
   }, [isAvailable]);
 
-  return { impact, notification, selection };
+  return useMemo(() => ({
+    impact,
+    notification,
+    selection
+  }), [impact, notification, selection]);
 }

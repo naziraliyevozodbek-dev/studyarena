@@ -29,7 +29,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     // Delete enrollment
     const { error: deleteError } = await supabaseAdmin
-      .from('course_enrollments')
+      .from('course_members')
       .delete()
       .eq('course_id', courseId)
       .eq('student_id', studentId);
