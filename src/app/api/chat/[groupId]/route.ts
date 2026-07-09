@@ -12,6 +12,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
     const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET!) as any;
     const currentUserId = decoded.sub;
     const courseId = (await params).groupId;
+    
+    const url = new URL(req.url);
+    const cursor = url.searchParams.get('cursor'); // expected to be an ISO timestamp
+    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
     // Check if user is enrolled or mentor
     const { data: course } = await supabaseAdmin.from('courses').select('title, mentor_id').eq('id', courseId).single();
@@ -40,16 +44,27 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
 
     const { count: studentCount } = await supabaseAdmin.from('course_members').select('*', { count: 'exact', head: true }).eq('course_id', room?.course_id || courseId);
 
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('messages')
       .select('*, users!messages_sender_id_fkey(full_name, avatar_url, role), message_reactions(*), message_reads(*), message_files(*)')
       .eq('room_id', roomId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (cursor) {
+      query = query.lt('created_at', cursor);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
+    // We got the newest 'limit' messages before the cursor (or newest overall), ordered descending.
+    // We need to reverse them to return in chronological order.
+    const chronologicalMessages = data.reverse();
+
     // Filter out messages deleted for this user
-    const visibleMessages = data.filter(m => !m.deleted_for_users?.includes(currentUserId));
+    const visibleMessages = chronologicalMessages.filter(m => !m.deleted_for_users?.includes(currentUserId));
 
     const { data: pinnedData } = await supabaseAdmin
       .from('pinned_messages')
@@ -59,7 +74,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ groupId:
 
     return NextResponse.json({ 
       roomId,
-      messages: visibleMessages, 
+      messages: visibleMessages,
+      hasMore: data.length === limit,
       pinnedMessages: pinnedData || [],
       courseName: courseInfo?.title || 'Guruh Chati', 
       memberCount: (studentCount || 0) + 1 

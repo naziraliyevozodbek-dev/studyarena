@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useChatStore, Message, MessageReaction, MessageRead, PinnedMessage } from '@/store/chatStore';
 
-export function useChatRealtime(roomId: string | null, token: string | null) {
+export function useChatRealtime(roomId: string | null, token: string | null, currentUserId?: string) {
   const { 
     addMessage, 
     updateMessage, 
@@ -22,6 +22,29 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
 
     // We create a channel specifically for this room
     const channel = supabase.channel(`room:${roomId}`);
+
+    const playNotificationSound = () => {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (e) {
+        console.error('Audio play error', e);
+      }
+    };
 
     // Subscribe to messages
     channel.on(
@@ -48,6 +71,10 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
           
         if (files && files.length > 0) {
           newMsg.message_files = files;
+        }
+
+        if (currentUserId && newMsg.sender_id !== currentUserId) {
+          playNotificationSound();
         }
 
         addMessage(newMsg);
@@ -117,12 +144,28 @@ export function useChatRealtime(roomId: string | null, token: string | null) {
       }
     );
 
+    // Typing indicator
+    channel.on(
+      'broadcast',
+      { event: 'typing' },
+      (payload) => {
+        if (payload.payload.userId && payload.payload.name) {
+          useChatStore.getState().setTypingUser(payload.payload.userId, payload.payload.name);
+        }
+      }
+    );
+
     channel.subscribe((status) => {
       console.log(`Realtime subscription status for room ${roomId}:`, status);
     });
 
+    // Provide a way to send events if needed, but useEffect cleanup requires returning a function.
+    // Instead of returning the channel, we'll store it in a module variable or use window.
+    (window as any)._currentChatChannel = channel;
+
     return () => {
       supabase.removeChannel(channel);
+      (window as any)._currentChatChannel = null;
     };
-  }, [roomId, token, addMessage, updateMessage, deleteMessage, addReaction, removeReaction, addReadReceipt, addPinnedMessage, removePinnedMessage]);
+  }, [roomId, token, currentUserId, addMessage, updateMessage, deleteMessage, addReaction, removeReaction, addReadReceipt, addPinnedMessage, removePinnedMessage]);
 }

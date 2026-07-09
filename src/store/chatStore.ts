@@ -60,12 +60,18 @@ interface ChatState {
   pinnedMessages: PinnedMessage[];
   activeRoomId: string | null;
   isLoading: boolean;
+  hasMore: boolean;
+  typingUsers: { userId: string, name: string, timestamp: number }[];
   
   // Actions
   setActiveRoom: (roomId: string | null) => void;
   setLoading: (loading: boolean) => void;
+  setHasMore: (hasMore: boolean) => void;
   setMessages: (messages: Message[]) => void;
+  prependMessages: (messages: Message[]) => void;
   setPinnedMessages: (pinned: PinnedMessage[]) => void;
+  setTypingUser: (userId: string, name: string) => void;
+  removeTypingUser: (userId: string) => void;
   
   // Optimistic/Realtime Updates
   addMessage: (message: Message) => void;
@@ -85,13 +91,37 @@ export const useChatStore = create<ChatState>((set) => ({
   pinnedMessages: [],
   activeRoomId: null,
   isLoading: true,
+  hasMore: true,
+  typingUsers: [],
 
   setActiveRoom: (roomId) => set({ activeRoomId: roomId }),
   setLoading: (loading) => set({ isLoading: loading }),
+  setHasMore: (hasMore) => set({ hasMore }),
   
   setMessages: (messages) => set({ messages }),
+  prependMessages: (messagesToPrepend) => set((state) => {
+    const existingIds = new Set(state.messages.map(m => m.id));
+    const uniqueNew = messagesToPrepend.filter(m => !existingIds.has(m.id));
+    return { messages: [...uniqueNew, ...state.messages] };
+  }),
   setPinnedMessages: (pinnedMessages) => set({ pinnedMessages }),
   
+  setTypingUser: (userId, name) => set((state) => {
+    if ((window as any)[`_typing_${userId}`]) {
+      clearTimeout((window as any)[`_typing_${userId}`]);
+    }
+    (window as any)[`_typing_${userId}`] = setTimeout(() => {
+      useChatStore.getState().removeTypingUser(userId);
+    }, 3000);
+
+    const filtered = state.typingUsers.filter(u => u.userId !== userId);
+    return { typingUsers: [...filtered, { userId, name, timestamp: Date.now() }] };
+  }),
+  
+  removeTypingUser: (userId) => set((state) => ({
+    typingUsers: state.typingUsers.filter(u => u.userId !== userId)
+  })),
+
   addMessage: (message) => set((state) => {
     // Prevent duplicates
     if (state.messages.some(m => m.id === message.id)) return state;

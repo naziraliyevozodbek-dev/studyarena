@@ -1,8 +1,9 @@
 'use client';
 
+import { use, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Send, X, Paperclip, Mic } from 'lucide-react';
+import { Loader2, ArrowLeft, Send, X, Paperclip, Mic, Users, Edit2, Reply } from 'lucide-react';
 import { useChatStore, Message } from '@/store/chatStore';
 import { useChatRealtime } from '@/hooks/useChatRealtime';
 import MessageItem from '@/components/chat/MessageItem';
@@ -22,10 +23,11 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     activeRoomId, 
     setActiveRoom, 
     deleteMessage,
-    setPinnedMessages
+    setPinnedMessages,
+    typingUsers
   } = useChatStore();
 
-  useChatRealtime(activeRoomId, token);
+  useChatRealtime(activeRoomId, token, user?.id);
 
   const [loading, setLoading] = useState(true);
   const [inputValue, setInputValue] = useState('');
@@ -47,6 +49,8 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const [fetchingMore, setFetchingMore] = useState(false);
+
   useEffect(() => {
     if (!user) {
       router.push('/');
@@ -55,7 +59,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
 
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/chat/${resolvedParams.groupId}`, {
+        const res = await fetch(`/api/chat/${resolvedParams.groupId}?limit=50`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Failed to fetch messages');
@@ -63,11 +67,12 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         
         if (data.roomId) setActiveRoom(data.roomId);
         setMessages(data.messages || []);
+        useChatStore.getState().setHasMore(data.hasMore);
         if (data.pinnedMessages) setPinnedMessages(data.pinnedMessages);
         if (data.courseName) setGroupName(data.courseName);
         if (data.memberCount) setMemberCount(data.memberCount);
         
-        // Only scroll to bottom on initial load or if user is near bottom
+        // Only scroll to bottom on initial load
         if (loading) setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error(error);
@@ -77,7 +82,93 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     };
 
     fetchMessages();
-  }, [user, token, resolvedParams.groupId, router, loading, setActiveRoom, setMessages]);
+  }, [user, token, resolvedParams.groupId, router, setActiveRoom, setMessages]);
+
+  const loadMoreMessages = async () => {
+    if (fetchingMore || !useChatStore.getState().hasMore || messages.length === 0) return;
+    setFetchingMore(true);
+    try {
+      const oldestMessage = messages[0];
+      const cursor = oldestMessage.created_at;
+      
+      const res = await fetch(`/api/chat/${resolvedParams.groupId}?limit=50&cursor=${encodeURIComponent(cursor)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch more messages');
+      const data = await res.json();
+      
+      if (data.messages && data.messages.length > 0) {
+        // Save current scroll height to maintain scroll position
+        const container = document.getElementById('messages-container');
+        const previousScrollHeight = container?.scrollHeight || 0;
+        
+        useChatStore.getState().prependMessages(data.messages);
+        useChatStore.getState().setHasMore(data.hasMore);
+        
+        // Restore scroll position
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - previousScrollHeight;
+          }
+        }, 10);
+      } else {
+        useChatStore.getState().setHasMore(false);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setFetchingMore(false);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    if (target.scrollTop === 0) {
+      loadMoreMessages();
+    }
+  };
+
+  // Auto-scroll on new message if already near bottom
+  useEffect(() => {
+    const container = document.getElementById('messages-container');
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
+  }, [messages.length]);
+  // Mark messages as read
+  useEffect(() => {
+    if (!user || messages.length === 0) return;
+
+    const unreadMessageIds = messages
+      .filter(m => m.sender_id !== user.id && !m.message_reads?.some(r => r.user_id === user.id))
+      .map(m => m.id);
+
+    if (unreadMessageIds.length > 0) {
+      // Optimistically add read receipts
+      const now = new Date().toISOString();
+      unreadMessageIds.forEach(id => {
+        useChatStore.getState().addReadReceipt({
+          id: 'temp-' + id,
+          message_id: id,
+          user_id: user.id,
+          read_at: now
+        });
+      });
+
+      // Send to API
+      fetch(`/api/chat/${resolvedParams.groupId}/read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ messageIds: unreadMessageIds })
+      }).catch(err => console.error('Failed to mark read', err));
+    }
+  }, [messages, user, token, resolvedParams.groupId]);
 
   const handleSendMessage = async (e?: React.FormEvent, audioFile?: File) => {
     if (e) e.preventDefault();
@@ -223,27 +314,59 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
 
       {/* Messages Area */}
       <div 
+        id="messages-container"
         className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-bg-base"
         onClick={() => setSelectedMessage(null)}
+        onScroll={handleScroll}
       >
+        {fetchingMore && (
+          <div className="flex justify-center py-2">
+            <Loader2 className="animate-spin text-primary" size={20} />
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-text-tertiary text-sm">
             Hali xabarlar yo'q. Birinchi bo'lib yozing!
           </div>
         ) : (
-          messages.map(msg => (
-            <MessageItem 
-              key={msg.id} 
-              msg={msg} 
-              isSelected={selectedMessage === msg.id}
-              onSelect={() => setSelectedMessage(selectedMessage === msg.id ? null : msg.id)}
-              onReply={(m) => { setReplyTo(m); setSelectedMessage(null); setEditingMsg(null); }}
-              onEdit={(m) => { setEditingMsg(m); setInputValue(m.content); setReplyTo(null); setSelectedMessage(null); }}
-            />
-          ))
+          messages.map((msg, index) => {
+            const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
+            return (
+              <div key={msg.id} className="flex flex-col gap-4">
+                {showDate && (
+                  <div className="flex justify-center my-2">
+                    <span className="bg-bg-secondary text-text-tertiary text-xs px-3 py-1 rounded-full">
+                      {new Intl.DateTimeFormat('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(msg.created_at))}
+                    </span>
+                  </div>
+                )}
+                <MessageItem 
+                  msg={msg} 
+                  isSelected={selectedMessage === msg.id}
+                  onSelect={() => setSelectedMessage(selectedMessage === msg.id ? null : msg.id)}
+                  onReply={(m) => { setReplyTo(m); setSelectedMessage(null); setEditingMsg(null); }}
+                  onEdit={(m) => { setEditingMsg(m); setInputValue(m.content); setReplyTo(null); setSelectedMessage(null); }}
+                />
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
-      </div>      {/* Input Area */}
+      </div>
+
+      {/* Typing indicator */}
+      {typingUsers.filter(u => u.userId !== user?.id).length > 0 && (
+        <div className="px-4 py-1.5 text-[11px] text-primary/80 bg-bg-base/90 italic flex items-center gap-2 border-t border-border/50">
+           <span className="flex gap-1 items-center h-full">
+             <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></span>
+             <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+             <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+           </span>
+           {typingUsers.filter(u => u.userId !== user?.id).map(u => u.name).join(', ')} yozmoqda...
+        </div>
+      )}
+
+      {/* Input Area */}
       <div className="bg-bg-card border-t border-border shrink-0 pb-[calc(12px+env(safe-area-inset-bottom))]">
         {(replyTo || editingMsg || selectedFile) && (
           <div className="px-4 py-2 border-b border-border bg-bg-base/50 flex flex-col gap-1">
@@ -310,7 +433,20 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
               <div className="flex-1 bg-bg-secondary rounded-2xl border border-border overflow-hidden focus-within:border-primary/50 transition-colors shadow-sm">
                 <textarea 
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    if (user && (window as any)._currentChatChannel) {
+                      const now = Date.now();
+                      if (now - ((window as any)._lastTypingTime || 0) > 2000) {
+                        (window as any)._lastTypingTime = now;
+                        (window as any)._currentChatChannel.send({
+                          type: 'broadcast',
+                          event: 'typing',
+                          payload: { userId: user.id, name: user.full_name }
+                        });
+                      }
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
