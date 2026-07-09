@@ -355,14 +355,14 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
       </div>
 
       {/* Typing indicator */}
-      {typingUsers.filter(u => u.userId !== user?.id).length > 0 && (
+      {typingUsers.filter(u => u.userId !== user?.id && u.roomId === activeRoomId).length > 0 && (
         <div className="px-4 py-1.5 text-[11px] text-primary/80 bg-bg-base/90 italic flex items-center gap-2 border-t border-border/50">
            <span className="flex gap-1 items-center h-full">
              <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></span>
              <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
              <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
            </span>
-           {typingUsers.filter(u => u.userId !== user?.id).map(u => u.name).join(', ')} yozmoqda...
+           {typingUsers.filter(u => u.userId !== user?.id && u.roomId === activeRoomId).map(u => u.name).join(', ')} yozmoqda...
         </div>
       )}
 

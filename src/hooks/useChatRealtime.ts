@@ -150,7 +150,7 @@ export function useChatRealtime(roomId: string | null, token: string | null, cur
       { event: 'typing' },
       (payload) => {
         if (payload.payload.userId && payload.payload.name) {
-          useChatStore.getState().setTypingUser(payload.payload.userId, payload.payload.name);
+          useChatStore.getState().setTypingUser(payload.payload.userId, payload.payload.name, roomId);
         }
       }
     );

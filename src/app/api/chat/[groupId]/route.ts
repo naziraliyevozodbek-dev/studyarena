@@ -146,6 +146,45 @@ export async function POST(req: Request, { params }: { params: Promise<{ groupId
       .eq('id', data.id)
       .single();
 
+    // Telegram Push Notifications
+    // Find course members for this chat
+    const { data: members } = await supabaseAdmin
+      .from('course_members')
+      .select('student_id, users(id, telegram_id, full_name)')
+      .eq('course_id', actualCourseId);
+
+    // Also get mentor
+    const { data: course } = await supabaseAdmin
+      .from('courses')
+      .select('mentor_id, users!courses_mentor_id_fkey(id, telegram_id, full_name), title')
+      .eq('id', actualCourseId)
+      .single();
+
+    const usersToNotify: any[] = [];
+    if (members) {
+      members.forEach((m: any) => {
+        if (m.users?.id !== currentUserId && m.users?.telegram_id) {
+          usersToNotify.push(m.users.telegram_id);
+        }
+      });
+    }
+    const courseUser = Array.isArray(course?.users) ? course?.users[0] : course?.users;
+    if (courseUser?.id !== currentUserId && courseUser?.telegram_id) {
+      usersToNotify.push(courseUser.telegram_id);
+    }
+
+    if (usersToNotify.length > 0) {
+      const senderName = finalMsg?.users?.full_name || 'Birov';
+      const courseName = course?.title || 'Guruh';
+      const textPreview = content ? (content.length > 50 ? content.slice(0, 50) + '...' : content) : (file ? `📎 ${file.file_name}` : 'Yangi xabar');
+      const tgMsg = `💬 *${courseName}*\n${senderName}: ${textPreview}`;
+      
+      const { bot } = await import('@/lib/bot');
+      Promise.allSettled(usersToNotify.map(tgId => 
+        bot.api.sendMessage(tgId, tgMsg, { parse_mode: 'Markdown' })
+      )).catch(err => console.error('TG Notification error:', err));
+    }
+
     return NextResponse.json({ message: finalMsg });
   } catch (err: unknown) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });

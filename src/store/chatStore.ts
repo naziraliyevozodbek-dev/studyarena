@@ -61,7 +61,7 @@ interface ChatState {
   activeRoomId: string | null;
   isLoading: boolean;
   hasMore: boolean;
-  typingUsers: { userId: string, name: string, timestamp: number }[];
+  typingUsers: { userId: string, name: string, roomId: string, timestamp: number }[];
   
   // Actions
   setActiveRoom: (roomId: string | null) => void;
@@ -70,8 +70,8 @@ interface ChatState {
   setMessages: (messages: Message[]) => void;
   prependMessages: (messages: Message[]) => void;
   setPinnedMessages: (pinned: PinnedMessage[]) => void;
-  setTypingUser: (userId: string, name: string) => void;
-  removeTypingUser: (userId: string) => void;
+  setTypingUser: (userId: string, name: string, roomId: string) => void;
+  removeTypingUser: (userId: string, roomId: string) => void;
   
   // Optimistic/Realtime Updates
   addMessage: (message: Message) => void;
@@ -106,20 +106,21 @@ export const useChatStore = create<ChatState>((set) => ({
   }),
   setPinnedMessages: (pinnedMessages) => set({ pinnedMessages }),
   
-  setTypingUser: (userId, name) => set((state) => {
-    if ((window as any)[`_typing_${userId}`]) {
-      clearTimeout((window as any)[`_typing_${userId}`]);
+  setTypingUser: (userId, name, roomId) => set((state) => {
+    const typingKey = `_typing_${userId}_${roomId}`;
+    if ((window as any)[typingKey]) {
+      clearTimeout((window as any)[typingKey]);
     }
-    (window as any)[`_typing_${userId}`] = setTimeout(() => {
-      useChatStore.getState().removeTypingUser(userId);
+    (window as any)[typingKey] = setTimeout(() => {
+      useChatStore.getState().removeTypingUser(userId, roomId);
     }, 3000);
 
-    const filtered = state.typingUsers.filter(u => u.userId !== userId);
-    return { typingUsers: [...filtered, { userId, name, timestamp: Date.now() }] };
+    const filtered = state.typingUsers.filter(u => !(u.userId === userId && u.roomId === roomId));
+    return { typingUsers: [...filtered, { userId, name, roomId, timestamp: Date.now() }] };
   }),
   
-  removeTypingUser: (userId) => set((state) => ({
-    typingUsers: state.typingUsers.filter(u => u.userId !== userId)
+  removeTypingUser: (userId, roomId) => set((state) => ({
+    typingUsers: state.typingUsers.filter(u => !(u.userId === userId && u.roomId === roomId))
   })),
 
   addMessage: (message) => set((state) => {
