@@ -595,7 +595,7 @@ export default function CourseDetails({ params }: { params: Promise<{ id: string
                                       <span className="text-xs text-text-tertiary block">📝 {v.example_german}</span>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex items-center gap-1 transition-opacity">
                                     <button 
                                       onClick={() => {
                                         setEditWordId(v.id);
