@@ -20,7 +20,6 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
   const [gradingId, setGradingId] = useState<string | null>(null);
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   const fetchData = useCallback(async () => {
@@ -193,7 +192,14 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                                 <div 
                                   key={idx} 
                                   className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => setZoomImage(url)}
+                                  onClick={() => {
+                                    const twa = (window as any).Telegram?.WebApp;
+                                    if (twa?.openLink) {
+                                      twa.openLink(url);
+                                    } else {
+                                      window.open(url, '_blank');
+                                    }
+                                  }}
                                 >
                                   <Image src={url} width={800} height={400} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-cover" />
                                 </div>
@@ -260,31 +266,6 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
-
-      {/* Zoom Modal */}
-      {zoomImage && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-sm m-0 p-0"
-          onClick={() => setZoomImage(null)}
-        >
-          <div className="relative w-screen h-screen flex items-center justify-center m-0 p-0">
-            <button 
-              className="absolute top-4 right-4 text-white p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[10000] backdrop-blur-md shadow-lg"
-              onClick={(e) => { e.stopPropagation(); setZoomImage(null); }}
-            >
-              <X size={24} />
-            </button>
-            <Image 
-              src={zoomImage} 
-              width={1000} 
-              height={800} 
-              alt="To'liq o'lcham" 
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

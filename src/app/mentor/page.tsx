@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Loader2, Plus, Users, BookOpen, ChevronRight } from 'lucide-react';
@@ -182,10 +183,10 @@ export default function MentorDashboard() {
       </div>
 
       {/* Notifications Modal */}
-      {showNotifications && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-bg-base animate-fade-in">
+      {showNotifications && createPortal(
+        <div className="fixed inset-0 z-[100] flex flex-col bg-bg-base animate-fade-in m-0 p-0" style={{ WebkitTapHighlightColor: 'transparent' }}>
           {/* True Fullscreen Modal */}
-          <div className="w-full h-full flex flex-col">
+          <div className="w-full h-full flex flex-col m-0 p-0">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-bg-base/90 backdrop-blur-md z-20 shrink-0">
               <h2 className="text-xl font-bold text-text-main">Bildirishnomalar</h2>
               <button onClick={() => setShowNotifications(false)} className="p-2 bg-bg-secondary rounded-full text-text-secondary hover:text-text-main transition-colors">
@@ -200,7 +201,7 @@ export default function MentorDashboard() {
                   <p>Hozircha bildirishnomalar yo&apos;q</p>
                 </div>
               ) : (
-                notifications.map(notification => (
+                notifications.map((notification: any) => (
                   <Card 
                     key={notification.id} 
                     padding="md" 
@@ -208,7 +209,7 @@ export default function MentorDashboard() {
                     onClick={() => {
                       setShowNotifications(false);
                       if (notification.type === 'homework') {
-                        router.push('/mentor/homeworks'); // Or wherever mentor checks homeworks
+                        router.push('/mentor/courses');
                       } else if (notification.type === 'resource') {
                         router.push('/mentor/resources');
                       } else if (notification.type === 'challenge') {
@@ -231,7 +232,8 @@ export default function MentorDashboard() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div>
