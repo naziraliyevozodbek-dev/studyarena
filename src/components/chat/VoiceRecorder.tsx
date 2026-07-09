@@ -15,11 +15,14 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    startRecording();
     return () => {
+      stopRecording();
       if (timerRef.current) clearInterval(timerRef.current);
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     };
-  }, [recordedUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -52,11 +55,12 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
     } catch (err) {
       console.error('Microphone access denied or error:', err);
       alert("Mikrofonga ruxsat yo'q yoki xatolik yuz berdi.");
+      onCancel();
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -79,18 +83,11 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
 
   return (
     <div className="flex items-center gap-3 w-full bg-bg-secondary rounded-2xl p-2 border border-border">
-      {!isRecording && !recordedUrl ? (
-        <button 
-          onClick={startRecording}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-error text-white animate-pulse shadow-md"
-        >
-          <Mic size={20} />
-        </button>
-      ) : isRecording ? (
+      {isRecording ? (
         <>
           <button 
             onClick={stopRecording}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-error/20 text-error hover:bg-error/30"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-error/20 text-error hover:bg-error/30 transition-colors"
           >
             <Square size={16} fill="currentColor" />
           </button>
@@ -98,11 +95,17 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
             <div className="w-2 h-2 rounded-full bg-error animate-pulse" />
             {formatTime(recordingTime)}
           </div>
-          <button onClick={onCancel} className="p-2 text-text-secondary hover:text-error">
+          <button 
+            onClick={() => {
+              stopRecording();
+              onCancel();
+            }}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-bg-tertiary text-text-secondary transition-colors"
+          >
             <Trash2 size={20} />
           </button>
         </>
-      ) : (
+      ) : recordedUrl ? (
         <>
           <button onClick={onCancel} className="p-2 text-text-secondary hover:text-error">
             <Trash2 size={20} />
@@ -117,7 +120,7 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
             <Send size={18} className="ml-1" />
           </button>
         </>
-      )}
+      ) : null}
       
       {!isRecording && !recordedUrl && (
         <button onClick={onCancel} className="ml-auto p-2 text-text-secondary">

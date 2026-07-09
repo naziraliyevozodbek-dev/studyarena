@@ -10,6 +10,7 @@ import MessageItem from '@/components/chat/MessageItem';
 import PinnedBanner from '@/components/chat/PinnedBanner';
 import VoiceRecorder from '@/components/chat/VoiceRecorder';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function ChatRoom({ params }: { params: Promise<{ groupId: string }> }) {
   const resolvedParams = use(params);
@@ -42,6 +43,13 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [groupInfoLoading, setGroupInfoLoading] = useState(false);
+  const [isMentor, setIsMentor] = useState(false);
+  const [editGroupName, setEditGroupName] = useState('');
+  const [savingGroupInfo, setSavingGroupInfo] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedReadsRef = useRef<Set<string>>(new Set());
@@ -214,11 +222,31 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         setUploadingFile(false);
       }
 
-      // Optimistic only for text without files (for simplicity) - REMOVED to prevent C-02 duplicate optimistic messages issue
+      // Optimistic update
+      const tempId = `temp-${Date.now()}`;
+      if (!fileData) {
+        if (editingMsg) {
+          updateMessage({ ...editingMsg, content: currentInput, is_edited: true });
+        } else {
+          addMessage({
+            id: tempId,
+            room_id: activeRoomId!,
+            sender_id: user!.id,
+            content: currentInput,
+            created_at: new Date().toISOString(),
+            is_read: false,
+            users: {
+              full_name: user!.full_name,
+              avatar_url: user!.avatar_url,
+              role: user!.role
+            }
+          } as any);
+          setTimeout(scrollToBottom, 100);
+        }
+      }
 
       setReplyTo(null);
       setEditingMsg(null);
-      setTimeout(scrollToBottom, 100);
 
       const res = await fetch(`/api/chat/${resolvedParams.groupId}`, {
         method: editingMsg ? 'PUT' : 'POST',
@@ -236,9 +264,10 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
       
       if (!res.ok) throw new Error('Failed to send');
       
-      // Realtime will catch the insert, we don't strictly need to do anything for files 
-      // but if we used optimistic text, we might want to clean it up (handled in Realtime or here)
-      // Actually, for simplicity we just let realtime do its job.
+      // Remove temp message because Realtime will catch the actual insert
+      if (!fileData) {
+        deleteMessage(tempId);
+      }
       
     } catch (error) {
       console.error(error);
@@ -268,6 +297,51 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     }
   };
 
+  const openGroupInfo = async () => {
+    setShowGroupInfo(true);
+    setGroupInfoLoading(true);
+    try {
+      const res = await fetch(`/api/chat/${resolvedParams.groupId}/info`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGroupMembers(data.members || []);
+        setIsMentor(data.isMentor);
+        setEditGroupName(data.roomName);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setGroupInfoLoading(false);
+    }
+  };
+
+  const saveGroupInfo = async () => {
+    if (!editGroupName.trim()) return;
+    setSavingGroupInfo(true);
+    try {
+      const res = await fetch(`/api/chat/${resolvedParams.groupId}/info`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ name: editGroupName })
+      });
+      if (res.ok) {
+        setGroupName(editGroupName);
+        toast.success("Guruh nomi yangilandi");
+      } else {
+        toast.error("Xatolik yuz berdi");
+      }
+    } catch (error) {
+      toast.error("Xatolik yuz berdi");
+    } finally {
+      setSavingGroupInfo(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
@@ -286,8 +360,11 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
         >
           <ArrowLeft size={24} />
         </button>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <div 
+          className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-bg-secondary p-1 -ml-1 rounded transition-colors"
+          onClick={openGroupInfo}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <Users size={20} />
           </div>
           <div>
@@ -394,7 +471,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
               onCancel={() => setIsRecording(false)} 
             />
           ) : (
-            <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-3xl mx-auto">
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-3xl mx-auto">
               <button 
                 type="button" 
                 onClick={() => fileInputRef.current?.click()}
@@ -442,7 +519,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
                     }
                   }}
                   placeholder="Xabar yozing..."
-                  className="w-full bg-transparent p-3 max-h-32 min-h-[44px] focus:outline-none resize-none text-text-main placeholder:text-text-tertiary text-[15px]"
+                  className="w-full bg-transparent px-3 py-2.5 max-h-32 min-h-[44px] focus:outline-none resize-none text-text-main placeholder:text-text-tertiary text-[15px]"
                   rows={1}
                 />
               </div>
@@ -468,6 +545,74 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
           )}
         </div>
       </div>
+
+      {/* Group Info Modal */}
+      {showGroupInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-bg-card border border-border w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center p-4 border-b border-border">
+              <h2 className="text-lg font-bold">Guruh Ma'lumotlari</h2>
+              <button onClick={() => setShowGroupInfo(false)} className="text-text-secondary hover:text-text-main">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto flex-1">
+              {groupInfoLoading ? (
+                <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" size={24} /></div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Edit Name if Mentor */}
+                  {isMentor && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-text-secondary">Guruh Nomi</label>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={editGroupName}
+                          onChange={(e) => setEditGroupName(e.target.value)}
+                          className="flex-1 bg-bg-secondary border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                        />
+                        <button 
+                          onClick={saveGroupInfo}
+                          disabled={savingGroupInfo || editGroupName === groupName}
+                          className="bg-primary text-white px-4 rounded-xl text-sm font-medium disabled:opacity-50"
+                        >
+                          {savingGroupInfo ? <Loader2 size={16} className="animate-spin" /> : 'Saqlash'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Members List */}
+                  <div>
+                    <h3 className="text-sm font-medium text-text-secondary mb-3">A'zolar ({groupMembers.length})</h3>
+                    <div className="space-y-3">
+                      {groupMembers.map(m => (
+                        <div key={m.id} className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-bg-secondary flex justify-center items-center overflow-hidden">
+                            {m.avatar_url ? (
+                              <img src={m.avatar_url} alt={m.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="font-bold text-text-secondary">{m.full_name?.charAt(0) || '?'}</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{m.full_name} {m.id === user?.id ? '(Siz)' : ''}</div>
+                            {m.role === 'mentor' && (
+                              <div className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full w-fit">Mentor</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

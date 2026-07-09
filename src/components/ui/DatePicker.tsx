@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DatePickerProps {
@@ -11,8 +12,13 @@ interface DatePickerProps {
 
 export function DatePicker({ value, onChange, placeholder = "Sanani tanlang", className = "", label }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [currentDate, setCurrentDate] = useState(value ? new Date(value) : new Date());
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -90,7 +96,7 @@ export function DatePicker({ value, onChange, placeholder = "Sanani tanlang", cl
         <Calendar size={18} className="text-text-secondary" />
       </div>
 
-      {isOpen && (
+      {isOpen && mounted && createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
           <div className="relative w-full max-w-[300px] bg-bg-card border border-border rounded-3xl shadow-2xl p-5 animate-fade-in">
@@ -98,27 +104,22 @@ export function DatePicker({ value, onChange, placeholder = "Sanani tanlang", cl
               <button type="button" onClick={handlePrevMonth} className="p-2 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
                 <ChevronLeft size={20} />
               </button>
-              <div className="font-bold text-text-main text-lg">
+              <div className="font-bold text-lg text-text-main">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
               <button type="button" onClick={handleNextMonth} className="p-2 hover:bg-bg-secondary rounded-full transition-colors text-text-secondary hover:text-text-main">
                 <ChevronRight size={20} />
               </button>
             </div>
-            
-            <div className="grid grid-cols-7 gap-1 mb-3">
-              {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
-                <div key={d} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-text-tertiary uppercase tracking-wider">
-                  {d}
-                </div>
-              ))}
+            <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-medium text-text-tertiary">
+              <div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Ya</div>
             </div>
-            
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 place-items-center">
               {days}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

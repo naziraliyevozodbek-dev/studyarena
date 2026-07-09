@@ -8,6 +8,8 @@ import { ArrowLeft, Loader2, Check, X, User, ChevronDown, ChevronUp } from 'luci
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { createPortal } from 'react-dom';
 
 export default function HomeworkReview({ params }: { params: Promise<{ id: string, homeworkId: string }> }) {
   const resolvedParams = use(params);
@@ -21,6 +23,12 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
   const [showRejectInput, setShowRejectInput] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -192,14 +200,7 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
                                 <div 
                                   key={idx} 
                                   className="rounded-lg overflow-hidden border border-border bg-bg-secondary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => {
-                                    const twa = (window as any).Telegram?.WebApp;
-                                    if (twa?.openLink) {
-                                      twa.openLink(url);
-                                    } else {
-                                      window.open(url, '_blank');
-                                    }
-                                  }}
+                                  onClick={() => setZoomImage(url)}
                                 >
                                   <Image src={url} width={800} height={400} alt={`Homework ${idx+1}`} className="w-full h-auto max-h-96 object-cover" />
                                 </div>
@@ -266,6 +267,42 @@ export default function HomeworkReview({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
+
+      {/* Zoom Modal using Portal to escape `.content-area` boundaries */}
+      {mounted && zoomImage && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 m-0 p-0"
+        >
+          <div className="absolute top-4 right-4 z-[10000]">
+            <button 
+              onClick={() => setZoomImage(null)}
+              className="p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors backdrop-blur-md"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          <TransformWrapper
+            initialScale={1}
+            minScale={1}
+            maxScale={5}
+            centerOnInit
+            wheel={{ step: 0.1 }}
+            pinch={{ step: 5 }}
+            doubleClick={{ disabled: false, step: 1, mode: 'toggle' }}
+          >
+            <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img 
+                src={zoomImage} 
+                alt="Zoomed Homework" 
+                className="max-w-full max-h-[100dvh] object-contain select-none pointer-events-auto"
+                draggable={false}
+              />
+            </TransformComponent>
+          </TransformWrapper>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
