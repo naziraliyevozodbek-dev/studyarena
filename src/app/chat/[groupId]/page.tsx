@@ -24,6 +24,7 @@ export default function ChatRoom({ params }: { params: Promise<{ groupId: string
     activeRoomId, 
     setActiveRoom, 
     deleteMessage,
+    updateMessage,
     setPinnedMessages,
     typingUsers
   } = useChatStore();
